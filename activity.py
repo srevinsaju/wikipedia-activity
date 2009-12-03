@@ -20,10 +20,11 @@ import os
 import sys
 import server
 
-from sugar.activity import registry
-activity_info = registry.get_registry().get_activity('org.laptop.WebActivity')
+#from sugar.activity import registry
+#activity_info = registry.get_registry().get_activity('org.laptop.WebActivity')
 
-sys.path.append(activity_info.path)
+#sys.path.append(activity_info.path)
+sys.path.append("/home/olpc/Activities/Browse.activity")
 import webactivity
 
 from searchtoolbar import SearchToolbar
