@@ -348,28 +348,6 @@ class HTMLWriter(object):
     writeControl = writeText
 
     def writeArticle(self, a):
-        if a.caption:
-            self.out.write("<h1>")
-            self._write(a.caption)
-            self.out.write(' <font size="1">&middot; <a class="offsite" ')
-            self.out.write('href="http://es.wikipedia.org/wiki/')
-            self._write(a.caption)
-            self.out.write('">De Wikipedia, la enciclopedia libre</a> ')
-
-            # Report rendering problem.
-            self.out.write('&middot; <a class="offsite" ')
-            self.out.write('href="http://pullcord.laptop.org:8000/render?q=')
-            self._write(a.caption)
-            self.out.write('">Haz clic aquí si esta página contiene errores de presentación</a> ') 
-
-            # Report inappropriate content.
-            self.out.write('&middot; <a class="offsite" ')
-            self.out.write('href="http://pullcord.laptop.org:8000/report?q=')
-            self._write(a.caption)
-            self.out.write('">Esta página contiene material inapropiado</a>')
-
-            self.out.write("</font>")
-            self.out.write('</h1>')
             
         for x in a:
             self.write(x)

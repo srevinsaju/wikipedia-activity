@@ -462,7 +462,29 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
             htmlout.write("</head>")
             
             htmlout.write("<body>")
-            
+
+            htmlout.write("<h1>")
+            htmlout.write(title)
+            htmlout.write(' <font size="1">&middot; <a class="offsite" ')
+            htmlout.write('href="http://es.wikipedia.org/wiki/')
+            htmlout.write(title)
+            htmlout.write('">De Wikipedia, la enciclopedia libre</a> ')
+
+            # Report rendering problem.
+            htmlout.write('&middot; <a class="offsite" ')
+            htmlout.write('href="http://pullcord.laptop.org:8000/render?q=')
+            htmlout.write(title)
+            htmlout.write('">Haz clic aquí si esta página contiene errores de presentación</a> ') 
+
+            # Report inappropriate content.
+            htmlout.write('&middot; <a class="offsite" ')
+            htmlout.write('href="http://pullcord.laptop.org:8000/report?q=')
+            htmlout.write(title)
+            htmlout.write('">Esta página contiene material inapropiado</a>')
+
+            htmlout.write("</font>")
+            htmlout.write('</h1>')
+ 
             self.write_wiki_html(htmlout, title, article_text)
 
             htmlout.write('<center>Contenido disponible bajo los términos de la <a href="/static/es-gfdl.html">Licencia de documentación libre de GNU</a>. <br/> Wikipedia es una marca registrada de la organización sin ánimo de lucro Wikimedia Foundation, Inc.<br/><a href="/static/acerca.html">Acerca de Wikipedia</a> </center>')
