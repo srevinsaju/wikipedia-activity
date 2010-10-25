@@ -377,8 +377,21 @@ class WPHTMLWriter(mwlib.htmlwriter.HTMLWriter):
             mwlib.htmlwriter.HTMLWriter.writeTagNode(self, t)
 
 class WikiRequestHandler(SimpleHTTPRequestHandler):
-    def __init__(self, index, request, client_address, server):
-        self.index = index
+    def __init__(self, conf, request, client_address, server):
+        # pullcord is currently offline
+        # self.reporturl = 'pullcord.laptop.org:8000'
+        self.reporturl = False
+        self.index = conf['path']
+        self.port  = conf['port']
+        if conf.has_key('editdir'):
+            self.editdir = conf['editdir']
+        else:
+            self.editdir = False
+        if conf.has_key('giturl'):
+            self.giturl = conf['giturl']
+        else:
+            self.giturl = False
+            
         self.client_address = client_address
         SimpleHTTPRequestHandler.__init__(
             self, request, client_address, server)
@@ -394,7 +407,8 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
             override.close()
 
         # Pass ?noexpand=1 in the url to disable template expansion.
-        if not self.params.get('noexpand', 0):
+        if not self.params.get('noexpand', 0) \
+               and not self.params.get('edit', 0):
             article_text = wikidb.expandArticle(article_text, title)
 
         return article_text
@@ -433,6 +447,20 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
             self.end_headers()
         
             self.wfile.write(article_text.encode('utf8'))
+        elif self.params.get('edit', 0):
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.end_headers()
+
+            self.wfile.write('<html><body><form method="POST">')
+            self.wfile.write('User: <input type="text" size="30" name="user"><br />')
+            self.wfile.write('Comment: <input type="text" size="100" name="comment"><br />')
+            self.wfile.write('<input type="submit" value="OK"><br />')
+            self.wfile.write('<textarea name="wmcontent" rows="40" cols="80" >')
+            htmlout = HTMLOutputBuffer()
+            htmlout.write(article_text.encode('utf8'))
+            self.wfile.write(htmlout.getvalue())
+            self.wfile.write("</textarea></form></body></html>")
         else:
             htmlout = HTMLOutputBuffer()
             
@@ -470,18 +498,34 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
             htmlout.write(title)
             htmlout.write('">De Wikipedia, la enciclopedia libre</a> ')
 
-            # Report rendering problem.
-            htmlout.write('&middot; <a class="offsite" ')
-            htmlout.write('href="http://pullcord.laptop.org:8000/render?q=')
-            htmlout.write(title)
-            htmlout.write('">Haz clic aquí si esta página contiene errores de presentación</a> ') 
+            if self.reporturl:
+                # Report rendering problem.
+                htmlout.write('&middot; <a class="offsite" ')
+                htmlout.write('href="http://%s/render?q=' % self.reporturl)
+                htmlout.write(title)
+                htmlout.write('">Haz clic aquí si esta página contiene errores de presentación</a> ')
 
-            # Report inappropriate content.
-            htmlout.write('&middot; <a class="offsite" ')
-            htmlout.write('href="http://pullcord.laptop.org:8000/report?q=')
-            htmlout.write(title)
-            htmlout.write('">Esta página contiene material inapropiado</a>')
+                # Report inappropriate content.
+                htmlout.write(' &middot; <a class="offsite" ')
+                htmlout.write('href="http://%s/report?q=' % self.reporturl)
+                htmlout.write(title)
+                htmlout.write('">Esta página contiene material inapropiado</a>')
 
+            if self.editdir:
+                htmlout.write(' &middot; <a ')
+                htmlout.write('href="http://localhost:%s/wiki/' % self.port)
+                htmlout.write(title)
+                htmlout.write('?edit=true">[ Editar ]</a>')
+                htmlout.write(' &middot; <a ')
+                htmlout.write('href="http://localhost:%s/wiki/' % self.port)
+                htmlout.write(title)
+                htmlout.write('?edit=true">[ Vista OK ]</a>')
+            if self.giturl:
+                htmlout.write(' &middot; <a ')
+                htmlout.write('href="%s' % self.giturl)
+                htmlout.write(title)
+                htmlout.write('">[ Historial ]</a>')
+                
             htmlout.write("</font>")
             htmlout.write('</h1>')
  
@@ -502,7 +546,35 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
                 print "FAILED to tidy '%s'" % title
     
             self.wfile.write(html)
-    
+
+    def do_POST(self):
+        real_path = urllib.unquote(self.path)
+        real_path = unicode(real_path, 'utf8')
+
+        (real_path, sep, param_text) = real_path.partition('?')
+
+        # Wiki requests return article contents or redirect to Wikipedia.
+        m = re.match(r'^/wiki/(.+)$', real_path)
+        if m:
+            title = m.group(1)
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.end_headers()
+            
+            self.wfile.write('<html><body>Edited: ')
+            htmlout = HTMLOutputBuffer()
+            htmlout.write(title.encode('utf8'))
+            self.wfile.write(htmlout.getvalue())
+            self.wfile.write('</body></html>')
+            
+            return
+
+        # Any other request redirects to the index page.        
+        self.send_response(301)
+        self.send_header("Location", "/static/")
+        self.end_headers()
+
+        
     def send_searchresult(self, title):
         self.send_response(200)
         self.send_header("Content-Type", "text/html; charset=utf-8")
@@ -610,11 +682,11 @@ def load_db(dbname):
         dbname + '.locate.prefixdb',
         dbname + '.blocks.db')
 
-def run_server(path, port):
-    index = ArticleIndex('%s.index.txt' % path)
+def run_server(confvars):
+    index = ArticleIndex('%s.index.txt' % confvars['path'])
 
-    httpd = BaseHTTPServer.HTTPServer(('', port),
-        lambda *args: WikiRequestHandler(index, *args))
+    httpd = BaseHTTPServer.HTTPServer(('', confvars['port']),
+        lambda *args: WikiRequestHandler(confvars, *args))
 
     if __name__ == '__main__':
         httpd.serve_forever()
@@ -629,6 +701,13 @@ def run_server(path, port):
 
 
 if __name__ == '__main__':
-    load_db(sys.argv[1])
 
-    run_server(sys.argv[1], int(sys.argv[2]))
+    conf  = {'path': sys.argv[1],
+             'port': int(sys.argv[2])} 
+    if len(sys.argv) > 3:
+        conf['editdir'] = sys.argv[3]
+    if len(sys.argv) > 4:
+        conf['giturl'] = sys.argv[4]
+        load_db(conf['path'])
+
+    run_server(conf)
