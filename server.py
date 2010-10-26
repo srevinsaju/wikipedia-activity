@@ -59,7 +59,7 @@ class ArticleIndex:
 
     def __init__(self, path):
         self.article_index = set()
-        with open(path, 'r') as f:
+        with codecs.open(path, mode='r', encoding='utf-8') as f:
             for line in f.readlines():
                 m = re.search(r'(.*?)\s*\d+$', line)
                 if m is None:
@@ -86,7 +86,7 @@ class WPWikiDB:
                 break
 
             article_text = unicode(wp.wp_load_article(title.encode('utf8')), 'utf8')
-
+            
             # To see unmodified article_text, uncomment here.
             # print article_text
 
@@ -401,7 +401,10 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
     def get_wikitext(self, title):
         wikidb = WPWikiDB()
         article_text = wikidb.getRawArticle(title)
-
+        edited = self.get_editedarticle(title)
+        if edited:
+            article_text = edited
+            
         # Pass ?override=1 in the url to replace wikitext for testing the renderer.
         if self.params.get('override', 0):
             override = codecs.open('override.txt', 'r', 'utf-8')
@@ -567,7 +570,8 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
             self.send_header("Content-Type", "text/html; charset=utf-8")
             self.end_headers()
             
-            self.wfile.write('<html><body>Edited: ')
+            self.wfile.write('<html><body>Editado: ')
+            
             htmlout = HTMLOutputBuffer()
             htmlout.write(title.encode('utf8'))
             self.wfile.write(htmlout.getvalue())
@@ -589,8 +593,13 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
         comment   = formdata.getfirst('comment')
         wmcontent = formdata.getfirst('wmcontent')
 
-        fpath = self.getfpath(title)
-        # UGLY: racy. 
+        # fix newlines
+        wmcontent = re.sub('\r', '', wmcontent)
+
+        fpath = self.getfpath('wiki', title)
+        # UGLY: racy.
+        if not os.path.exists(fpath):
+            self._saveorig(title)
         (fh, tmpfpath) = tempfile.mkstemp(dir=os.path.dirname(fpath))
         os.write(fh, wmcontent)
         os.close(fh)
@@ -598,10 +607,25 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
 
         return True
 
-    def getfpath(self, title):
+    def getfpath(self, dir, title):
         # may want to hash it
-        fpath = os.path.join(self.editdir, 'wiki', title)
+        fpath = os.path.join(self.editdir, dir, title)
         return fpath
+
+    def _saveorig(self, title):
+        wikidb = WPWikiDB()
+        article_text = wikidb.getRawArticle(title)
+        fpath = self.getfpath('wiki.orig', title)
+        fh = codecs.open(fpath, 'w', encoding='utf-8')
+        fh.write(article_text)
+        fh.close()
+
+    def get_editedarticle(self, title):
+        buf = None
+        fpath = self.getfpath('wiki', title)
+        if os.path.exists(fpath):
+            buf = codecs.open(fpath, 'r', encoding='utf-8').read()
+        return buf
     
     def send_searchresult(self, title):
         self.send_response(200)
@@ -715,7 +739,7 @@ def run_server(confvars):
 
     if confvars.has_key('editdir'):
         try:
-            for dir in ['wiki', 'blacklist', 'audited']:
+            for dir in ['wiki', 'wiki.orig']:
                 fdirpath = os.path.join(confvars['editdir'], dir)
                 if not os.path.exists(fdirpath):
                     os.mkdir(fdirpath)
