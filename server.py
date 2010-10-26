@@ -29,7 +29,9 @@ import codecs
 from StringIO import StringIO
 import BaseHTTPServer
 from SimpleHTTPServer import SimpleHTTPRequestHandler
+import cgi
 import urllib
+import tempfile
 import re
 import wp
 import xml.dom.minidom
@@ -548,6 +550,7 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
             self.wfile.write(html)
 
     def do_POST(self):
+
         real_path = urllib.unquote(self.path)
         real_path = unicode(real_path, 'utf8')
 
@@ -555,8 +558,11 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
 
         # Wiki requests return article contents or redirect to Wikipedia.
         m = re.match(r'^/wiki/(.+)$', real_path)
-        if m:
+        if self.editdir and m:
             title = m.group(1)
+
+            self._save_page(title)
+            
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
             self.end_headers()
@@ -574,7 +580,29 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
         self.send_header("Location", "/static/")
         self.end_headers()
 
-        
+    def _save_page(self, title):
+        formdata = cgi.FieldStorage(fp=self.rfile,
+            headers=self.headers, environ = {'REQUEST_METHOD':'POST'},
+            keep_blank_values = 1)
+
+        user      = formdata.getfirst('user')
+        comment   = formdata.getfirst('comment')
+        wmcontent = formdata.getfirst('wmcontent')
+
+        fpath = self.getfpath(title)
+        # UGLY: racy. 
+        (fh, tmpfpath) = tempfile.mkstemp(dir=os.path.dirname(fpath))
+        os.write(fh, wmcontent)
+        os.close(fh)
+        os.rename(tmpfpath, fpath)
+
+        return True
+
+    def getfpath(self, title):
+        # may want to hash it
+        fpath = os.path.join(self.editdir, 'wiki', title)
+        return fpath
+    
     def send_searchresult(self, title):
         self.send_response(200)
         self.send_header("Content-Type", "text/html; charset=utf-8")
@@ -685,6 +713,16 @@ def load_db(dbname):
 def run_server(confvars):
     index = ArticleIndex('%s.index.txt' % confvars['path'])
 
+    if confvars.has_key('editdir'):
+        try:
+            for dir in ['wiki', 'blacklist', 'audited']:
+                fdirpath = os.path.join(confvars['editdir'], dir)
+                if not os.path.exists(fdirpath):
+                    os.mkdir(fdirpath)
+        except:
+            print "Error setting up directories:"
+            print "%s must be a writable directory" % confvars['editdir']
+            
     httpd = BaseHTTPServer.HTTPServer(('', confvars['port']),
         lambda *args: WikiRequestHandler(confvars, *args))
 
