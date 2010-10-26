@@ -379,11 +379,11 @@ class WPHTMLWriter(mwlib.htmlwriter.HTMLWriter):
             mwlib.htmlwriter.HTMLWriter.writeTagNode(self, t)
 
 class WikiRequestHandler(SimpleHTTPRequestHandler):
-    def __init__(self, conf, request, client_address, server):
+    def __init__(self, index, conf, request, client_address, server):
         # pullcord is currently offline
         # self.reporturl = 'pullcord.laptop.org:8000'
         self.reporturl = False
-        self.index = conf['path']
+        self.index = index
         self.port  = conf['port']
         if conf.has_key('editdir'):
             self.editdir = conf['editdir']
@@ -724,7 +724,7 @@ def run_server(confvars):
             print "%s must be a writable directory" % confvars['editdir']
             
     httpd = BaseHTTPServer.HTTPServer(('', confvars['port']),
-        lambda *args: WikiRequestHandler(confvars, *args))
+        lambda *args: WikiRequestHandler(index, confvars, *args))
 
     if __name__ == '__main__':
         httpd.serve_forever()
@@ -746,6 +746,6 @@ if __name__ == '__main__':
         conf['editdir'] = sys.argv[3]
     if len(sys.argv) > 4:
         conf['giturl'] = sys.argv[4]
-        load_db(conf['path'])
 
+    load_db(conf['path'])
     run_server(conf)
