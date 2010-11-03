@@ -1,0 +1,31 @@
+#!/bin/sh
+
+set -e 
+
+if [ ! -n "$1" ]; then
+  echo "process <file.processed>"
+  exit 1
+else
+  file=`readlink -f $1`
+fi
+
+# drop the trailing '.processed'
+basename=${file%.processed}
+
+ifile="$basename.index.txt"
+echo "Creating index..."
+pushd woip/rb
+ruby ./index.rb $file > $ifile
+
+sfile="$basename.locate.db"
+echo "Creating locate index..."
+cat $ifile | LC_ALL=C /usr/libexec/locate.mklocatedb > $sfile
+
+spfile="$basename.locate.prefixdb"
+echo "Creating locate prefix index..."
+../c/lsearcher -f $sfile -c $spfile -n
+
+bfile="$basename.blocks.db"
+echo "Creating block index"
+../c/bzipreader -f $ofile -l | awk '{print $2;}' | ../c/blocks $bfile
+
