@@ -458,8 +458,8 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
             self.end_headers()
 
             self.wfile.write('<html><body><form method="POST">')
-            self.wfile.write('User: <input type="text" size="30" name="user"><br />')
-            self.wfile.write('Comment: <input type="text" size="100" name="comment"><br />')
+            # self.wfile.write('User: <input type="text" size="30" name="user"><br />')
+            # self.wfile.write('Comment: <input type="text" size="100" name="comment"><br />')
             self.wfile.write('<input type="submit" value="OK"><br />')
             self.wfile.write('<textarea name="wmcontent" rows="40" cols="80" >')
             htmlout = HTMLOutputBuffer()
@@ -569,11 +569,15 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
             self.end_headers()
-            
-            self.wfile.write('<html><body>Editado: ')
-            
+
             htmlout = HTMLOutputBuffer()
             htmlout.write(title.encode('utf8'))
+
+            self.wfile.write('<html><body>Editado: ')
+            self.wfile.write('<a href="')
+            
+            self.wfile.write(htmlout.getvalue())
+            self.wfile.write('">')
             self.wfile.write(htmlout.getvalue())
             self.wfile.write('</body></html>')
             
