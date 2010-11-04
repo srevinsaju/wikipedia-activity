@@ -25,11 +25,13 @@ from __future__ import with_statement
 import sys
 import os
 import subprocess
+import select
 import codecs
 from StringIO import StringIO
 import BaseHTTPServer
 from SimpleHTTPServer import SimpleHTTPRequestHandler
 import cgi
+import errno
 import urllib
 import tempfile
 import re
@@ -46,6 +48,29 @@ except ImportError:
 
 import mwlib.htmlwriter
 from mwlib import parser, scanner, expander
+
+class MyHTTPServer(BaseHTTPServer.HTTPServer):
+    def serve_forever(self, poll_interval=0.5):
+        """Overridden version of BaseServer.serve_forever that does not fail
+        to work when EINTR is received.
+        """
+        self._BaseServer__serving = True
+        self._BaseServer__is_shut_down.clear()
+        while self._BaseServer__serving:
+            # XXX: Consider using another file descriptor or
+            # connecting to the socket to wake this up instead of
+            # polling. Polling reduces our responsiveness to a
+            # shutdown request and wastes cpu at all other times.
+            try:
+                r, w, e = select.select([self], [], [], poll_interval)
+            except select.error, e:
+                if e[0] == errno.EINTR:
+                    print "got eintr"
+                    continue
+                raise
+            if r:
+                self._handle_request_noblock()
+        self._BaseServer__is_shut_down.set()
 
 class LinkStats:
     allhits = 1
@@ -751,7 +776,7 @@ def run_server(confvars):
             print "Error setting up directories:"
             print "%s must be a writable directory" % confvars['editdir']
             
-    httpd = BaseHTTPServer.HTTPServer(('', confvars['port']),
+    httpd = MyHTTPServer(('', confvars['port']),
         lambda *args: WikiRequestHandler(index, confvars, *args))
 
     if __name__ == '__main__':

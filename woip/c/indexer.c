@@ -27,7 +27,7 @@ void insert(struct node *node, char *str, uint32_t block) {
         insert(NODE(NEXT_NODE(node, cmp)), str, block);
     } else if(!(cmp == 0 && !str[1])) { 
       /* unless at end of string, and all matches */
-      NEXT_NODE(node, cmp) = ++storepos;
+      //NEXT_NODE(node, cmp) = ++storepos;
       insert(NODE(storepos), cmp ? str : str + 1, block);
     } else {
       node->block = BLOCK_MASK(block); 

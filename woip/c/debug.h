@@ -23,7 +23,7 @@
 #error I want GNU C plz
 #endif
 
-#ifdef DEBUG
+#if 0
 static bool debug = true;
 #else
 static bool debug = false;
