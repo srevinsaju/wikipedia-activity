@@ -1,6 +1,7 @@
 #!/bin/sh
 
 set -e 
+set -o pipefail
 
 if [ ! -n "$1" ]; then
   echo "process <file.processed>"
@@ -13,19 +14,33 @@ fi
 basename=${file%.processed}
 
 ifile="$basename.index.txt"
-echo "Creating index..."
-pushd woip/rb
-ruby ./index.rb $file > $ifile
+if [ ! -e $ifile ]; then
+    echo "Creating index..."
+    pushd woip/rb
+    ruby ./index.rb $file > $ifile.tmp
+    mv $ifile.tmp $ifile
+    popd
+fi
 
 sfile="$basename.locate.db"
-echo "Creating locate index..."
-cat $ifile | LC_ALL=C /usr/libexec/locate.mklocatedb > $sfile
+if [ ! -e $sfile ]; then
+    echo "Creating locate index..."
+    PATH=$PATH:./locate.freebsd/bigram/:./locate.freebsd/code 
+    cat $ifile | LC_ALL=C ./locate.freebsd/locate/mklocatedb.sh > $sfile.tmp
+    mv $sfile.tmp $sfile
+fi
 
 spfile="$basename.locate.prefixdb"
-echo "Creating locate prefix index..."
-../c/lsearcher -f $sfile -c $spfile -n
+if [ ! -e $spfile ]; then
+    echo "Creating locate prefix index..."
+    woip/c/lsearcher -f $sfile -c $spfile.tmp -n
+    mv $spfile.tmp $spfile
+fi
 
 bfile="$basename.blocks.db"
-echo "Creating block index"
-../c/bzipreader -f $ofile -l | awk '{print $2;}' | ../c/blocks $bfile
+if [ ! -e $bfile ]; then
+    echo "Creating block index"
+    woip/c/bzipreader -f $file -l | awk '{print $2;}' | woip/c/blocks $bfile.tmp
+    mv $bfile.tmp $bfile
+fi
 
