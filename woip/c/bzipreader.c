@@ -160,7 +160,8 @@ int computeBoundariesUpto(FILE *inFile, int32_t upto) {
      
     if(b == BIT_EOF) {
       if(bitsRead >= bStart[currBlock] && (bitsRead - bStart[currBlock]) >= 40) {
-        fatal("Corrupted file"); /* I'm not actually certain that this is necessarily the case */
+	fprintf(stderr, "Corrupted file?\n");
+        /* fatal("Corrupted file"); I'm not actually certain that this is necessarily the case */
       } else
         currBlock--;
         
