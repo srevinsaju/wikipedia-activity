@@ -10,6 +10,7 @@ import re
 import os
 from mwlib import magics
 import mwlib.log
+from pylru import lrudecorator
 
 DEBUG = "DEBUG_EXPANDER" in os.environ
 
@@ -424,6 +425,7 @@ class Expander(object):
             for line in f.readlines():
                 self.blacklist.add(line.rstrip().decode('utf8'))
 
+    @lrudecorator(100)
     def getParsedTemplate(self, name):
         if name.startswith("[["):
             return None
@@ -435,10 +437,6 @@ class Expander(object):
             if len(name) > 1:
                 name = name[0].capitalize() + name[1:]
                 name = "Plantilla:" + name
-                try:
-                    return self.parsedTemplateCache[name]
-                except KeyError:
-                    pass
 
             # Check to see if this is a template in our blacklist --
             # one that we don't want to bother rendering.
@@ -463,7 +461,6 @@ class Expander(object):
                 print "TEMPLATE:", name, repr(raw)
                 res.show()
                 
-        self.parsedTemplateCache[name] = res
         return res
             
         

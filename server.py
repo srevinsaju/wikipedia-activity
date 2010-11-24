@@ -37,6 +37,7 @@ import tempfile
 import re
 import wp
 import xml.dom.minidom
+from pylru import lrudecorator
 
 # Uncomment to print out a large dump from the template expander.
 #os.environ['DEBUG_EXPANDER'] = '1'
@@ -110,7 +111,7 @@ class WPWikiDB:
                 article_text = ""
                 break
 
-            article_text = unicode(wp.wp_load_article(title.encode('utf8')), 'utf8')
+            article_text = unicode(wp_load_article(title.encode('utf8')), 'utf8')
             
             # To see unmodified article_text, uncomment here.
             # print article_text
@@ -762,6 +763,12 @@ def load_db(dbname):
         dbname + '.locate.db',
         dbname + '.locate.prefixdb',
         dbname + '.blocks.db')
+
+# Cache articles and specially templates
+@lrudecorator(100)
+def wp_load_article(title):
+    
+    return wp.wp_load_article(title)
 
 def run_server(confvars):
     index = ArticleIndex('%s.index.txt' % confvars['path'])
