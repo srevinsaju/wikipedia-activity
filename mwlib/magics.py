@@ -300,7 +300,10 @@ class ParserFunctions(object):
             else:
                 r=None
         else:
-            r=self.wikidb.getRawArticle(name)
+            if name == '':
+                r = None
+            else:
+                r=self.wikidb.getRawArticle(name)
 
         if r:
             return args[1]
