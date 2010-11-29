@@ -15,9 +15,10 @@ reload(sys)
 # UTF-8 chars. Without this, errors galore.
 sys.setdefaultencoding('utf-8')
 
-import os
+sys.path.append('.')
+
+import os, select, time
 import subprocess
-import select
 import codecs
 from StringIO import StringIO
 import cgi
@@ -84,7 +85,11 @@ class WPWikiDB:
                 article_text = ""
                 break
 
-            article_text = unicode(wp_load_article(title.encode('utf8')), 'utf8')
+            article_text = wp_load_article(title.encode('utf8'))
+            if article_text == None:
+                # something's wrong
+                return None
+            article_text = unicode(article_text, 'utf8')
             
             # To see unmodified article_text, uncomment here.
             # print article_text
@@ -139,8 +144,37 @@ def load_db(dbname):
 # Cache articles and specially templates
 @lrudecorator(100)
 def wp_load_article(title):
-    
-    return wp.wp_load_article(title)
+   #return wp.wp_load_article(title)
+   return wp_load_article_fork(title) 
+
+# Fork the wp lookup as a subprocess, so it can return None on error
+# wp.wp_load_article() exit(1)s on error .
+# We pay a 20% wall time penalty in forking and reading/waiting for
+# the child process.
+def wp_load_article_fork(title):
+    pid, fd = os.forkpty()
+    if pid ==  0:
+        # child only does wp lookup
+        article_text = wp.wp_load_article(title)
+        sys.stdout.write(article_text)
+        sys.exit(os.EX_OK)
+
+    article_text = ''
+    while True: #os.kill(pid, 0):
+        try: # try catch, as it may have died
+            b = os.read(fd, 1024 * 1024)
+        except:
+            break
+        if not b:
+            break
+        article_text = article_text + b
+
+    (pid, ex_status) = os.waitpid(pid, 0)
+    #print "%s %s " % (pid, ex_status)
+    if ex_status == os.EX_OK:
+        return article_text
+    else:
+        return None
 
 # __main__
 
@@ -155,20 +189,17 @@ rawindex = index.rawindex()
 wikidb = WPWikiDB()
 rx = re.compile('Plantilla:')
 
-# The index is sometimes slightly corrupt and
-# names articles we don't have
-badarts = ['Ciclo hidr', 'Mar de Aral',  'Salario Mínimo Interpr']
-
 for title in rawindex:
     if rx.match(title):
-        continue
-    if title in badarts:
         continue
     
     sys.stderr.write('PROCESSING: ' + title + "\n")
     
     article_text  = wikidb.getRawArticle(title, followRedirects=False)
-                
+    if article_text == None:
+        sys.stderr.write('ERROR - SKIPPING: ' + title + "\n")
+        continue
+
     # we don't expand nor follow redirects
     m = re.match(r'^\s*\#?redirect\s*\:?\s*\[\[(.*)\]\]',
                  article_text, re.IGNORECASE|re.MULTILINE)
