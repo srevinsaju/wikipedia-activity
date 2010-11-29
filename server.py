@@ -98,8 +98,11 @@ class ArticleIndex:
 class WPWikiDB:
     """Retrieves article contents for mwlib."""
 
-    def getRawArticle(self, title):
+    def getRawArticle(self, title, followRedirects=True):
         # Retrieve article text, recursively following #redirects.
+        if title == '':
+            return ''
+
         oldtitle = ""
         while True:
             # Replace underscores with spaces in title.
@@ -111,10 +114,16 @@ class WPWikiDB:
                 article_text = ""
                 break
 
-            article_text = unicode(wp_load_article(title.encode('utf8')), 'utf8')
+            article_text = wp_load_article(title.encode('utf8'))
+            if article_text == None:
+                # something's wrong
+                return None
+            article_text = unicode(article_text, 'utf8')
             
             # To see unmodified article_text, uncomment here.
             # print article_text
+            if not followRedirects:
+                break
 
             m = re.match(r'^\s*\#?redirect\s*\:?\s*\[\[(.*)\]\]', article_text, re.IGNORECASE|re.MULTILINE)
             if not m: break

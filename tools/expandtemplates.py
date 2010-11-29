@@ -70,11 +70,10 @@ class WPWikiDB:
 
     def getRawArticle(self, title, followRedirects=True):
         # Retrieve article text, recursively following #redirects.
-        oldtitle = ""
-
         if title == '':
             return ''
-        
+
+        oldtitle = ""
         while True:
             # Replace underscores with spaces in title.
             title = title.replace("_", " ")
