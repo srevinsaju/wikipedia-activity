@@ -206,6 +206,11 @@ class Parser(object):
         # find the name
         name = Node()
         t.children.append(name)
+
+        # empty blocks are a fact of life
+        if len(children) == 0:
+            return t
+        
         for idx, c in enumerate(children):
             if c==u'|':
                 break
@@ -429,6 +434,9 @@ class Expander(object):
     def getParsedTemplate(self, name):
         if name.startswith("[["):
             return None
+
+        if name == '':
+            return ''
 
         if name.startswith(":"):
             log.info("including article")
