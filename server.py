@@ -436,9 +436,10 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
     def get_wikitext(self, title):
         wikidb = WPWikiDB()
         article_text = wikidb.getRawArticle(title)
-        edited = self.get_editedarticle(title)
-        if edited:
-            article_text = edited
+        if self.editdir:
+            edited = self.get_editedarticle(title)
+            if edited:
+                article_text = edited
             
         # Pass ?override=1 in the url to replace wikitext for testing the renderer.
         if self.params.get('override', 0):
