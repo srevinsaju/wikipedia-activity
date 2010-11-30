@@ -1,12 +1,23 @@
 #!/usr/bin/python
+#
+# Usage:
+#   bzcat es_PE.xml.bz2.processed \ 
+#     | mergeupdates.py /path/to/wikiedits [ /path/to/blacklist ] \
+#     | bzip -c -9 - > new/es_PE.xml.bz2.processed
 
-import sys, re, os
+import sys, re, os, codecs
+reload(sys)
+sys.setdefaultencoding('utf-8')
 
 START_HEADING = chr(1)
 START_TEXT = chr(2)
 END_TEXT = chr(3)
 
 def process_article(title, text):
+    if title.lower() in blacklist:
+        sys.stderr.write('Skipping %s\n' % title)
+        return
+
     fpath = os.path.join(wikidir, title)
     if os.path.exists(fpath):
         sys.stderr.write('Merging %s\n' % fpath)
@@ -27,6 +38,11 @@ wikidir = os.path.join(sys.argv[1], 'wiki')
 if not os.path.exists(wikidir):
     print "Does not exist: " + wikidir
     sys.exit(1)
+
+blacklist = []
+if sys.argv > 2:
+    blacklist = codecs.open(sys.argv[2], mode='r', encoding='utf8').readlines()
+    blacklist = [ i.strip().lower() for i in blacklist]
 
 while True:
     b = sys.stdin.read(1)
