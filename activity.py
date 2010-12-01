@@ -43,7 +43,8 @@ class WikipediaActivity(webactivity.WebActivity):
         os.chdir(os.environ['SUGAR_BUNDLE_PATH'])
         
         server.load_db(WIKIDB)
-        server.run_server(WIKIDB, int(HTTP_PORT))
+        server.run_server({ 'path': WIKIDB,
+                            'port': int(HTTP_PORT) })
 
         handle.uri = 'http://localhost:%s%s' % (HTTP_PORT, HOME_PAGE)
 
