@@ -17,6 +17,9 @@ def process_article(title, text):
     if title.lower() in blacklist:
         sys.stderr.write('Skipping %s\n' % title)
         return
+    if re.match('Wikipedia:', title):
+        sys.stderr.write('Skipping %s\n' % title)
+        return
 
     fpath = os.path.join(wikidir, title)
     if os.path.exists(fpath):

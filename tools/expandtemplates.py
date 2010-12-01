@@ -88,6 +88,7 @@ class WPWikiDB:
             if article_text == None:
                 # something's wrong
                 return None
+            #sys.stderr.write("!!!%s!!!" % article_text)
             article_text = unicode(article_text, 'utf8')
             
             # To see unmodified article_text, uncomment here.
@@ -143,8 +144,8 @@ def load_db(dbname):
 # Cache articles and specially templates
 @lrudecorator(100)
 def wp_load_article(title):
-   #return wp.wp_load_article(title)
-   return wp_load_article_fork(title) 
+   return wp.wp_load_article(title)
+   #return wp_load_article_fork(title) 
 
 # Fork the wp lookup as a subprocess, so it can return None on error
 # wp.wp_load_article() exit(1)s on error .
@@ -186,9 +187,9 @@ index = ArticleIndex('%s.index.txt' % sys.argv[1])
 rawindex = index.rawindex()
 
 wikidb = WPWikiDB()
-rx = re.compile('Plantilla:')
+rx = re.compile('(Plantilla|Template|Wikipedia):')
 
-for title in rawindex:
+for title in rawindex: #['1812 invasion of Russia', '1857 revolt']: #rawindex:
     if rx.match(title):
         continue
     
