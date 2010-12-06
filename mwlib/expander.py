@@ -155,9 +155,6 @@ def optimize(node):
 
     
 class Parser(object):
-    template_ns = set([ ((5, u'Plantilla'), (5, u':')),
-                        ])
-
 
     def __init__(self, txt):
         self.txt = txt
@@ -415,20 +412,17 @@ class ArgumentList(object):
     
             
 class Expander(object):
-    def __init__(self, txt, pagename="", wikidb=None):
+    def __init__(self, txt, pagename="", wikidb=None, templateprefix='Template:', templateblacklist=set(), lang='en'):
         assert wikidb is not None, "must supply wikidb argument in Expander.__init__"
         self.db = wikidb
         self.resolver = magics.MagicResolver(pagename=pagename)
         self.resolver.wikidb = wikidb
-
+        self.templateprefix = templateprefix
+        self.templateblacklist = templateblacklist
+        self.lang = lang
         self.parsed = Parser(txt).parse()
         #show(self.parsed)
         self.parsedTemplateCache = {}
-
-        self.blacklist = set()
-        with open("es_PE/template_blacklist", 'r') as f:
-            for line in f.readlines():
-                self.blacklist.add(line.rstrip().decode('utf8'))
 
     @lrudecorator(100)
     def getParsedTemplate(self, name):
@@ -444,11 +438,11 @@ class Expander(object):
         else:
             if len(name) > 1:
                 name = name[0].capitalize() + name[1:]
-                name = "Plantilla:" + name
+                name = self.templateprefix + name
 
             # Check to see if this is a template in our blacklist --
             # one that we don't want to bother rendering.
-            if name in self.blacklist:
+            if name in self.templateblacklist:
                 log.info("Skipping template " + name.encode('utf8'))
                 raw = None
             else:

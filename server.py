@@ -98,6 +98,11 @@ class ArticleIndex:
 class WPWikiDB:
     """Retrieves article contents for mwlib."""
 
+    def __init__(self, lang, templateprefix, templateblacklist):
+        self.lang = lang
+        self.templateprefix = templateprefix
+        self.templateblacklist = templateblacklist
+    
     def getRawArticle(self, title, followRedirects=True):
         # Retrieve article text, recursively following #redirects.
         if title == '':
@@ -141,7 +146,10 @@ class WPWikiDB:
         return self.getRawArticle(title)
 
     def expandArticle(self, article_text, title):
-        template_expander = expander.Expander(article_text, pagename=title, wikidb=self)
+        template_expander = expander.Expander(article_text, pagename=title,
+                                              wikidb=self, lang=self.lang,
+                                              templateprefix = self.templateprefix,
+                                              templateblacklist = self.templateblacklist)
         return template_expander.expandTemplates()
         
     def getExpandedArticle(self, title):
@@ -149,7 +157,9 @@ class WPWikiDB:
 
 class WPImageDB:
     """Retrieves images for mwlib."""
-    
+    def __init__(self, basepath):
+        self.basepath = basepath
+
     def hashpath(self, name):
         name = name.replace(' ', '_')
         name = name[:1].upper()+name[1:]
@@ -158,14 +168,14 @@ class WPImageDB:
     
     def getPath(self, name, size=None):
         hashed_name = self.hashpath(name).encode('utf8')
-        path = 'es_PE/images/%s' % hashed_name
+        path = self.basepath + '/%s' % hashed_name
         #print "getPath: %s -> %s" % (name.encode('utf8'), path.encode('utf8'))
         return path
 
     def getURL(self, name, size=None):
         hashed_name = self.hashpath(name).encode('utf8')
-        if os.path.exists('es_PE/images/' + hashed_name):
-            url = '/es_PE/images/' + hashed_name
+        if os.path.exists(self.basepath + hashed_name):
+            url = '/' + self.basepath + hashed_name
         else:
             url = 'http://upload.wikimedia.org/wikipedia/commons/' + hashed_name
         #print "getUrl: %s -> %s" % (name.encode('utf8'), url.encode('utf8'))
@@ -213,9 +223,10 @@ class WPMathRenderer:
 class WPHTMLWriter(mwlib.htmlwriter.HTMLWriter):
     """Customizes HTML output from mwlib."""
     
-    def __init__(self, index, wfile, images=None):
+    def __init__(self, index, wfile, images=None, lang='en'):
         self.index = index
         self.gallerylevel = 0
+        self.lang = lang
 
         math_renderer = WPMathRenderer()
         mwlib.htmlwriter.HTMLWriter.__init__(self, wfile, images, math_renderer=math_renderer)
@@ -244,12 +255,12 @@ class WPHTMLWriter(mwlib.htmlwriter.HTMLWriter):
             link_attr = ''
             link_baseurl = '/wiki/'
         else:
-            # No match.  External link.  Use es.wikipedia.org.
-            # FIXME:  Decide between es.w.o and schoolserver.
+            # No match.  External link.  Use {lang}.wikipedia.org.
+            # FIXME:  Decide between {lang}.w.o and schoolserver.
             LinkStats.alltotal += 1
             LinkStats.pagetotal += 1
             link_attr = "class='offsite' "
-            link_baseurl = "http://es.wikipedia.org/wiki/"
+            link_baseurl = 'http://' + self.lang + '.wikipedia.org/wiki/'
 
         parts = article.encode('utf-8').split('#')
         parts[0] = parts[0].replace(" ", "_")
@@ -420,6 +431,14 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
         self.reporturl = False
         self.index = index
         self.port  = conf['port']
+        self.lang  = conf['lang']
+        self.flang = conf['flang']
+        self.templateprefix = conf['templateprefix']
+        self.templateblacklist = set()
+        self.imgbasepath = self.flang + '/images/'
+        self.wpheader = conf['wpheader']
+        self.wpfooter = conf['wpfooter']
+
         if conf.has_key('editdir'):
             self.editdir = conf['editdir']
         else:
@@ -428,14 +447,15 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
             self.giturl = conf['giturl']
         else:
             self.giturl = False
+
+        self.wikidb = WPWikiDB(self.lang, self.templateprefix, self.templateblacklist)
             
         self.client_address = client_address
         SimpleHTTPRequestHandler.__init__(
             self, request, client_address, server)
 
     def get_wikitext(self, title):
-        wikidb = WPWikiDB()
-        article_text = wikidb.getRawArticle(title)
+        article_text = self.wikidb.getRawArticle(title)
         if self.editdir:
             edited = self.get_editedarticle(title)
             if edited:
@@ -450,7 +470,7 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
         # Pass ?noexpand=1 in the url to disable template expansion.
         if not self.params.get('noexpand', 0) \
                and not self.params.get('edit', 0):
-            article_text = wikidb.expandArticle(article_text, title)
+            article_text = self.wikidb.expandArticle(article_text, title)
 
         return article_text
     
@@ -460,8 +480,8 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
         wiki_parsed = parser.Parser(tokens, title).parse()
         wiki_parsed.caption = title
       
-        imagedb = WPImageDB()
-        writer = WPHTMLWriter(self.index, htmlout, images=imagedb)
+        imagedb = WPImageDB(self.flang + '/images/')
+        writer = WPHTMLWriter(self.index, htmlout, images=imagedb, lang=self.lang)
         writer.write(wiki_parsed)
 
     def send_article(self, title):
@@ -477,7 +497,7 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
         if article_text == "":
             self.send_response(301)
             self.send_header("Location", 
-                             "http://es.wikipedia.org/wiki/" + title.encode('utf8'))
+                             'http://' + self.lang + '.wikipedia.org/wiki/' + title.encode('utf8'))
             self.end_headers()
             return
 
@@ -535,9 +555,9 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
             htmlout.write("<h1>")
             htmlout.write(title)
             htmlout.write(' <font size="1">&middot; <a class="offsite" ')
-            htmlout.write('href="http://es.wikipedia.org/wiki/')
+            htmlout.write('href="http://'+self.lang+'.wikipedia.org/wiki/')
             htmlout.write(title)
-            htmlout.write('">De Wikipedia, la enciclopedia libre</a> ')
+            htmlout.write('">'+ self.wpheader + '</a> ')
 
             if self.reporturl:
                 # Report rendering problem.
@@ -572,7 +592,7 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
  
             self.write_wiki_html(htmlout, title, article_text)
 
-            htmlout.write('<center>Contenido disponible bajo los términos de la <a href="/static/es-gfdl.html">Licencia de documentación libre de GNU</a>. <br/> Wikipedia es una marca registrada de la organización sin ánimo de lucro Wikimedia Foundation, Inc.<br/><a href="/static/acerca.html">Acerca de Wikipedia</a> </center>')
+            htmlout.write('<center>' + self.wpfooter + '</center>')
             htmlout.write("</body>")
             htmlout.write("</html>")
 
@@ -653,8 +673,7 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
         return fpath
 
     def _saveorig(self, title):
-        wikidb = WPWikiDB()
-        article_text = wikidb.getRawArticle(title)
+        article_text = self.wikidb.getRawArticle(title)
         fpath = self.getfpath('wiki.orig', title)
         fh = codecs.open(fpath, 'w', encoding='utf-8')
         fh.write(article_text)
@@ -696,7 +715,7 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
         self.wfile.write("</body></html>")
 
     def send_image(self, path):
-        if os.path.exists('es_PE/images/' + path.encode('utf8')):
+        if os.path.exists(self.imgbasepath + path.encode('utf8')):
             # If image exists locally, serve it as normal.
             SimpleHTTPRequestHandler.do_GET(self)
         else:
@@ -792,7 +811,28 @@ def run_server(confvars):
         except:
             print "Error setting up directories:"
             print "%s must be a writable directory" % confvars['editdir']
-            
+
+    blacklistpath = os.path.join(os.path.dirname(confvars['path']),
+                               'template_blacklist')
+    blacklist = set()
+    if os.path.exists(blacklistpath):
+        with open(blacklistpath, 'r') as f:
+            for line in f.readlines():
+                blacklist.add(line.rstrip().decode('utf8'))
+    confvars['templateblacklist'] = blacklist
+    confvars['lang'] = os.path.basename(confvars['path'])[0:2]
+    confvars['flang'] = os.path.basename(confvars['path'])[0:5]
+    ## FIXME GETTEXT
+    templateprefixes = { 'en': 'Template:',
+                         'es': 'Plantilla:' }
+    wpheader = {'en': 'From Wikipedia, The Free Encyclopedia',
+                'es': 'De Wikipedia, la enciclopedia libre'}
+    wpfooter = {'en': 'Content available under the <a href="/static/es-gfdl.html">GNU Free Documentation License</a>. <br/> Wikipedia is a registered trademark of the non-profit Wikimedia Foundation, Inc. ',
+                'es': 'Contenido disponible bajo los términos de la <a href="/static/es-gfdl.html">Licencia de documentación libre de GNU</a>. <br/> Wikipedia es una marca registrada de la organización sin ánimo de lucro Wikimedia Foundation, Inc.<br/><a href="/static/acerca.html">Acerca de Wikipedia</a>'}
+
+    confvars['templateprefix'] = templateprefixes[ confvars['lang'] ]
+    confvars['wpheader'] = wpheader[ confvars['lang'] ]
+    confvars['wpfooter'] = wpfooter[ confvars['lang'] ]
     httpd = MyHTTPServer(('', confvars['port']),
         lambda *args: WikiRequestHandler(index, confvars, *args))
 
