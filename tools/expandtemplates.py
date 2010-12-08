@@ -68,6 +68,11 @@ class ArticleIndex:
 class WPWikiDB:
     """Retrieves article contents for mwlib."""
 
+    def __init__(self, lang, templateprefix, templateblacklist):
+        self.lang = lang
+        self.templateprefix = templateprefix
+        self.templateblacklist = templateblacklist
+    
     def getRawArticle(self, title, followRedirects=True):
         # Retrieve article text, recursively following #redirects.
         if title == '':
@@ -113,7 +118,10 @@ class WPWikiDB:
         return self.getRawArticle(title)
 
     def expandArticle(self, article_text, title):
-        template_expander = expander.Expander(article_text, pagename=title, wikidb=self)
+        template_expander = expander.Expander(article_text, pagename=title,
+                                              wikidb=self, lang=self.lang,
+                                              templateprefix = self.templateprefix,
+                                              templateblacklist = self.templateblacklist)
         return template_expander.expandTemplates()
         
     def getExpandedArticle(self, title):
@@ -178,19 +186,33 @@ def wp_load_article_fork(title):
 
 # __main__
 
-# prep a isting of redirects. wp.so hides them from
-# us, which would bloat our
-
-load_db(sys.argv[1])
+path = sys.argv[1]
+load_db(path)
 index = ArticleIndex('%s.index.txt' % sys.argv[1])
 
 rawindex = index.rawindex()
 
-wikidb = WPWikiDB()
-rx = re.compile('(Plantilla|Template|Wikipedia):')
+lang = os.path.basename(path)[0:2]
+## FIXME GETTEXT
+templateprefixes = { 'en': 'Template:',
+                     'es': 'Plantilla:' }
+templateprefix = templateprefixes[ lang ]
 
-for title in rawindex: #['1812 invasion of Russia', '1857 revolt']: #rawindex:
+# load blacklist only once
+templateblacklist = set()
+templateblacklistpath = os.path.join(os.path.dirname(path),
+                                     'template_blacklist')
+if os.path.exists(templateblacklistpath):
+    with open(templateblacklistpath, 'r') as f:
+        for line in f.readlines():
+            templateblacklist.add(line.rstrip().decode('utf8'))
+
+wikidb = WPWikiDB(lang, templateprefix, templateblacklist)
+rx = re.compile('('+templateprefix+'|Wikipedia:)')
+
+for title in rawindex: #['1812 invasion of Russia', '1857 revolt']:
     if rx.match(title):
+        sys.stderr.write('SKIPPING: ' + title + "\n")
         continue
     
     sys.stderr.write('PROCESSING: ' + title + "\n")
