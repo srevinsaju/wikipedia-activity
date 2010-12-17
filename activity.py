@@ -30,7 +30,6 @@ import webactivity
 from searchtoolbar import SearchToolbar
 
 # Default settings.
-HTTP_PORT = '8000'
 WIKIDB = 'es_PE/es_PE.xml.bz2'
 HOME_PAGE = '/static/'
 
@@ -41,12 +40,13 @@ class WikipediaActivity(webactivity.WebActivity):
         print "Starting server...\n"
         
         os.chdir(os.environ['SUGAR_BUNDLE_PATH'])
-        
+
+        self.HTTP_PORT = '8000'
         server.load_db(WIKIDB)
         server.run_server({ 'path': WIKIDB,
-                            'port': int(HTTP_PORT) })
+                            'port': int(self.HTTP_PORT) })
 
-        handle.uri = 'http://localhost:%s%s' % (HTTP_PORT, HOME_PAGE)
+        handle.uri = 'http://localhost:%s%s' % (self.HTTP_PORT, HOME_PAGE)
 
         webactivity.WebActivity.__init__(self, handle)
 

@@ -22,14 +22,6 @@ from sugar.graphics.toolbutton import ToolButton
 from sugar.graphics.toolcombobox import ToolComboBox
 from sugar._sugarext import AddressEntry
 
-default_search_providers = {
-    'schoolserver': {
-        'order': 3,
-        'name':  _('Wiki'),
-        'url':   'http://localhost:8000/search?q=%s',
-        'icon':  'zoom-home'
-    },
-}
 
 class SearchToolbar(gtk.Toolbar):
     def __init__(self, activity):
@@ -43,6 +35,15 @@ class SearchToolbar(gtk.Toolbar):
 
         self.insert(self._providercombo, -1)
         self._providercombo.show()
+
+        default_search_providers = {
+            'schoolserver': {
+                'order': 3,
+                'name':  _('Wiki'),
+                'url':   'http://localhost:'+ self._activity.HTTP_PORT + '/search?q=%s',
+                'icon':  'zoom-home'
+            },
+        }
 
         self.set_providers(default_search_providers)
         
