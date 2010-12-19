@@ -68,3 +68,7 @@ class WikipediaActivity(webactivity.WebActivity):
         # WTB: Hacked to use hardcoded Spanish localization for WikiBrowse release.
         self.toolbox.add_toolbar('Buscar', self.searchtoolbar)
         self.searchtoolbar.show()
+
+    def _load_homepage(self):
+        home_url = 'http://localhost:%s%s' % (self.HTTP_PORT, HOME_PAGE)
+        self._browser.load_uri(home_url)
