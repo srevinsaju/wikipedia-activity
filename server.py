@@ -438,6 +438,7 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
         self.imgbasepath = self.flang + '/images/'
         self.wpheader = conf['wpheader']
         self.wpfooter = conf['wpfooter']
+        self.resultstitle = conf['resultstitle']
 
         if conf.has_key('editdir'):
             self.editdir = conf['editdir']
@@ -691,7 +692,9 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
         self.send_header("Content-Type", "text/html; charset=utf-8")
         self.end_headers()
 
-        self.wfile.write("<html><head><title>Resultados de la búsqueda sobre '%s'</title></head>" % title.encode('utf8'))
+        self.wfile.write("<html><head><title>" 
+                         + ( self.resultstitle % title.encode('utf8') )
+                         + "</title></head>")
 
         self.wfile.write("<style type='text/css' media='screen, projection'>"\
                          "@import '/static/monobook.css';</style>")
@@ -700,13 +703,15 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
 
         self.wfile.write("<body>")
         
-        self.wfile.write("<h1>Resultados de la búsqueda sobre '%s'.</h1>" % title.encode('utf8'))
+        self.wfile.write("<h1>" 
+                         + ( self.resultstitle % title.encode('utf8') ) 
+                         + "</h1>")
         self.wfile.write("<ul>")
 
         num_results = wp.wp_search(title.encode('utf8'))
         for i in xrange(0, num_results):
             result = unicode(wp.wp_result(i), 'utf8')
-            if not result.startswith("Plantilla:"):
+            if not result.startswith(self.templateprefix):
                 self.wfile.write('<li><a href="/wiki/%s">%s</a></li>' %
                                 (result.encode('utf8'), result.encode('utf8')))
 
@@ -830,10 +835,14 @@ def run_server(confvars):
                 'es': 'De Wikipedia, la enciclopedia libre'}
     wpfooter = {'en': 'Content available under the <a href="/static/es-gfdl.html">GNU Free Documentation License</a>. <br/> Wikipedia is a registered trademark of the non-profit Wikimedia Foundation, Inc. ',
                 'es': 'Contenido disponible bajo los términos de la <a href="/static/es-gfdl.html">Licencia de documentación libre de GNU</a>. <br/> Wikipedia es una marca registrada de la organización sin ánimo de lucro Wikimedia Foundation, Inc.<br/><a href="/static/acerca.html">Acerca de Wikipedia</a>'}
+    resultstitle = { 'en': "Search results for '%s'.",
+                     'es': "Resultados de la búsqueda sobre '%s'."
+        }
 
     confvars['templateprefix'] = templateprefixes[ confvars['lang'] ]
     confvars['wpheader'] = wpheader[ confvars['lang'] ]
     confvars['wpfooter'] = wpfooter[ confvars['lang'] ]
+    confvars['resultstitle'] = resultstitle[confvars['lang']]
     httpd = MyHTTPServer(('', confvars['port']),
         lambda *args: WikiRequestHandler(index, confvars, *args))
 
