@@ -7,6 +7,16 @@ cd c
 make
 cd ..
 
+If configure or make errors out complaining about missing files (install-sh,
+install, depcomp) you may need to run automake --add-missing . 
+
+==Updating _wp.so==
+
+cd py
+python ./setup.py build
+cp  build/path/to/_wp.so ../../
+
+
 Get a Wikipedia XML dump (e.g. enwiki-20071018-pages-articles.xml.bz2), and 
 place it in root (wp) directory.
 
