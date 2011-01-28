@@ -35,20 +35,24 @@ import errno
 import urllib
 import tempfile
 import re
-import wp
 import xml.dom.minidom
 from pylru import lrudecorator
-
-# Uncomment to print out a large dump from the template expander.
-#os.environ['DEBUG_EXPANDER'] = '1'
-
 try:
     from hashlib import md5
 except ImportError:
     from md5 import md5
 
-import mwlib.htmlwriter
-from mwlib import parser, scanner, expander
+## libs we ship
+sys.path.append('./mwlib')
+import wp
+import mwlib.xhtmlwriter as htmlwriter 
+import mwlib
+from mwlib import utoken
+from mwlib import expander
+
+# Uncomment to print out a large dump from the template expander.
+#os.environ['DEBUG_EXPANDER'] = '1'
+
 
 class MyHTTPServer(BaseHTTPServer.HTTPServer):
     def serve_forever(self, poll_interval=0.5):
@@ -147,13 +151,28 @@ class WPWikiDB:
 
     def expandArticle(self, article_text, title):
         template_expander = expander.Expander(article_text, pagename=title,
-                                              wikidb=self, lang=self.lang,
-                                              templateprefix = self.templateprefix,
-                                              templateblacklist = self.templateblacklist)
+                                              wikidb=self)
+# ,
+#                                              #lang=self.lang,
+#                                              templateprefix = self.templateprefix,
+#                                              templateblacklist = self.templateblacklist)
         return template_expander.expandTemplates()
-        
+
+    def normalize_and_get_page(self, name, ns):
+        print name
+        print ns
+        return page(rawtext=self.getRawArticle(name), name=name)
+
     def getExpandedArticle(self, title):
         return self.expandArticle(self.getRawArticle(title), title)
+
+    def get_siteinfo():
+        #from mwlib.siteinfo import get_siteinfo
+        return mwlib.siteinfo.get_siteinfo('es')
+
+class page(object):
+    def __init__(self,  **kw):
+        self.__dict__.update(**kw)
 
 class WPImageDB:
     """Retrieves images for mwlib."""
@@ -220,7 +239,7 @@ class WPMathRenderer:
         # Straight embedding.  Requires parent document to be XHTML.
         return mathml
             
-class WPHTMLWriter(mwlib.htmlwriter.HTMLWriter):
+class WPHTMLWriter(mwlib.xhtmlwriter.MWXHTMLWriter):
     """Customizes HTML output from mwlib."""
     
     def __init__(self, index, wfile, images=None, lang='en'):
@@ -476,9 +495,9 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
         return article_text
     
     def write_wiki_html(self, htmlout, title, article_text):
-        tokens = scanner.tokenize(article_text, title)
+        tokens = utoken.tokenize(article_text, title)
 
-        wiki_parsed = parser.Parser(tokens, title).parse()
+        wiki_parsed = mwlib.templ.parser.Parser(tokens, title).parse()
         wiki_parsed.caption = title
       
         imagedb = WPImageDB(self.flang + '/images/')
