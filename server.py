@@ -51,8 +51,8 @@ _root_path = os.path.dirname(__file__)
 # linux32_27" for Linux 32bits Python 2.7
 platform = "%s%s_%s%s" % (platform.system().lower(),
                           platform.architecture()[0][0:2],
-                          sys.version_info.major,
-                          sys.version_info.minor)
+                          sys.version_info[0], # major
+                          sys.version_info[1]) # minor
 
 sys.path.append(os.path.join(_root_path, 'binarylibs', platform))
 
