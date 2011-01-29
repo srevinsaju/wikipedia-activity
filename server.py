@@ -21,9 +21,11 @@
 #
 # Usage: server.py <dbfile> <port>
 #
+## Standard libs
 from __future__ import with_statement
 import sys
 import os
+import platform
 import subprocess
 import select
 import codecs
@@ -35,20 +37,34 @@ import errno
 import urllib
 import tempfile
 import re
-import wp
 import xml.dom.minidom
-from pylru import lrudecorator
-
-# Uncomment to print out a large dump from the template expander.
-#os.environ['DEBUG_EXPANDER'] = '1'
-
 try:
     from hashlib import md5
 except ImportError:
     from md5 import md5
 
+##
+## Libs we ship -- add lib path for
+## shared objects
+##
+_root_path = os.path.dirname(__file__)
+# linux32_27" for Linux 32bits Python 2.7
+platform = "%s%s_%s%s" % (platform.system().lower(),
+                          platform.architecture()[0][0:2],
+                          sys.version_info.major,
+                          sys.version_info.minor)
+
+sys.path.append(os.path.join(_root_path, 'binarylibs', platform))
+
+import wp
+from pylru import lrudecorator
 import mwlib.htmlwriter
 from mwlib import parser, scanner, expander
+
+# Uncomment to print out a large dump from the template expander.
+#os.environ['DEBUG_EXPANDER'] = '1'
+
+
 
 class MyHTTPServer(BaseHTTPServer.HTTPServer):
     def serve_forever(self, poll_interval=0.5):
