@@ -69,6 +69,14 @@ class WikipediaActivity(webactivity.WebActivity):
         self.toolbox.add_toolbar('Buscar', self.searchtoolbar)
         self.searchtoolbar.show()
 
+    def _get_browser(self):
+        if hasattr(self, '_browser') and callable(self._browser):
+            # Browse < 109
+            return self._browser
+        else:
+            return self._tabbed_view.props.current_browser
+
     def _load_homepage(self):
         home_url = 'http://localhost:%s%s' % (self.HTTP_PORT, HOME_PAGE)
-        self._browser.load_uri(home_url)
+        browser = self._get_browser()
+        browser.load_uri(home_uri)

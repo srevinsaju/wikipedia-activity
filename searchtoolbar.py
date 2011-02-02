@@ -29,8 +29,6 @@ class SearchToolbar(gtk.Toolbar):
 
         self._activity = activity        
 
-        self._browser = self._activity._browser
-
         self._providercombo = ToolComboBox()
 
         self.insert(self._providercombo, -1)
@@ -62,8 +60,9 @@ class SearchToolbar(gtk.Toolbar):
         k = self._providercombo.combo.get_active_item()[0]
         p = self._providers[k]
         
-        self._browser.load_uri(p['url'] % entry.props.text)
-        self._browser.grab_focus()
+        browser = self._activity._get_browser()
+        browser.load_uri(p['url'] % entry.props.text)
+        browser.grab_focus()
         
         self._activity.toolbox.current_toolbar = 1
 
