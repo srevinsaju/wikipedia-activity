@@ -20,6 +20,12 @@ import os
 import sys
 import server
 
+OLD_TOOLBAR = False
+try:
+    from sugar.graphics.toolbarbox import ToolbarBox, ToolbarButton
+except ImportError:
+    OLD_TOOLBAR = True
+
 #from sugar.activity import registry
 #activity_info = registry.get_registry().get_activity('org.laptop.WebActivity')
 
@@ -66,7 +72,16 @@ class WikipediaActivity(webactivity.WebActivity):
 
         self.searchtoolbar = SearchToolbar(self)
         # WTB: Hacked to use hardcoded Spanish localization for WikiBrowse release.
-        self.toolbox.add_toolbar('Buscar', self.searchtoolbar)
+        if OLD_TOOLBAR:
+            self.toolbox.add_toolbar('Buscar', self.searchtoolbar)
+        else:
+            search_toolbar_button = ToolbarButton()
+            search_toolbar_button.set_page(self.searchtoolbar)
+            search_toolbar_button.props.icon_name = 'search'
+            search_toolbar_button.props.label = _('Search')
+            self.get_toolbar_box().toolbar.insert(search_toolbar_button, 1)
+            search_toolbar_button.show()
+
         self.searchtoolbar.show()
 
     def _get_browser(self):
