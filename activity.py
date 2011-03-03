@@ -30,7 +30,13 @@ except ImportError:
 #activity_info = registry.get_registry().get_activity('org.laptop.WebActivity')
 
 #sys.path.append(activity_info.path)
-sys.path.append("/home/olpc/Activities/Browse.activity")
+if os.path.exists('../Browse.activity'):
+    sys.path.append('../Browse.activity')
+elif os.path.exists('/usr/share/sugar/activities/Browse.activity'):
+    sys.path.append('/usr/share/sugar/activities/Browse.activity')
+else:
+    print 'This activity need a Browser activity installed to run'
+
 import webactivity
 
 from searchtoolbar import SearchToolbar
