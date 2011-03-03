@@ -94,4 +94,4 @@ class WikipediaActivity(webactivity.WebActivity):
     def _load_homepage(self):
         home_url = 'http://localhost:%s%s' % (self.HTTP_PORT, HOME_PAGE)
         browser = self._get_browser()
-        browser.load_uri(home_uri)
+        browser.load_uri(home_url)
