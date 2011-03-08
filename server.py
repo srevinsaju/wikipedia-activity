@@ -809,6 +809,7 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
         self.end_headers()
 
 def load_db(dbname):
+    dbname = os.path.join(os.environ['SUGAR_BUNDLE_PATH'], dbname)
     wp.wp_load_dump(
         dbname + '.processed',
         dbname + '.locate.db',
@@ -849,8 +850,8 @@ def run_server(confvars):
                          'es': 'Plantilla:' }
     wpheader = {'en': 'From Wikipedia, The Free Encyclopedia',
                 'es': 'De Wikipedia, la enciclopedia libre'}
-    wpfooter = {'en': 'Content available under the <a href="/static/es-gfdl.html">GNU Free Documentation License</a>. <br/> Wikipedia is a registered trademark of the non-profit Wikimedia Foundation, Inc. ',
-                'es': 'Contenido disponible bajo los términos de la <a href="/static/es-gfdl.html">Licencia de documentación libre de GNU</a>. <br/> Wikipedia es una marca registrada de la organización sin ánimo de lucro Wikimedia Foundation, Inc.<br/><a href="/static/acerca.html">Acerca de Wikipedia</a>'}
+    wpfooter = {'en': 'Content available under the <a href="/static/es-gfdl.html">GNU Free Documentation License</a>. <br/> Wikipedia is a registered trademark of the non-profit Wikimedia Foundation, Inc.<br/><a href="/static/about_en.html">About Wikipedia</a>',
+                'es': 'Contenido disponible bajo los términos de la <a href="/static/es-gfdl.html">Licencia de documentación libre de GNU</a>. <br/> Wikipedia es una marca registrada de la organización sin ánimo de lucro Wikimedia Foundation, Inc.<br/><a href="/static/about_es.html">Acerca de Wikipedia</a>'}
     resultstitle = { 'en': "Search results for '%s'.",
                      'es': "Resultados de la búsqueda sobre '%s'."
         }

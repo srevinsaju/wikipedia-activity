@@ -19,6 +19,7 @@ from gettext import gettext as _
 import os
 import sys
 import server
+import logging
 
 OLD_TOOLBAR = False
 try:
@@ -41,24 +42,21 @@ import webactivity
 
 from searchtoolbar import SearchToolbar
 
-# Default settings.
-WIKIDB = 'es_PE/es_PE.xml.bz2'
-HOME_PAGE = '/static/'
 
 # Activity class, extends WebActivity.
 class WikipediaActivity(webactivity.WebActivity):
     def __init__(self, handle):
-        
-        print "Starting server...\n"
-        
+
+        logging.error("Starting server database: %s port: %s" %
+                (self.WIKIDB, self.HTTP_PORT))
+
         os.chdir(os.environ['SUGAR_BUNDLE_PATH'])
 
-        self.HTTP_PORT = '8000'
-        server.load_db(WIKIDB)
-        server.run_server({ 'path': WIKIDB,
-                            'port': int(self.HTTP_PORT) })
+        server.load_db(self.WIKIDB)
+        server.run_server({'path': self.WIKIDB,
+                           'port': int(self.HTTP_PORT)})
 
-        handle.uri = 'http://localhost:%s%s' % (self.HTTP_PORT, HOME_PAGE)
+        handle.uri = 'http://localhost:%s%s' % (self.HTTP_PORT, self.HOME_PAGE)
 
         webactivity.WebActivity.__init__(self, handle)
 
@@ -77,9 +75,8 @@ class WikipediaActivity(webactivity.WebActivity):
         io_service.manageOfflineStatus = False
 
         self.searchtoolbar = SearchToolbar(self)
-        # WTB: Hacked to use hardcoded Spanish localization for WikiBrowse release.
         if OLD_TOOLBAR:
-            self.toolbox.add_toolbar('Buscar', self.searchtoolbar)
+            self.toolbox.add_toolbar(_('Search'), self.searchtoolbar)
         else:
             search_toolbar_button = ToolbarButton()
             search_toolbar_button.set_page(self.searchtoolbar)
@@ -98,6 +95,6 @@ class WikipediaActivity(webactivity.WebActivity):
             return self._tabbed_view.props.current_browser
 
     def _load_homepage(self):
-        home_url = 'http://localhost:%s%s' % (self.HTTP_PORT, HOME_PAGE)
+        home_url = 'http://localhost:%s%s' % (self.HTTP_PORT, self.HOME_PAGE)
         browser = self._get_browser()
         browser.load_uri(home_url)
