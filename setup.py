@@ -24,6 +24,7 @@ import urllib2
 import subprocess
 import zipfile
 import ConfigParser
+import codecs
 
 
 def download_file(url):
@@ -92,9 +93,18 @@ if sys.argv[1] == 'prepare':
             print "MD5 Ok"
             # Unzip data files
             zf = zipfile.ZipFile(local_data_file_name, 'r')
-            zf.extractall('.')
             list_data_files = zf.namelist()
+            root_data_directory = list_data_files[0]
+            # Create temporary directory
+            tmp_directory = 'TMP'
+            if not os.path.exists(tmp_directory):
+                os.mkdir(tmp_directory)
+            zf.extractall(tmp_directory)
             zf.close()
+            if os.path.exists(root_data_directory):
+                shutil.rmtree(root_data_directory)
+            shutil.move(tmp_directory + '/' + root_data_directory, root_data_directory)
+            shutil.rmtree(tmp_directory)
             # Create flag file
             flag_file = open(flag_file_name, 'w')
             flag_file.write(last_version)
@@ -108,12 +118,13 @@ if sys.argv[1] == 'prepare':
             # Create MANIFEST
             print "Create MANIFEST"
             list_git_files = subprocess.check_output(['git', 'ls-files'])
-            manifest_file = open('MANIFEST', 'w')
+            manifest_file = codecs.open('MANIFEST', 'w', encoding='utf-8')
             manifest_file.write('activity/activity.info\n')
             for name_file in list_git_files:
                 manifest_file.write(name_file)
             for name_file in list_data_files:
-                manifest_file.write(name_file + '\n')
+                if not os.path.isdir(name_file):
+                    manifest_file.write(name_file + '\n')
             manifest_file.close()
 
             prepare_ok = True
