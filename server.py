@@ -809,7 +809,8 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
         self.end_headers()
 
 def load_db(dbname):
-    dbname = os.path.join(os.environ['SUGAR_BUNDLE_PATH'], dbname)
+    if os.environ.has_key('SUGAR_BUNDLE_PATH'):
+        dbname = os.path.join(os.environ['SUGAR_BUNDLE_PATH'], dbname)
     wp.wp_load_dump(
         dbname + '.processed',
         dbname + '.locate.db',
