@@ -88,7 +88,7 @@ class WikipediaActivity(webactivity.WebActivity):
         self.searchtoolbar.show()
 
     def _get_browser(self):
-        if hasattr(self, '_browser') and callable(self._browser):
+        if hasattr(self, '_browser'):
             # Browse < 109
             return self._browser
         else:
