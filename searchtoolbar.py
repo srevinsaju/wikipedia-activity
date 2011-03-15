@@ -63,8 +63,6 @@ class SearchToolbar(gtk.Toolbar):
         browser = self._activity._get_browser()
         browser.load_uri(p['url'] % entry.props.text)
         browser.grab_focus()
-        
-        self._activity.toolbox.current_toolbar = 1
 
     def _cmp_provider_order(self, a, b):
         return self._providers[a]['order'] - self._providers[b]['order']
