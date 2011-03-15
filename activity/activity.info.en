@@ -1,6 +1,6 @@
 [Activity]
 name = WikipediaEN
-activity_version = 25
+activity_version = 26
 bundle_id = org.laptop.WikipediaActivityEN
 icon = activity-wikipedia-en
 exec = sugar-activity activity_en.WikipediaActivityEN
