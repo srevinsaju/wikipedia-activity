@@ -80,7 +80,7 @@ class WikipediaActivity(webactivity.WebActivity):
         else:
             search_toolbar_button = ToolbarButton()
             search_toolbar_button.set_page(self.searchtoolbar)
-            search_toolbar_button.props.icon_name = 'search'
+            search_toolbar_button.props.icon_name = 'search-wiki'
             search_toolbar_button.props.label = _('Search')
             self.get_toolbar_box().toolbar.insert(search_toolbar_button, 1)
             search_toolbar_button.show()
