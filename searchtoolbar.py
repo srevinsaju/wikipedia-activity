@@ -20,7 +20,6 @@ import gtk
 
 from sugar.graphics.toolbutton import ToolButton
 from sugar.graphics.toolcombobox import ToolComboBox
-from sugar._sugarext import AddressEntry
 
 
 class SearchToolbar(gtk.Toolbar):
