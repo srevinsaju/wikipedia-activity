@@ -49,12 +49,16 @@ except ImportError:
 ##
 _root_path = os.path.dirname(__file__)
 # linux32_27" for Linux 32bits Python 2.7
-platform = "%s%s_%s%s" % (platform.system().lower(),
-                          platform.architecture()[0][0:2],
+system_id = "%s%s" % (platform.system().lower(),
+                          platform.architecture()[0][0:2])
+if platform.processor().startswith('arm'):
+    system_id = platform.processor()
+
+platform_dir = "%s_%s%s" % (system_id,
                           sys.version_info[0], # major
                           sys.version_info[1]) # minor
 
-sys.path.append(os.path.join(_root_path, 'binarylibs', platform))
+sys.path.append(os.path.join(_root_path, 'binarylibs', platform_dir))
 
 import wp
 from pylru import lrudecorator
@@ -214,7 +218,12 @@ class HTMLOutputBuffer:
 
 class WPMathRenderer:
     def render(self, latex):
-        process = subprocess.Popen(('bin/blahtex', '--mathml', '--texvc-compatible-commands'), stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        bin_dir = 'bin'
+        if platform.processor().startswith('arm'):
+            bin_dir = 'bin/arm'
+        process = subprocess.Popen(('%s/blahtex' % bin_dir, '--mathml',
+            '--texvc-compatible-commands'), stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE)
 
         (mathml, err) = process.communicate(latex.encode('utf8'))
         if process.returncode is not 0:
@@ -616,7 +625,15 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
             html = htmlout.getvalue()
 
             # Fix any non-XHTML tags using tidy.
-            process = subprocess.Popen(('bin/tidy', '-q', '-config', 'bin/tidy.conf', '-numeric', '-utf8', '-asxhtml'), stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+            if platform.processor().startswith('arm'):
+                process = subprocess.Popen(('bin/arm/tidy', '-q', '-config',
+                    'bin/tidy.conf', '-numeric', '-utf8', '-asxhtml'),
+                    stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                    env={"LD_LIBRARY_PATH":"bin/arm/"})
+            else:
+                process = subprocess.Popen(('bin/tidy', '-q', '-config',
+                    'bin/tidy.conf', '-numeric', '-utf8', '-asxhtml'),
+                    stdin=subprocess.PIPE, stdout=subprocess.PIPE)
             (xhtml, err) = process.communicate(html)
             if len(xhtml):
                 html = xhtml
