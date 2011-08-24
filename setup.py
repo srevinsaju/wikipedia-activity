@@ -43,6 +43,10 @@ def download_file(url):
     local_file.close()
     return local_file_name
 
+if len(sys.argv) == 1:
+    print "Use ./setup prepare lang"
+    exit()
+
 prepare_ok = True
 if sys.argv[1] == 'prepare':
     if len(sys.argv) < 3:
