@@ -218,12 +218,15 @@ class HTMLOutputBuffer:
 
 class WPMathRenderer:
     def render(self, latex):
-        bin_dir = 'bin'
         if platform.processor().startswith('arm'):
-            bin_dir = 'bin/arm'
-        process = subprocess.Popen(('%s/blahtex' % bin_dir, '--mathml',
-            '--texvc-compatible-commands'), stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE)
+            process = subprocess.Popen(('bin/arm/blahtex', '--mathml',
+                '--texvc-compatible-commands'), stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                env={"LD_LIBRARY_PATH":"bin/arm/"})
+        else:
+            process = subprocess.Popen(('bin/blahtex', '--mathml',
+                '--texvc-compatible-commands'), stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE)
 
         (mathml, err) = process.communicate(latex.encode('utf8'))
         if process.returncode is not 0:
