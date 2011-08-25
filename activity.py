@@ -84,6 +84,8 @@ class WikipediaActivity(webactivity.WebActivity):
             search_toolbar_button.props.label = _('Search')
             self.get_toolbar_box().toolbar.insert(search_toolbar_button, 1)
             search_toolbar_button.show()
+            # Hide add-tabs button
+            self._primary_toolbar._add_tab.hide()
 
         self.searchtoolbar.show()
 
