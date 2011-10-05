@@ -97,7 +97,7 @@ class WikipediaActivity(webactivity.WebActivity):
         else:
             return self._tabbed_view.props.current_browser
 
-    def _load_homepage(self):
+    def _go_home_button_cb(self, button):
         home_url = 'http://localhost:%s%s' % (self.HTTP_PORT, self.HOME_PAGE)
         browser = self._get_browser()
         browser.load_uri(home_url)
