@@ -197,7 +197,11 @@ class WPImageDB:
         if os.path.exists(self.basepath + hashed_name):
             url = '/' + self.basepath + hashed_name
         else:
-            url = 'http://upload.wikimedia.org/wikipedia/commons/' + hashed_name
+            if size is None:
+                url = 'http://upload.wikimedia.org/wikipedia/commons/' + hashed_name
+            else:
+                url = 'http://upload.wikimedia.org/wikipedia/commons/thumb/' + \
+                        hashed_name + '/300px-' + name.replace(' ','_')
         #print "getUrl: %s -> %s" % (name.encode('utf8'), url.encode('utf8'))
         return url
 
@@ -311,14 +315,23 @@ class WPHTMLWriter(mwlib.htmlwriter.HTMLWriter):
         width = obj.width
         height = obj.height
 
-        if width and height:
-            path = self.images.getPath(obj.target, size=max(width, height))
-            url = self.images.getURL(obj.target, size=max(width, height))
+        is_svg = re.match(r'.*\.svg$', obj.target, re.IGNORECASE)
+
+        if ((width and height) or obj.thumb or obj.frame) and not is_svg:
+            max_length = max(width, height)
+            if obj.thumb:
+                max_length = 180
+            if self.gallerylevel > 0:
+                max_length = 120
+            path = self.images.getPath(obj.target, size=max_length)
+            url_thumb = self.images.getURL(obj.target, size=max_length)
+            url = self.images.getURL(obj.target)
         else:
             path = self.images.getPath(obj.target)
-            url = self.images.getURL(obj.target)
+            url_thumb = self.images.getURL(obj.target)
+            url = url_thumb
             
-        if url is None:
+        if url_thumb is None:
             return
 
         # The following HTML generation code is copied closely from InstaView, which seems to 
@@ -333,7 +346,7 @@ class WPHTMLWriter(mwlib.htmlwriter.HTMLWriter):
             caption = obj.caption
             
             # SVG images must be included using <object data=''> rather than <img src=''>.
-            if re.match(r'.*\.svg$', url, re.IGNORECASE):
+            if re.match(r'.*\.svg$', url_thumb, re.IGNORECASE):
                 tag = 'object'
                 ref = 'data'
             else:
@@ -352,7 +365,8 @@ class WPHTMLWriter(mwlib.htmlwriter.HTMLWriter):
                 attr += 'width="%d" ' % width
             
             img = '<%(tag)s %(ref)s="%(url)s" longdesc="%(caption)s" %(attr)s></%(tag)s>' % \
-               {'tag':tag, 'ref':ref, 'url':url, 'caption':caption, 'attr':attr}
+               {'tag':tag, 'ref':ref, 'url':url_thumb, 'caption':caption,
+                'attr':attr}
             
             center = False
             if align == 'center':
@@ -422,7 +436,7 @@ class WPHTMLWriter(mwlib.htmlwriter.HTMLWriter):
 
             self.imglevel -= 1
         else:
-            self.out.write('<a href="%s">' % url.encode('utf8'))
+            self.out.write('<a href="%s">' % url_thumb.encode('utf8'))
             
             for x in obj.children:
                 self.write(x)
