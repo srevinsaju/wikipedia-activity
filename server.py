@@ -316,8 +316,9 @@ class WPHTMLWriter(mwlib.htmlwriter.HTMLWriter):
         height = obj.height
 
         is_svg = re.match(r'.*\.svg$', obj.target, re.IGNORECASE)
+        is_thumb = obj.thumb or obj.frame or (self.gallerylevel > 0)
 
-        if ((width and height) or obj.thumb or obj.frame) and not is_svg:
+        if not is_svg and ((width and height) or is_thumb):
             max_length = max(width, height)
             if obj.thumb:
                 max_length = 180
