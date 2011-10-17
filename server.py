@@ -200,8 +200,8 @@ class WPImageDB:
             if size is None:
                 url = 'http://upload.wikimedia.org/wikipedia/commons/' + hashed_name
             else:
-                url = 'http://upload.wikimedia.org/wikipedia/commons/thumb/' + \
-                        hashed_name + '/300px-' + name.replace(' ','_')
+                url = 'http://upload.wikimedia.org/wikipedia/commons/thumb/' \
+                    + hashed_name + ('/%dpx-' % size) + name.replace(' ','_')
         #print "getUrl: %s -> %s" % (name.encode('utf8'), url.encode('utf8'))
         return url
 
