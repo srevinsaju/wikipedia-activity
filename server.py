@@ -437,7 +437,7 @@ class WPHTMLWriter(mwlib.htmlwriter.HTMLWriter):
 
             self.imglevel -= 1
         else:
-            self.out.write('<a href="%s">' % url_thumb.encode('utf8'))
+            self.out.write('<a href="%s">' % url.encode('utf8'))
             
             for x in obj.children:
                 self.write(x)
