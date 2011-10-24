@@ -202,6 +202,9 @@ class WPImageDB:
             else:
                 url = 'http://upload.wikimedia.org/wikipedia/commons/thumb/' \
                     + hashed_name + ('/%dpx-' % size) + name.replace(' ','_')
+            if re.match(r'.*\.svg$', url, re.IGNORECASE):
+                url = url + '.png'
+
         #print "getUrl: %s -> %s" % (name.encode('utf8'), url.encode('utf8'))
         return url
 
@@ -318,7 +321,7 @@ class WPHTMLWriter(mwlib.htmlwriter.HTMLWriter):
         is_svg = re.match(r'.*\.svg$', obj.target, re.IGNORECASE)
         is_thumb = obj.thumb or obj.frame or (self.gallerylevel > 0)
 
-        if not is_svg and ((width and height) or is_thumb):
+        if (width or height) or is_thumb:
             max_length = max(width, height)
             if obj.thumb:
                 max_length = 180
