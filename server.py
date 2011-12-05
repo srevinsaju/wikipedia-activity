@@ -43,6 +43,8 @@ try:
 except ImportError:
     from md5 import md5
 
+from dataretriever import DataRetriever
+
 ##
 ## Libs we ship -- add lib path for
 ## shared objects
@@ -496,13 +498,17 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
             self.giturl = False
 
         self.wikidb = WPWikiDB(self.lang, self.templateprefix, self.templateblacklist)
+
+        self.data_retriever = DataRetriever('./es_new/eswiki-20110810-pages-articles.xml')
             
         self.client_address = client_address
         SimpleHTTPRequestHandler.__init__(
             self, request, client_address, server)
 
     def get_wikitext(self, title):
-        article_text = self.wikidb.getRawArticle(title)
+        #article_text = self.wikidb.getRawArticle(title)
+        article_text = self.data_retriever.get_text_article(title).decode('utf-8')
+        print article_text
         if self.editdir:
             edited = self.get_editedarticle(title)
             if edited:
@@ -515,9 +521,9 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
             override.close()
 
         # Pass ?noexpand=1 in the url to disable template expansion.
-        if not self.params.get('noexpand', 0) \
-               and not self.params.get('edit', 0):
-            article_text = self.wikidb.expandArticle(article_text, title)
+        #if not self.params.get('noexpand', 0) \
+        #       and not self.params.get('edit', 0):
+        #    article_text = self.wikidb.expandArticle(article_text, title)
 
         return article_text
     
