@@ -651,6 +651,11 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
                     'bin/tidy.conf', '-numeric', '-utf8', '-asxhtml'),
                     stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                     env={"LD_LIBRARY_PATH":"bin/arm/"})
+            elif platform.processor() == 'x86_64':
+                process = subprocess.Popen(('bin/x86_64/tidy', '-q', '-config',
+                    'bin/tidy.conf', '-numeric', '-utf8', '-asxhtml'),
+                    stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                    env={"LD_LIBRARY_PATH":"bin/x86_64/"})
             else:
                 process = subprocess.Popen(('bin/tidy', '-q', '-config',
                     'bin/tidy.conf', '-numeric', '-utf8', '-asxhtml'),
@@ -660,7 +665,7 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
                 html = xhtml
             else:
                 print "FAILED to tidy '%s'" % title
-    
+
             self.wfile.write(html)
 
     def do_POST(self):
