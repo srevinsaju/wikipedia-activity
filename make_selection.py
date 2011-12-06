@@ -111,12 +111,12 @@ class PagesProcessor(handler.ContentHandler):
     def characters(self, content):
         self._text = self._text + content
 
-    def _register_page(self, register):
+    def _register_page(self, register, title, content):
         register.write('\01\n')
-        register.write('%s\n' % self._title)
-        register.write('%d\n' % len(self._page))
+        register.write('%s\n' % title)
+        register.write('%d\n' % len(content))
         register.write('\02\n')
-        register.write('%s\n' % self._page)
+        register.write('%s\n' % content)
         register.write('\03\n')
 
     def endElement(self, name):
@@ -138,12 +138,14 @@ class PagesProcessor(handler.ContentHandler):
                 if unicode(self._page).startswith(tag):
                     return
 
-            if self._title not in self._pages_blacklist and \
-                self._title in self._selected_pages_list:
+            title = self._title.replace(' ', '_').capitalize()
+
+            if title not in self._pages_blacklist and \
+                title in self._selected_pages_list:
                 print "%d Page '%s', length %d                   \r" % \
-                        (self._page_counter, self._title, len(self._page)),
+                        (self._page_counter, title, len(self._page)),
                 # processed
-                self._register_page(self._output)
+                self._register_page(self._output, title, self._page)
 
         elif name == "mediawiki":
             self._output.close()
