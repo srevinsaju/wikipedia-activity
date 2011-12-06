@@ -210,9 +210,9 @@ class TemplatesLoader():
                     title = _file.readline()
                     size = _file.readline()
                     separator = _file.readline()
-                    finish = False                    
+                    finish = False
                     template_content = ''
-                    while not finish: 
+                    while not finish:
                         line = _file.readline()
                         #print line
                         if len(line) == 2:
@@ -222,12 +222,13 @@ class TemplatesLoader():
                         template_content += line
                     template_name = title[title.find(':') + 1:].capitalize()
                     template_name = template_name.strip().replace(' ', '_')
-                    #print "checking", template_name, 
+                    #print "checking", template_name,
 
                     if template_name in templates_used.keys():
-                        #print "Adding", template_name, 
-                        self._register_page(title.strip(), template_content.strip())
-                        
+                        #print "Adding", template_name,
+                        self._register_page(title.strip(),
+                                template_content.strip())
+
             line = _file.readline()
 
     def _register_page(self, title, content):
