@@ -220,14 +220,15 @@ class TemplatesLoader():
                                 finish = True
                                 break
                         template_content += line
+                    template_namespace = title[:title.find(':')]
                     template_name = title[title.find(':') + 1:].capitalize()
                     template_name = template_name.strip().replace(' ', '_')
                     #print "checking", template_name,
 
                     if template_name in templates_used.keys():
                         #print "Adding", template_name,
-                        self._register_page(title.strip(),
-                                template_content.strip())
+                        title = template_namespace + ":" + template_name
+                        self._register_page(title, template_content.strip())
 
             line = _file.readline()
 
