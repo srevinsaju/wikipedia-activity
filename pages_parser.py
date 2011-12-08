@@ -6,6 +6,7 @@ from xml.sax import make_parser, handler
 import codecs
 import re
 import sqlite3
+import os
 
 input_xml_file_name = './eswiki-20111112-pages-articles.xml'
 
@@ -16,6 +17,10 @@ BLACKLISTED_NAMESPACES = ['Wikipedia:', 'MediaWiki:']
 TEMPLATE_NAMESPACES = ['Plantilla:']
 
 LINKS_NAMESPACES = [u'Categoría']
+
+
+def normalize_title(title):
+    return title.strip().replace(' ', '_').capitalize()
 
 
 class WikimediaXmlPagesProcessor(handler.ContentHandler):
@@ -38,9 +43,12 @@ class WikimediaXmlPagesProcessor(handler.ContentHandler):
                 encoding='utf-8', mode='w')
         self._output_page_templates = codecs.open('%s.page_templates' % 
                 file_name, encoding='utf-8', mode='w')
+
+        os.remove('%s.all_redirects.db' % file_name)
+
         self.conn = sqlite3.connect('%s.all_redirects.db' % file_name)
         self.conn.execute('create table redirects(page, redirect_to)')
-        self.cur = self.con.cursor()
+        self.cur = self.conn.cursor()
         self.link_re = re.compile('\[\[.*?\]\]')
         self.template_re = re.compile('{{.*?}}')
 
@@ -55,7 +63,7 @@ class WikimediaXmlPagesProcessor(handler.ContentHandler):
 
     def _register_page(self, register):
         register.write('\01\n')
-        register.write('%s\n' % self._title)
+        register.write('%s\n' % normalize_title(self._title))
         register.write('%d\n' % len(self._page))
         register.write('\02\n')
         register.write('%s\n' % self._page)
@@ -68,14 +76,14 @@ class WikimediaXmlPagesProcessor(handler.ContentHandler):
             self._page = self._text
         elif name == "page":
 
+            title = normalize_title(self._title)
             print "Page %d '%s', length %d                   \r" % \
-                    (self._page_counter, self._title, len(self._page)),
+                    (self._page_counter, title, len(self._page)),
 
             for namespace in BLACKLISTED_NAMESPACES:
                 if unicode(self._title).startswith(namespace):
                     self._register_page(self._output_blacklisted)
                     return
-
 
             is_redirect = False
             for tag in REDIRECT_TAGS:
@@ -91,14 +99,13 @@ class WikimediaXmlPagesProcessor(handler.ContentHandler):
                 if search is not None:
                     # keep out the [[]]
                     page_destination = search.group()[2:-2]
-                    page_destination = page_destination.strip().capitalize()
-                origin = self._title.strip().replace(' ', '_').capitalize()
+                    page_destination = normalize_title(page_destination)
 
                 self._output_redirects.write('[[%s]]\t[[%s]]\n' %
-                        (origin, page_destination))
+                        (title, page_destination))
 
                 self.cur.execute('insert into redirects (page, redirect_to) ' +
-                            'values (?,?)', (origin, page_destination))
+                            'values (?,?)', (title, page_destination))
             else:
 
                 for namespace in TEMPLATE_NAMESPACES:
@@ -107,14 +114,12 @@ class WikimediaXmlPagesProcessor(handler.ContentHandler):
                         self._register_page(self._output_templates)
                         return
 
-
                 # titles
-                self._output_titles.write('%s\n' % self._title)
+                self._output_titles.write('%s\n' % title)
 
                 # processed
                 self._register_page(self._output)
 
-                title = self._title.replace(' ', '_')
                 # links
                 links = self.link_re.findall(unicode(self._page))
                 self._output_links.write('%s ' % title)
@@ -132,8 +137,7 @@ class WikimediaXmlPagesProcessor(handler.ContentHandler):
                         pipe_position = link.find('|')
                         if pipe_position > -1:
                             link = link[:pipe_position]
-                        link = link.replace(' ', '_')
-                        link = link.capitalize()
+                        link = normalize_title(link)
                         self._output_links.write('%s ' % link)
                 self._output_links.write('\n')
 
@@ -156,8 +160,7 @@ class WikimediaXmlPagesProcessor(handler.ContentHandler):
                     # ignore templates starting with # or {
                     if template[0] == '#' or template[0] == '{':
                         break
-                    template = template.strip().replace(' ', '_')
-                    template = template.capitalize()
+                    template = normalize_title(template)
                     # only add one time by page
                     if not template in templates_list: 
                         templates_list.append(template)
