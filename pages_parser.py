@@ -5,6 +5,7 @@
 from xml.sax import make_parser, handler
 import codecs
 import re
+import sqlite3
 
 input_xml_file_name = './eswiki-20111112-pages-articles.xml'
 
@@ -37,7 +38,9 @@ class WikimediaXmlPagesProcessor(handler.ContentHandler):
                 encoding='utf-8', mode='w')
         self._output_page_templates = codecs.open('%s.page_templates' % 
                 file_name, encoding='utf-8', mode='w')
-
+        self.conn = sqlite3.connect('%s.all_redirects.db' % file_name)
+        self.conn.execute('create table redirects(page, redirect_to)')
+        self.cur = self.con.cursor()
         self.link_re = re.compile('\[\[.*?\]\]')
         self.template_re = re.compile('{{.*?}}')
 
@@ -88,11 +91,14 @@ class WikimediaXmlPagesProcessor(handler.ContentHandler):
                 if search is not None:
                     # keep out the [[]]
                     page_destination = search.group()[2:-2]
-                    page_destination = page_destination.capitalize()
+                    page_destination = page_destination.strip().capitalize()
+                origin = self._title.strip().replace(' ', '_').capitalize()
 
                 self._output_redirects.write('[[%s]]\t[[%s]]\n' %
-                        (self._title.replace(' ', '_'),
-                        page_destination.replace(' ', '_')))
+                        (origin, page_destination))
+
+                self.cur.execute('insert into redirects (page, redirect_to) ' +
+                            'values (?,?)', (origin, page_destination))
             else:
 
                 for namespace in TEMPLATE_NAMESPACES:
@@ -171,7 +177,8 @@ class WikimediaXmlPagesProcessor(handler.ContentHandler):
             self._output_blacklisted.close()
             self._output_links.close()
             self._output_page_templates.close()
-
+            self.conn.commit()
+            self.conn.close()
             print "Processed %d pages." % self._page_counter
 
 
