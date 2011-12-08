@@ -12,7 +12,7 @@ import re
 from xml.sax import make_parser, handler
 import os
 from operator import itemgetter
-
+#import sqlite3
 
 input_xml_file_name = './eswiki-20111112-pages-articles.xml'
 favorites_file_name = 'favorites.txt'
@@ -27,6 +27,10 @@ TEMPLATE_NAMESPACES = ['Plantilla:']
 LINKS_NAMESPACES = [u'Categoría']
 
 
+def normalize_title(title):
+    return title.strip().replace(' ', '_').capitalize()
+
+
 class FileListReader():
 
     def __init__(self, file_name):
@@ -35,8 +39,30 @@ class FileListReader():
         self.list = []
         line = _file.readline()
         while line:
-            self.list.append(line.strip())
+            self.list.append(normalize_title(line))
             line = _file.readline()
+
+
+class RedirectChecker:
+
+    def __init__(self, file_name):
+        self.conn = sqlite3.connect('%s.all_redirects.db' % file_name)
+        self.conn.text_factory = lambda x: unicode(x, "utf-8", "ignore")
+        self.cur = self.conn.cursor()
+
+    def get_redirected(self, article_title):
+        article_title = article_title.capitalize()
+        self.cur.execute('select * from redirects where page = ?',
+                (article_title,))
+        row = self.cur.fetchone()
+        if row is not None:
+            #print row[0], row[1]
+            return row[1]
+        else:
+            return None
+
+    def clean(self):
+        self.conn.close()
 
 
 class RedirectParser:
@@ -53,16 +79,25 @@ class RedirectParser:
         while line:
             links = links = self.link_re.findall(unicode(line))
             if len(links) == 2:
-                self.redirects[links[0]] = links[1]
+                self.redirects[normalize_title(links[0])] = \
+                        normalize_title(links[1])
             line = input_redirects.readline()
             count += 1
             print "Processing %d\r" % count,
         input_redirects.close()
 
+    def get_redirected(self, article_title):
+        try:
+            article_title = article_title.capitalize()
+            redirected = self.redirects[article_title]
+        except:
+            redirect = None
+        return redirect
+
 
 class LinksFilter():
 
-    def __init__(self, file_name, redirects, favorites):
+    def __init__(self, file_name, redirects_checker, favorites):
         self.links = []
         input_links = codecs.open('%s.links' % file_name,
                 encoding='utf-8', mode='r')
@@ -76,11 +111,11 @@ class LinksFilter():
                     print "Adding page %s" % page
                     for n in range(1, len(words) - 1):
                         link = words[n]
+                        link = normalize_title(link)
                         # check if is a redirect
-                        try:
-                            link = redirects[link]
-                        except:
-                            pass
+                        redirected = redirects_checker.get_redirected(link)
+                        if redirected is not None:
+                            link = redirected
 
                         if not link in self.links and \
                             not link in favorites:
@@ -91,8 +126,7 @@ class LinksFilter():
 
 class PagesProcessor(handler.ContentHandler):
 
-    def __init__(self, file_name, selected_pages_list, pages_blacklist,
-            redirects):
+    def __init__(self, file_name, selected_pages_list, pages_blacklist):
         handler.ContentHandler.__init__(self)
         self._page_counter = 0
         self._page = None
@@ -100,7 +134,6 @@ class PagesProcessor(handler.ContentHandler):
                 encoding='utf-8', mode='w')
         self._selected_pages_list = selected_pages_list
         self._pages_blacklist = pages_blacklist
-        self._redirects = redirects
 
     def startElement(self, name, attrs):
         if name == "page":
@@ -113,7 +146,7 @@ class PagesProcessor(handler.ContentHandler):
 
     def _register_page(self, register, title, content):
         register.write('\01\n')
-        register.write('%s\n' % title)
+        register.write('%s\n' % normalize_title(title))
         register.write('%d\n' % len(content))
         register.write('\02\n')
         register.write('%s\n' % content)
@@ -138,7 +171,7 @@ class PagesProcessor(handler.ContentHandler):
                 if unicode(self._page).startswith(tag):
                     return
 
-            title = self._title.replace(' ', '_').capitalize()
+            title = normalize_title(self._title)
 
             if title not in self._pages_blacklist and \
                 title in self._selected_pages_list:
@@ -154,7 +187,7 @@ class PagesProcessor(handler.ContentHandler):
 
 class TemplatesCounter:
 
-    def __init__(self, file_name, pages_selected, redirects):
+    def __init__(self, file_name, pages_selected, redirect_checker):
         self.templates_to_counter = {}
         input_links = codecs.open('%s.page_templates' % file_name,
                 encoding='utf-8', mode='r')
@@ -167,10 +200,9 @@ class TemplatesCounter:
                 for n in range(1, len(words) - 1):
                     template = words[n]
                     # check if is a redirect
-                    try:
-                        template = redirects[template]
-                    except:
-                        pass
+                    redirected = redirect_checker.get_redirected(template)
+                    if redirected is not None:
+                        template = redirected
 
                     try:
                         self.templates_to_counter[template] = \
@@ -192,7 +224,8 @@ class CountedTemplatesReader():
             words = line.split()
             template_name = words[0]
             cant_used = int(words[1])
-            self.templates[template_name] = {'cant': cant_used}
+            self.templates[normalize_title(template_name)] = \
+                    {'cant': cant_used}
             line = _file.readline()
 
 
@@ -221,8 +254,8 @@ class TemplatesLoader():
                                 break
                         template_content += line
                     template_namespace = title[:title.find(':')]
-                    template_name = title[title.find(':') + 1:].capitalize()
-                    template_name = template_name.strip().replace(' ', '_')
+                    template_name = title[title.find(':') + 1:]
+                    template_name = normalize_title(template_name)
                     #print "checking", template_name,
 
                     if template_name in templates_used.keys():
@@ -234,7 +267,7 @@ class TemplatesLoader():
 
     def _register_page(self, title, content):
         self._output.write('\01\n')
-        self._output.write('%s\n' % title)
+        self._output.write('%s\n' % normalize_title(title))
         self._output.write('%d\n' % len(content))
         self._output.write('\02\n')
         self._output.write('%s\n' % content)
@@ -254,9 +287,9 @@ if __name__ == '__main__':
     else:
         pages_blacklist = []
 
-    print "Loading redirects"
-    redirect_parser = RedirectParser(input_xml_file_name)
-    print "Processed %d redirects" % len(redirect_parser.redirects)
+    print "Init redirects checker"
+    #redirect_checker = RedirectChecker(input_xml_file_name)
+    redirect_checker = RedirectParser(input_xml_file_name)
 
     level = 1
 
@@ -266,7 +299,7 @@ if __name__ == '__main__':
         while level <= MAX_LEVELS:
             print "Processing links level %d" % level
             links_filter = LinksFilter(input_xml_file_name,
-                    redirect_parser.redirects, fav_reader.list)
+                    redirect_checker, fav_reader.list)
             fav_reader.list.extend(links_filter.links)
             level += 1
 
@@ -286,8 +319,7 @@ if __name__ == '__main__':
         print "Writing .processed file"
         parser = make_parser()
         parser.setContentHandler(PagesProcessor(input_xml_file_name,
-                selected_pages_list, pages_blacklist,
-                redirect_parser.redirects))
+                selected_pages_list, pages_blacklist))
         parser.parse(input_xml_file_name)
 
         # if there are a .templates_counted file should be removed
@@ -298,7 +330,7 @@ if __name__ == '__main__':
     if not os.path.exists('%s.templates_counted' % input_xml_file_name):
         print "Processing templates"
         templates_counter = TemplatesCounter(input_xml_file_name,
-                selected_pages_list, redirect_parser.redirects)
+                selected_pages_list, redirect_checker)
 
         print "Sorting counted templates"
         items = templates_counter.templates_to_counter.items()
