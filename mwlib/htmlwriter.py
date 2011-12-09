@@ -41,7 +41,10 @@ class HTMLWriter(object):
     def write(self, obj):
         m = "write" + obj.__class__.__name__
         m=getattr(self, m)
-        m(obj)
+        try:
+            m(obj)
+        except:
+            print "Error trying to write %s" % obj
 
     def ignore(self, obj):
         pass
