@@ -204,11 +204,11 @@ class Link(Node):
     ])
     
     imageKeywords = set([
-        "image", "imagen", "bild"
+        "image", "imagen", "bild", "archivo", "anexo"
     ])
     
     categoryKeywords = set([
-        "category", "kategorie"
+        "category", "kategorie", "categor\\xeda"
     ])
     
     from mwlib.lang import languages
