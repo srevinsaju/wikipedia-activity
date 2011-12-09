@@ -6,10 +6,40 @@ import codecs
 import os
 from subprocess import Popen, PIPE, STDOUT
 import re
-import sqlite3
+
 
 def normalize_title(title):
     return title.strip().replace(' ', '_').capitalize()
+
+
+class RedirectParser:
+
+    def __init__(self, file_name):
+        self.link_re = re.compile('\[\[.*?\]\]')
+        # Load redirects
+        input_redirects = codecs.open('%s.redirects_used' % file_name,
+                encoding='utf-8', mode='r')
+
+        self.redirects = {}
+        count = 0
+        for line in input_redirects.readlines():
+            links = links = self.link_re.findall(unicode(line))
+            if len(links) == 2:
+                origin = links[0][2:-2]
+                destination = links[1][2:-2]
+                self.redirects[normalize_title(origin)] = \
+                        normalize_title(destination)
+            count += 1
+            #print "Processing %s" % normalize_title(origin)
+        input_redirects.close()
+
+    def get_redirected(self, article_title):
+        try:
+            article_title = article_title.capitalize()
+            redirect = self.redirects[article_title]
+        except:
+            redirect = None
+        return redirect
 
 
 class DataRetriever():
@@ -19,14 +49,13 @@ class DataRetriever():
         self._bzip_table_file_name = '%s.processed.bz2t' % data_files_base
         self._index_file_name = '%s.processed.idx' % data_files_base
         self.template_re = re.compile('({{.*?}})')
-        self.conn = sqlite3.connect('%s.all_redirects.db' % data_files_base)
-        self.conn.text_factory = lambda x: unicode(x, "utf-8", "ignore")
+        self.redirects_checker = RedirectParser(data_files_base)
 
     def _get_article_position(self, article_title):
         article_title = normalize_title(article_title)
-        #index_file = codecs.open(self._index_file_name, encoding='utf-8',
-        #        mode='r')
-        index_file = open(self._index_file_name, mode='r')
+        index_file = codecs.open(self._index_file_name, encoding='utf-8',
+                mode='r')
+        #index_file = open(self._index_file_name, mode='r')
 
         index_line = index_file.readline()
         num_block = -1
@@ -44,16 +73,12 @@ class DataRetriever():
         if num_block == -1:
             # look at redirects
             print "looking for '%s' at redirects table" % article_title
-            cur = self.conn.cursor()
-            cur.execute('select * from redirects where page = ?',
-                    (article_title,))
-            row = cur.fetchone()
-            if row is not None:
-                print row
-                if row[0] == row[1]:
+            redirect = self.redirects_checker.get_redirected(article_title)
+            if redirect is not None:
+                if redirect == article_title:
                     # to avoid infinite recursion
                     return -1, -1
-                return self._get_article_position(row[1])
+                return self._get_article_position(redirect)
 
         return num_block, position
 
@@ -133,6 +158,7 @@ class DataRetriever():
         return output
 
 if __name__ == '__main__':
+    # only for test
     data_retriever = DataRetriever('./eswiki-20111112-pages-articles.xml')
     data_retriever.get_expanded_article('Argentina')
     #print data_retriever.get_text_article('Argentina')
