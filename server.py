@@ -43,7 +43,7 @@ try:
 except ImportError:
     from md5 import md5
 
-from dataretriever import DataRetriever
+import dataretriever
 
 ##
 ## Libs we ship -- add lib path for
@@ -107,29 +107,39 @@ class ArticleIndex:
 
     def __init__(self, path):
         self.article_index = set()
-        with codecs.open(path, mode='r', encoding='utf-8') as f:
+        with open(path, mode='r') as f:
             for line in f.readlines():
-                m = re.search(r'(.*?)\s*\d+$', line)
+                m = re.search(r'(.*?)\s*\d+\s*\d+$', line)
                 if m is None:
                     raise AssertionError("Match didn't work")
                 self.article_index.add(m.group(1))
+        print "INDEX HAVE %d articles" % len(self.article_index)
 
     def __contains__(self, x):
-        return x in self.article_index
+        found = dataretriever.normalize_title(x) in self.article_index
+        #print "TEST INDEX %s %s" % (dataretriever.normalize_title(x), found)
+        return found
+
 
 class WPWikiDB:
     """Retrieves article contents for mwlib."""
 
-    def __init__(self, lang, templateprefix, templateblacklist):
+    def __init__(self, path, lang, templateprefix, templateblacklist):
         self.lang = lang
         self.templateprefix = templateprefix
         self.templateblacklist = templateblacklist
+        self.data_retriever = dataretriever.DataRetriever(path)
+        self.templates_cache = {}
     
     def getRawArticle(self, title, followRedirects=True):
+
         # Retrieve article text, recursively following #redirects.
         if title == '':
             return ''
 
+        article_text = self.data_retriever.get_text_article(title).decode('utf-8')
+
+        """
         oldtitle = ""
         while True:
             # Replace underscores with spaces in title.
@@ -157,7 +167,7 @@ class WPWikiDB:
 
             oldtitle = title
             title = m.group(1)
-
+        """
         # Stripping leading & trailing whitespace fixes template expansion.
         article_text = article_text.lstrip()
         article_text = article_text.rstrip()
@@ -165,14 +175,22 @@ class WPWikiDB:
         return article_text
 
     def getTemplate(self, title, followRedirects=False):
-        return self.getRawArticle(title)
+        if title in self.templates_cache:
+             return self.templates_cache[title]
+        else:
+            template_content = self.getRawArticle(title)
+            self.templates_cache[title] = template_content
+            return template_content
 
     def expandArticle(self, article_text, title):
         template_expander = expander.Expander(article_text, pagename=title,
                                               wikidb=self, lang=self.lang,
                                               templateprefix = self.templateprefix,
                                               templateblacklist = self.templateblacklist)
-        return template_expander.expandTemplates()
+        expanded_article =  template_expander.expandTemplates()
+        print "ORIGINAL ARTICLE SIZE %s EXPANDED ARTICLE SIZE %s" % (len(article_text), len(expanded_article))
+
+        return expanded_article
         
     def getExpandedArticle(self, title):
         return self.expandArticle(self.getRawArticle(title), title)
@@ -497,17 +515,15 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
         else:
             self.giturl = False
 
-        self.wikidb = WPWikiDB(self.lang, self.templateprefix, self.templateblacklist)
-
-        self.data_retriever = DataRetriever('./es_new/eswiki-20110810-pages-articles.xml')
+        self.wikidb = WPWikiDB(conf['path'], self.lang, self.templateprefix,
+                self.templateblacklist)
             
         self.client_address = client_address
         SimpleHTTPRequestHandler.__init__(
             self, request, client_address, server)
 
     def get_wikitext(self, title):
-        #article_text = self.wikidb.getRawArticle(title)
-        article_text = self.data_retriever.get_text_article(title).decode('utf-8')
+        article_text = self.wikidb.getRawArticle(title)
         print article_text
         if self.editdir:
             edited = self.get_editedarticle(title)
@@ -521,9 +537,9 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
             override.close()
 
         # Pass ?noexpand=1 in the url to disable template expansion.
-        #if not self.params.get('noexpand', 0) \
-        #       and not self.params.get('edit', 0):
-        #    article_text = self.wikidb.expandArticle(article_text, title)
+        if not self.params.get('noexpand', 0) \
+               and not self.params.get('edit', 0):
+            article_text = self.wikidb.expandArticle(article_text, title)
 
         return article_text
     
@@ -873,7 +889,7 @@ def wp_load_article(title):
     return wp.wp_load_article(title)
 
 def run_server(confvars):
-    index = ArticleIndex('%s.index.txt' % confvars['path'])
+    index = ArticleIndex('%s.processed.idx' % confvars['path'])
 
     if confvars.has_key('editdir'):
         try:
@@ -934,5 +950,4 @@ if __name__ == '__main__':
     if len(sys.argv) > 4:
         conf['giturl'] = sys.argv[4]
 
-    load_db(conf['path'])
     run_server(conf)
