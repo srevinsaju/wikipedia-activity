@@ -274,6 +274,39 @@ class TemplatesLoader():
         self._output.write('\03\n')
 
 
+class RedirectsUsedWriter():
+
+    def __init__(self, file_name, selected_pages_list, templates_used,
+            redirect_checker):
+        _output_redirects = codecs.open('%s.redirects_used' % file_name,
+                encoding='utf-8', mode='w')
+
+        pages_redirects = {}
+        # check pages in redirects
+        for title in selected_pages_list:
+            title = normalize_title(title)
+            redirected = redirect_checker.get_redirected(title)
+            if redirected is not None:
+                pages_redirects[title] = redirected
+                _output_redirects.write('[[%s]]\t[[%s]]\n' %
+                        (title, redirected))
+        print "Found %d redirected pages" % len(pages_redirects)
+
+        templates_redirects = {}
+        # check pages in redirects
+        for title in templates_used_reader.templates.keys():
+            title = normalize_title(title)
+            redirected = redirect_checker.get_redirected(title)
+            if redirected is not None:
+                templates_redirects[title] = redirected
+                _output_redirects.write('[[%s]]\t[[%s]]\n' %
+                        (title, redirected))
+
+        print "Found %d redirected templates" % len(templates_redirects)
+
+        _output_redirects.close()
+
+
 if __name__ == '__main__':
     MAX_LEVELS = 1
 
@@ -350,3 +383,8 @@ if __name__ == '__main__':
         print "Adding used templates to .processed file"
         templates_loader = TemplatesLoader(input_xml_file_name,
                 templates_used_reader.templates)
+
+        if not os.path.exists('%s.redirects_used' % input_xml_file_name):
+            redirects_used_writer = RedirectsUsedWriter(input_xml_file_name,
+                    selected_pages_list, templates_used_reader.templates,
+                    redirect_checker)
