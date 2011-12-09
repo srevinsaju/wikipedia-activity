@@ -6,7 +6,7 @@ import codecs
 import os
 from subprocess import Popen, PIPE, STDOUT
 import re
-
+import sqlite3
 
 class FileListReader():
 
@@ -27,8 +27,11 @@ class DataRetriever():
         self._bzip_table_file_name = '%s.processed.bz2t' % data_files_base
         self._index_file_name = '%s.processed.idx' % data_files_base
         self.template_re = re.compile('({{.*?}})')
+        self.conn = sqlite3.connect('%s.all_redirects.db' % data_files_base)
+        self.conn.text_factory = lambda x: unicode(x, "utf-8", "ignore")
 
     def _get_article_position(self, article_title):
+        article_title = article_title.capitalize()
         index_file = codecs.open(self._index_file_name, encoding='utf-8',
                 mode='r')
 
@@ -44,6 +47,18 @@ class DataRetriever():
                 break
             index_line = index_file.readline()
         index_file.close()
+
+        if num_block == -1:
+            # look at redirects
+            print "looking for '%s' at redirects table" % article_title
+            cur = self.conn.cursor()
+            cur.execute('select * from redirects where page = ?',
+                    (article_title.capitalize(),))
+            row = cur.fetchone()
+            if row is not None:
+                print row
+                return self._get_article_position(row[1])
+
         return num_block, position
 
     def _get_block_start(self, num_block):
