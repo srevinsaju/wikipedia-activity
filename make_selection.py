@@ -12,7 +12,6 @@ import re
 from xml.sax import make_parser, handler
 import os
 from operator import itemgetter
-#import sqlite3
 
 input_xml_file_name = './eswiki-20111112-pages-articles.xml'
 favorites_file_name = 'favorites.txt'
@@ -42,25 +41,6 @@ class FileListReader():
             self.list.append(normalize_title(line))
             line = _file.readline()
 
-
-class RedirectChecker:
-
-    def __init__(self, file_name):
-        self.conn = sqlite3.connect('%s.all_redirects.db' % file_name)
-        self.conn.text_factory = lambda x: unicode(x, "utf-8", "ignore")
-        self.cur = self.conn.cursor()
-
-    def get_redirected(self, article_title):
-        article_title = article_title.capitalize()
-        self.cur.execute('select * from redirects where page = ?',
-                (article_title,))
-        row = self.cur.fetchone()
-        if row is not None:
-            #print row[0], row[1]
-            return row[1]
-        else:
-            return None
-
     def clean(self):
         self.conn.close()
 
@@ -73,18 +53,26 @@ class RedirectParser:
         input_redirects = codecs.open('%s.redirects' % file_name,
                 encoding='utf-8', mode='r')
 
-        line = input_redirects.readline()
         self.redirects = {}
         count = 0
-        while line:
+        for line in input_redirects.readlines():
             links = links = self.link_re.findall(unicode(line))
             if len(links) == 2:
-                self.redirects[normalize_title(links[0])] = \
-                        normalize_title(links[1])
-            line = input_redirects.readline()
+                origin = links[0][2:-2]
+                destination = links[1][2:-2]
+                self.redirects[normalize_title(origin)] = \
+                        normalize_title(destination)
             count += 1
-            print "Processing %d\r" % count,
+            #print "Processing %s" % normalize_title(origin)
         input_redirects.close()
+
+    def get_redirected(self, article_title):
+        try:
+            article_title = article_title.capitalize()
+            redirect = self.redirects[article_title]
+        except:
+            redirect = None
+        return redirect
 
     def get_redirected(self, article_title):
         try:
@@ -321,7 +309,6 @@ if __name__ == '__main__':
         pages_blacklist = []
 
     print "Init redirects checker"
-    #redirect_checker = RedirectChecker(input_xml_file_name)
     redirect_checker = RedirectParser(input_xml_file_name)
 
     level = 1
