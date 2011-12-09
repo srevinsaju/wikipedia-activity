@@ -57,17 +57,15 @@ class DataRetriever():
                 mode='r')
         #index_file = open(self._index_file_name, mode='r')
 
-        index_line = index_file.readline()
         num_block = -1
         position = -1
-        while index_line:
+        for index_line in  index_file.readlines():
             words = index_line.split()
             article = words[0]
             if article == article_title:
                 num_block = int(words[1])
                 position = int(words[2])
                 break
-            index_line = index_file.readline()
         index_file.close()
 
         if num_block == -1:
@@ -127,11 +125,13 @@ class DataRetriever():
         return expanded_article
 
     def get_text_article(self, article_title):
-        output = ''
         #print "Looking for article %s" % article_title
         num_block, position = self._get_article_position(article_title)
         #print "Found at block %d position %d" % (num_block, position)
+        return self._get_block_text(num_block, position)
 
+    def _get_block_text(self, num_block, position):
+        output = ''
         block_start = self._get_block_start(num_block)
         #print "Block %d starts at %d" % (num_block, block_start)
         if block_start == -1:
@@ -150,11 +150,16 @@ class DataRetriever():
         finish = False
         while not finish:
             line = p.stdout.readline()
+            if line == '':
+                # end of block?
+                output += self._get_block_text(num_block + 1, 0)
+                break
             if len(line) == 2:
                 if ord(line[0]) == 3:
                     finish = True
                     break
             output += line
+        p.stdout.close()
         return output
 
 if __name__ == '__main__':
