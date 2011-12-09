@@ -9,6 +9,11 @@ from subprocess import call, Popen, PIPE, STDOUT
 
 input_xml_file_name = './eswiki-20111112-pages-articles.xml'
 
+
+def normalize_title(title):
+    return title.strip().replace(' ', '_').capitalize()
+
+
 def create_index():
     output_file  = open("%s.processed.idx" % input_xml_file_name, mode='w')
     num_block = 1
@@ -39,10 +44,11 @@ def create_index():
                     # \02
                     data_line = p.stdout.readline()
                     position += len(data_line)
+                    title = title[0:-1].strip().capitalize()
                     output_file.write("%s %d %d\n" % \
-                        (title[0:-1], num_block, position))
+                        (title, num_block, position))
                     print "Article %s block %d position %d" % \
-                        (title[0:-1], num_block, position)
+                        (title, num_block, position)
 
             data_line = p.stdout.readline()
 
@@ -67,13 +73,16 @@ print 'Compressing .processed file'
 if not os.path.exists('%s.processed.bz2' % input_xml_file_name):
     cmd = ['bzip2', '-zk', '%s.processed' % input_xml_file_name]
     p = call(cmd)
+    if os.path.exists('%s.processed.bz2t' % input_xml_file_name):
+        os.remove('%s.processed.bz2t' % input_xml_file_name)
 else:
     print '.bz2 already exists. Skipping'
 
-print 'Creating bzip2 table file'
-create_bzip_table()
+if not os.path.exists('%s.processed.bz2t' % input_xml_file_name):
+    print 'Creating bzip2 table file'
+    create_bzip_table()
+else:
+    print '.bz2t already exists. Skipping'
 
 print 'Creating index file'
 create_index()
-
-
