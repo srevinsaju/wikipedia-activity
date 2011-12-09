@@ -6,34 +6,56 @@ import codecs
 import os
 from subprocess import Popen, PIPE, STDOUT
 import re
-import sqlite3
 
-class FileListReader():
+input_xml_file_name = './eswiki-20111112-pages-articles.xml'
+
+def normalize_title(title):
+    return title.strip().replace(' ', '_').capitalize()
+
+class RedirectParser:
 
     def __init__(self, file_name):
-        _file = codecs.open(file_name,
-                                encoding='utf-8', mode='r')
-        self.list = []
-        line = _file.readline()
+        self.link_re = re.compile('\[\[.*?\]\]')
+        # Load redirects
+        input_redirects = codecs.open('%s.redirects_used' % file_name,
+                encoding='utf-8', mode='r')
+
+        line = input_redirects.readline()
+        self.redirects = {}
+        count = 0
         while line:
-            self.list.append(line.strip())
-            line = _file.readline()
+            links = links = self.link_re.findall(unicode(line))
+            if len(links) == 2:
+                self.redirects[normalize_title(links[0])] = \
+                        normalize_title(links[1])
+            line = input_redirects.readline()
+            count += 1
+            print "Processing %d\r" % count,
+        input_redirects.close()
+
+    def get_redirected(self, article_title):
+        try:
+            article_title = article_title.capitalize()
+            redirected = self.redirects[article_title]
+        except:
+            redirect = None
+        return redirect
 
 
 class DataRetriever():
 
-    def __init__(self, data_files_base):
+    def __init__(self, data_files_base, redirects_checker):
         self._bzip_file_name = '%s.processed.bz2' % data_files_base
         self._bzip_table_file_name = '%s.processed.bz2t' % data_files_base
         self._index_file_name = '%s.processed.idx' % data_files_base
         self.template_re = re.compile('({{.*?}})')
-        self.conn = sqlite3.connect('%s.all_redirects.db' % data_files_base)
-        self.conn.text_factory = lambda x: unicode(x, "utf-8", "ignore")
+        self.redirects_checker = redirects_checker
 
     def _get_article_position(self, article_title):
-        article_title = article_title.capitalize()
-        index_file = codecs.open(self._index_file_name, encoding='utf-8',
-                mode='r')
+        article_title = normalize_title(article_title)
+        #index_file = codecs.open(self._index_file_name, encoding='utf-8',
+        #        mode='r')
+        index_file = open(self._index_file_name, mode='r')
 
         index_line = index_file.readline()
         num_block = -1
@@ -50,14 +72,9 @@ class DataRetriever():
 
         if num_block == -1:
             # look at redirects
-            print "looking for '%s' at redirects table" % article_title
-            cur = self.conn.cursor()
-            cur.execute('select * from redirects where page = ?',
-                    (article_title.capitalize(),))
-            row = cur.fetchone()
-            if row is not None:
-                print row
-                return self._get_article_position(row[1])
+            redirect = self.redirects_checker.get_redirected(article_title)
+            if redirect is not None:
+                return self._get_article_position(redirect)
 
         return num_block, position
 
@@ -76,6 +93,11 @@ class DataRetriever():
         return block_start
 
     def get_expanded_article(self, article_title):
+        """
+        This method does not do real template expansion
+        is only used to test all the needed templates and redirects are
+        available.
+        """
         text_article = self.get_text_article(article_title)
         templates_cache = {}
         expanded_article = ''
@@ -83,17 +105,17 @@ class DataRetriever():
         for part in parts:
             if part.startswith('{{'):
                 part = part[2:-2]
+                #print "TEMPLATE: %s" % part
                 if part.find('|') > -1:
                     template_name = part[:part.find('|')]
                 else:
                     template_name = part
-                template_name = template_name.strip().replace(' ', '_')
-                template_name = template_name.capitalize()
-                # TODO parameter
+                # TODO: Plantilla should be a parameter
+                template_name = normalize_title('Plantilla:%s' % template_name)
                 if template_name in templates_cache:
                     expanded_article += templates_cache[template_name]
                 else:
-                    templates_content = self.get_text_article('Plantilla:' + template_name)
+                    templates_content = self.get_text_article(template_name)
                     expanded_article += templates_content
                     templates_cache[template_name] = templates_content
             else:
@@ -102,12 +124,12 @@ class DataRetriever():
 
     def get_text_article(self, article_title):
         output = ''
+        print "Looking for article %s" % article_title
         num_block, position = self._get_article_position(article_title)
-        print "Looking for article %s at block %d position %d" % \
-                (article_title, num_block, position)
+        print "Found at block %d position %d" % (num_block, position)
 
         block_start = self._get_block_start(num_block)
-        print "Block %d starts at %d" % (num_block, block_start)
+        #print "Block %d starts at %d" % (num_block, block_start)
         if block_start == -1:
             return ""
 
@@ -132,6 +154,9 @@ class DataRetriever():
         return output
 
 if __name__ == '__main__':
-    data_retriever = DataRetriever('./eswiki-20111112-pages-articles.xml')
+    
+    redirects_checker = RedirectParser(input_xml_file_name)
+    data_retriever = DataRetriever(input_xml_file_name, redirects_checker)
     data_retriever.get_expanded_article('Argentina')
+
     #print data_retriever.get_text_article('Argentina')
