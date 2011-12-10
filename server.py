@@ -245,6 +245,14 @@ class HTMLOutputBuffer:
 
 class WPMathRenderer:
     def render(self, latex):
+        print "MathRenderer %s" % latex
+        latex = latex.replace('\f','\\f')
+        #latex = latex.replace('\n','\\n')
+        latex = latex.replace('\t','\\t')
+
+        # postpone the process to do it with javascript at client side
+        mathml = '\n$$\n' + latex + '\n$$\n'
+        """
         if platform.processor().startswith('arm'):
             process = subprocess.Popen(('bin/arm/blahtex', '--mathml',
                 '--texvc-compatible-commands'), stdin=subprocess.PIPE,
@@ -271,7 +279,7 @@ class WPMathRenderer:
         except:
             print "BLAHTEX XML PARSING FAILED:\nINPUT: '%s'\nOUTPUT: '%s'" % (latex, mathml)
             return ""
-
+        """
         # Straight embedding.  Requires parent document to be XHTML.
         return mathml
             
@@ -609,6 +617,21 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
 
             htmlout.write("<head>")
             htmlout.write("<title>%s</title>" % title.encode('utf8'))
+
+            # MathJs config
+            htmlout.write('<script type="text/x-mathjax-config">')
+            htmlout.write('  MathJax.Hub.Config({')
+            htmlout.write('    extensions: ["tex2jax.js"],')
+            htmlout.write('    jax: ["input/TeX","output/HTML-CSS"],')
+            htmlout.write('    "HTML-CSS": {')
+            htmlout.write('      availableFonts:[],')
+            htmlout.write('      styles: {".MathJax_Preview": {visibility: "hidden"}}')
+            htmlout.write('    }')
+            htmlout.write('  });')
+            htmlout.write('</script>')
+
+            htmlout.write("<script type='text/javascript' " +
+                    "src='http://localhost:8000/static/MathJax/MathJax.js'></script>")
         
             htmlout.write("<style type='text/css' media='screen, projection'>"
                              "@import '/static/common.css';"\
