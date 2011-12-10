@@ -23,7 +23,7 @@ class RedirectParser:
         self.redirects = {}
         count = 0
         for line in input_redirects.readlines():
-            links = links = self.link_re.findall(unicode(line))
+            links = self.link_re.findall(unicode(line))
             if len(links) == 2:
                 origin = links[0][2:-2]
                 destination = links[1][2:-2]
