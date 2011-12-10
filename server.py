@@ -595,7 +595,7 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
             htmlout = HTMLOutputBuffer()
             
             self.send_response(200)
-            self.send_header("Content-Type", "text/xml; charset=utf-8")
+            self.send_header("Content-Type", "text/html; charset=utf-8")
             self.end_headers()
 
             htmlout.write(
@@ -604,7 +604,7 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
                 '"-//W3C//DTD XHTML 1.1 plus MathML 2.0//EN" '\
                 '"http://www.w3.org/TR/MathML2/dtd/xhtml-math11-f.dtd" '\
                 '[ <!ENTITY mathml "http://www.w3.org/1998/Math/MathML"> ]> ')
-            
+
             htmlout.write('<html xmlns="http://www.w3.org/1999/xhtml"> ')
 
             htmlout.write("<head>")
@@ -667,6 +667,7 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
 
             html = htmlout.getvalue()
 
+            """
             # Fix any non-XHTML tags using tidy.
             if platform.processor().startswith('arm'):
                 process = subprocess.Popen(('bin/arm/tidy', '-q', '-config',
@@ -687,7 +688,7 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
                 html = xhtml
             else:
                 print "FAILED to tidy '%s'" % title
-
+            """
             self.wfile.write(html)
 
     def do_POST(self):
