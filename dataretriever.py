@@ -50,6 +50,8 @@ class DataRetriever():
         self._index_file_name = '%s.processed.idx' % data_files_base
         self.template_re = re.compile('({{.*?}})')
         self.redirects_checker = RedirectParser(data_files_base)
+        # TODO: I need control cache size
+        self.templates_cache = {}
 
     def _get_article_position(self, article_title):
         article_title = normalize_title(article_title)
@@ -70,7 +72,7 @@ class DataRetriever():
 
         if num_block == -1:
             # look at redirects
-            print "looking for '%s' at redirects table" % article_title
+            # print "looking for '%s' at redirects table" % article_title
             redirect = self.redirects_checker.get_redirected(article_title)
             if redirect is not None:
                 if redirect == article_title:
@@ -101,7 +103,6 @@ class DataRetriever():
         available.
         """
         text_article = self.get_text_article(article_title)
-        templates_cache = {}
         expanded_article = ''
         parts = self.template_re.split(text_article)
         for part in parts:
@@ -114,12 +115,12 @@ class DataRetriever():
                     template_name = part
                 # TODO: Plantilla should be a parameter
                 template_name = normalize_title('Plantilla:%s' % template_name)
-                if template_name in templates_cache:
-                    expanded_article += templates_cache[template_name]
+                if template_name in self.templates_cache:
+                    expanded_article += self.templates_cache[template_name]
                 else:
                     templates_content = self.get_text_article(template_name)
                     expanded_article += templates_content
-                    templates_cache[template_name] = templates_content
+                    self.templates_cache[template_name] = templates_content
             else:
                 expanded_article += part
         return expanded_article
