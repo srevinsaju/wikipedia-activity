@@ -1,4 +1,5 @@
 # Copyright (C) 2007, One Laptop Per Child
+# -*- coding: utf-8 -*-
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,7 +24,7 @@ import logging
 
 OLD_TOOLBAR = False
 try:
-    from sugar.graphics.toolbarbox import ToolbarBox, ToolbarButton
+    from sugar3.graphics.toolbarbox import ToolbarBox, ToolbarButton
 except ImportError:
     OLD_TOOLBAR = True
 
@@ -52,27 +53,13 @@ class WikipediaActivity(webactivity.WebActivity):
 
         os.chdir(os.environ['SUGAR_BUNDLE_PATH'])
 
-        server.load_db(self.WIKIDB)
+        #server.load_db(self.WIKIDB)
         server.run_server({'path': self.WIKIDB,
                            'port': int(self.HTTP_PORT)})
 
         handle.uri = 'http://localhost:%s%s' % (self.HTTP_PORT, self.HOME_PAGE)
 
         webactivity.WebActivity.__init__(self, handle)
-
-        # Use xpcom to set a RAM cache limit.  (Trac #7081.)
-        from xpcom import components
-        from xpcom.components import interfaces
-        cls = components.classes['@mozilla.org/preferences-service;1']
-        pref_service = cls.getService(interfaces.nsIPrefService)
-        branch = pref_service.getBranch("browser.cache.memory.")
-        branch.setIntPref("capacity", "5000")
-
-        # Use xpcom to turn off "offline mode" detection, which disables
-        # access to localhost for no good reason.  (Trac #6250.)
-        ios_class = components.classes["@mozilla.org/network/io-service;1"]
-        io_service = ios_class.getService(interfaces.nsIIOService2)
-        io_service.manageOfflineStatus = False
 
         self.searchtoolbar = SearchToolbar(self)
         if OLD_TOOLBAR:

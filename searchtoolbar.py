@@ -16,15 +16,15 @@
 
 from gettext import gettext as _
 
-import gtk
+from gi.repository import Gtk
 
-from sugar.graphics.toolbutton import ToolButton
-from sugar.graphics.toolcombobox import ToolComboBox
+from sugar3.graphics.toolbutton import ToolButton
+from sugar3.graphics.toolcombobox import ToolComboBox
 
 
-class SearchToolbar(gtk.Toolbar):
+class SearchToolbar(Gtk.Toolbar):
     def __init__(self, activity):
-        gtk.Toolbar.__init__(self)
+        Gtk.Toolbar.__init__(self)
 
         self._activity = activity        
 
@@ -44,10 +44,10 @@ class SearchToolbar(gtk.Toolbar):
 
         self.set_providers(default_search_providers)
         
-        self._entry = gtk.Entry()
+        self._entry = Gtk.Entry()
         self._entry.connect('activate', self._entry_activate_cb)
 
-        entry_item = gtk.ToolItem()
+        entry_item = Gtk.ToolItem()
         entry_item.set_expand(True)
         entry_item.add(self._entry)
         self._entry.show()
