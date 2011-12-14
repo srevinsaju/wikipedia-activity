@@ -139,35 +139,6 @@ class WPWikiDB:
 
         article_text = self.data_retriever.get_text_article(title).decode('utf-8')
 
-        """
-        oldtitle = ""
-        while True:
-            # Replace underscores with spaces in title.
-            title = title.replace("_", " ")
-            # Capitalize the first letter of the article -- Trac #6991.
-            title = title[0].capitalize() + title[1:]
-
-            if title == oldtitle:
-                article_text = ""
-                break
-
-            article_text = wp_load_article(title.encode('utf8'))
-            if article_text == None:
-                # something's wrong
-                return None
-            article_text = unicode(article_text, 'utf8')
-            
-            # To see unmodified article_text, uncomment here.
-            # print article_text
-            if not followRedirects:
-                break
-
-            m = re.match(r'^\s*\#?redirect\s*\:?\s*\[\[(.*)\]\]', article_text, re.IGNORECASE|re.MULTILINE)
-            if not m: break
-
-            oldtitle = title
-            title = m.group(1)
-        """
         # Stripping leading & trailing whitespace fixes template expansion.
         article_text = article_text.lstrip()
         article_text = article_text.rstrip()
@@ -247,40 +218,10 @@ class WPMathRenderer:
     def render(self, latex):
         print "MathRenderer %s" % latex
         latex = latex.replace('\f','\\f')
-        #latex = latex.replace('\n','\\n')
         latex = latex.replace('\t','\\t')
 
         # postpone the process to do it with javascript at client side
         mathml = '\n$$\n' + latex + '\n$$\n'
-        """
-        if platform.processor().startswith('arm'):
-            process = subprocess.Popen(('bin/arm/blahtex', '--mathml',
-                '--texvc-compatible-commands'), stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-                env={"LD_LIBRARY_PATH":"bin/arm/"})
-        else:
-            process = subprocess.Popen(('bin/blahtex', '--mathml',
-                '--texvc-compatible-commands'), stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE)
-
-        (mathml, err) = process.communicate(latex.encode('utf8'))
-        if process.returncode is not 0:
-            return ""
-
-        # Ugly!  There is certainly a better way to do this, but my DOM skills are weak, and this works.
-        try:
-            dom = xml.dom.minidom.parseString(mathml)
-            dom = dom.getElementsByTagName('blahtex')[0]
-            dom = dom.getElementsByTagName('mathml')[0]
-            dom = dom.getElementsByTagName('markup')[0]
-            mathml = dom.toxml()
-            mathml = mathml.replace('markup', 'math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"')
-            dom.unlink()
-        except:
-            print "BLAHTEX XML PARSING FAILED:\nINPUT: '%s'\nOUTPUT: '%s'" % (latex, mathml)
-            return ""
-        """
-        # Straight embedding.  Requires parent document to be XHTML.
         return mathml
             
 class WPHTMLWriter(mwlib.htmlwriter.HTMLWriter):
@@ -532,7 +473,7 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
 
     def get_wikitext(self, title):
         article_text = self.wikidb.getRawArticle(title)
-        print article_text
+        #print article_text
         if self.editdir:
             edited = self.get_editedarticle(title)
             if edited:
@@ -690,28 +631,6 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
 
             html = htmlout.getvalue()
 
-            """
-            # Fix any non-XHTML tags using tidy.
-            if platform.processor().startswith('arm'):
-                process = subprocess.Popen(('bin/arm/tidy', '-q', '-config',
-                    'bin/tidy.conf', '-numeric', '-utf8', '-asxhtml'),
-                    stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                    env={"LD_LIBRARY_PATH":"bin/arm/"})
-            elif platform.processor() == 'x86_64':
-                process = subprocess.Popen(('bin/x86_64/tidy', '-q', '-config',
-                    'bin/tidy.conf', '-numeric', '-utf8', '-asxhtml'),
-                    stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                    env={"LD_LIBRARY_PATH":"bin/x86_64/"})
-            else:
-                process = subprocess.Popen(('bin/tidy', '-q', '-config',
-                    'bin/tidy.conf', '-numeric', '-utf8', '-asxhtml'),
-                    stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-            (xhtml, err) = process.communicate(html)
-            if len(xhtml):
-                html = xhtml
-            else:
-                print "FAILED to tidy '%s'" % title
-            """
             self.wfile.write(html)
 
     def do_POST(self):
@@ -897,14 +816,6 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
         self.send_header("Location", "/static/")
         self.end_headers()
 
-def load_db(dbname):
-    if os.environ.has_key('SUGAR_BUNDLE_PATH'):
-        dbname = os.path.join(os.environ['SUGAR_BUNDLE_PATH'], dbname)
-    wp.wp_load_dump(
-        dbname + '.processed',
-        dbname + '.locate.db',
-        dbname + '.locate.prefixdb',
-        dbname + '.blocks.db')
 
 # Cache articles and specially templates
 @lrudecorator(100)
