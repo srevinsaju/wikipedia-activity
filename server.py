@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-# 
+#
 # Web server script for Wikiserver project.
 #
 # Usage: server.py <dbfile> <port>
@@ -57,8 +57,8 @@ if platform.processor().startswith('arm'):
     system_id = platform.processor()
 
 platform_dir = "%s_%s%s" % (system_id,
-                          sys.version_info[0], # major
-                          sys.version_info[1]) # minor
+                          sys.version_info[0],   # major
+                          sys.version_info[1])   # minor
 
 sys.path.append(os.path.join(_root_path, 'binarylibs', platform_dir))
 
@@ -69,7 +69,6 @@ from mwlib import parser, scanner, expander
 
 # Uncomment to print out a large dump from the template expander.
 #os.environ['DEBUG_EXPANDER'] = '1'
-
 
 
 class MyHTTPServer(BaseHTTPServer.HTTPServer):
@@ -95,15 +94,17 @@ class MyHTTPServer(BaseHTTPServer.HTTPServer):
                 self._handle_request_noblock()
         self._BaseServer__is_shut_down.set()
 
+
 class LinkStats:
     allhits = 1
     alltotal = 1
     pagehits = 1
     pagetotal = 1
 
+
 class ArticleIndex:
-    # Prepare an in-memory index, using the already generated 
-    # index file.  
+    # Prepare an in-memory index, using the already generated
+    # index file.
 
     def __init__(self, path):
         self.article_index = set()
@@ -130,14 +131,15 @@ class WPWikiDB:
         self.templateblacklist = templateblacklist
         self.data_retriever = dataretriever.DataRetriever(path)
         self.templates_cache = {}
-    
+
     def getRawArticle(self, title, followRedirects=True):
 
         # Retrieve article text, recursively following #redirects.
         if title == '':
             return ''
 
-        article_text = self.data_retriever.get_text_article(title).decode('utf-8')
+        article_text = \
+                self.data_retriever.get_text_article(title).decode('utf-8')
 
         # Stripping leading & trailing whitespace fixes template expansion.
         article_text = article_text.lstrip()
@@ -147,7 +149,7 @@ class WPWikiDB:
 
     def getTemplate(self, title, followRedirects=False):
         if title in self.templates_cache:
-             return self.templates_cache[title]
+            return self.templates_cache[title]
         else:
             template_content = self.getRawArticle(title)
             self.templates_cache[title] = template_content
@@ -155,16 +157,16 @@ class WPWikiDB:
 
     def expandArticle(self, article_text, title):
         template_expander = expander.Expander(article_text, pagename=title,
-                                              wikidb=self, lang=self.lang,
-                                              templateprefix = self.templateprefix,
-                                              templateblacklist = self.templateblacklist)
-        expanded_article =  template_expander.expandTemplates()
-        print "ORIGINAL ARTICLE SIZE %s EXPANDED ARTICLE SIZE %s" % (len(article_text), len(expanded_article))
+                wikidb=self, lang=self.lang,
+                templateprefix=self.templateprefix,
+                templateblacklist=self.templateblacklist)
+        expanded_article = template_expander.expandTemplates()
 
         return expanded_article
-        
+
     def getExpandedArticle(self, title):
         return self.expandArticle(self.getRawArticle(title), title)
+
 
 class WPImageDB:
     """Retrieves images for mwlib."""
@@ -173,14 +175,13 @@ class WPImageDB:
 
     def hashpath(self, name):
         name = name.replace(' ', '_')
-        name = name[:1].upper()+name[1:]
+        name = name[:1].upper() + name[1:]
         d = md5(name.encode('utf-8')).hexdigest()
         return "/".join([d[0], d[:2], name])
-    
+
     def getPath(self, name, size=None):
         hashed_name = self.hashpath(name).encode('utf8')
         path = self.basepath + '/%s' % hashed_name
-        #print "getPath: %s -> %s" % (name.encode('utf8'), path.encode('utf8'))
         return path
 
     def getURL(self, name, size=None):
@@ -189,15 +190,17 @@ class WPImageDB:
             url = '/' + self.basepath + hashed_name
         else:
             if size is None:
-                url = 'http://upload.wikimedia.org/wikipedia/commons/' + hashed_name
+                url = 'http://upload.wikimedia.org/wikipedia/commons/' + \
+                    hashed_name
             else:
                 url = 'http://upload.wikimedia.org/wikipedia/commons/thumb/' \
-                    + hashed_name + ('/%dpx-' % size) + name.replace(' ','_')
+                    + hashed_name + ('/%dpx-' % size) + name.replace(' ', '_')
             if re.match(r'.*\.svg$', url, re.IGNORECASE):
                 url = url + '.png'
 
         #print "getUrl: %s -> %s" % (name.encode('utf8'), url.encode('utf8'))
         return url
+
 
 class HTMLOutputBuffer:
     """Buffers output and converts to utf8 as needed."""
@@ -210,46 +213,49 @@ class HTMLOutputBuffer:
             self.buffer += obj.encode('utf8')
         else:
             self.buffer += obj
-    
+
     def getvalue(self):
         return self.buffer
+
 
 class WPMathRenderer:
     def render(self, latex):
         print "MathRenderer %s" % latex
-        latex = latex.replace('\f','\\f')
-        latex = latex.replace('\t','\\t')
+        latex = latex.replace('\f', '\\f')
+        latex = latex.replace('\t', '\\t')
 
         # postpone the process to do it with javascript at client side
         mathml = '\n$$\n' + latex + '\n$$\n'
         return mathml
-            
+
+
 class WPHTMLWriter(mwlib.htmlwriter.HTMLWriter):
     """Customizes HTML output from mwlib."""
-    
+
     def __init__(self, index, wfile, images=None, lang='en'):
         self.index = index
         self.gallerylevel = 0
         self.lang = lang
 
         math_renderer = WPMathRenderer()
-        mwlib.htmlwriter.HTMLWriter.__init__(self, wfile, images, math_renderer=math_renderer)
+        mwlib.htmlwriter.HTMLWriter.__init__(self, wfile, images,
+                math_renderer=math_renderer)
 
     def writeLink(self, obj):
         if obj.target is None:
             return
 
         article = obj.target
-        
+
         # Parser appending '/' characters to link targets for some reason.
         article = article.rstrip('/')
-        
+
         title = article
         title = title[0].capitalize() + title[1:]
         title = title.replace("_", " ")
 
         article_exists = title.encode('utf8') in self.index
-        
+
         if article_exists:
             # Exact match.  Internal link.
             LinkStats.allhits += 1
@@ -277,7 +283,7 @@ class WPHTMLWriter(mwlib.htmlwriter.HTMLWriter):
                 self.write(x)
         else:
             self._write(obj.target)
-        
+
         self.out.write("</a>")
 
     def writeImageLink(self, obj):
@@ -303,58 +309,65 @@ class WPHTMLWriter(mwlib.htmlwriter.HTMLWriter):
             path = self.images.getPath(obj.target)
             url_thumb = self.images.getURL(obj.target)
             url = url_thumb
-            
+
         if url_thumb is None:
             return
 
-        # The following HTML generation code is copied closely from InstaView, which seems to 
-        # approximate the nest of <div> tags needed to render images close to right.
+        # The following HTML generation code is copied closely from InstaView,
+        # which seems to approximate the nest of <div> tags needed to render
+        # images close to right.
         # It's also been extended to support Gallery tags.
-        if self.imglevel==0:
+        if self.imglevel == 0:
             self.imglevel += 1
 
             align = obj.align
             thumb = obj.thumb
             frame = obj.frame
             caption = obj.caption
-            
-            # SVG images must be included using <object data=''> rather than <img src=''>.
+
+            # SVG images must be included using <object data=''> rather than
+            # <img src=''>.
             if re.match(r'.*\.svg$', url_thumb, re.IGNORECASE):
                 tag = 'object'
                 ref = 'data'
             else:
                 tag = 'img'
                 ref = 'src'
-            
-            # Hack to get galleries to look okay, in the absence of image dimensions.
+
+            # Hack to get galleries to look okay, in the absence of image
+            # dimensions.
             if self.gallerylevel > 0:
                 width = 120
-            
+
             if thumb and not width:
-                width = 180 #FIXME: This should not be hardcoded
-    
+                width = 180  # FIXME: This should not be hardcoded
+
             attr = ''
             if width:
                 attr += 'width="%d" ' % width
-            
-            img = '<%(tag)s %(ref)s="%(url)s" longdesc="%(caption)s" %(attr)s></%(tag)s>' % \
-               {'tag':tag, 'ref':ref, 'url':url_thumb, 'caption':caption,
-                'attr':attr}
-            
+
+            img = '<%(tag)s %(ref)s="%(url)s" longdesc="%(cap)s" %(att)s>' % \
+               {'tag': tag, 'ref': ref, 'url': url_thumb, 'cap': caption,
+                'att': attr} + '</%(tag)s>' % {'tag': tag}
+
             center = False
             if align == 'center':
                 center = True
                 align = None
 
             if center:
-                self.out.write('<div class="center">');
+                self.out.write('<div class="center">')
 
             if self.gallerylevel > 0:
-                self.out.write('<div class="gallerybox" style="width: 155px;">')
-                
-                self.out.write('<div class="thumb" style="padding: 13px 0; width: 150px;">')
-                self.out.write('<div style="margin-left: auto; margin-right: auto; width: 120px;">')
-                self.out.write('<a href="%s" class="image" title="%s">' % (url, caption))
+                self.out.write('<div class="gallerybox" ' +
+                        'style="width: 155px;">')
+
+                self.out.write('<div class="thumb" ' +
+                        'style="padding: 13px 0; width: 150px;">')
+                self.out.write('<div style="margin-left: auto; ' +
+                        'margin-right: auto; width: 120px;">')
+                self.out.write('<a href="%s" class="image" title="%s">' %
+                        (url, caption))
                 self.out.write(img)
                 self.out.write('</a>')
                 self.out.write('</div>')
@@ -374,15 +387,17 @@ class WPHTMLWriter(mwlib.htmlwriter.HTMLWriter):
                 self.out.write('<div class="thumb t%s">' % align)
 
                 if not width:
-                    width = 180 # default thumb width
-                self.out.write('<div style="width:%dpx;">' % (int(width)+2))
+                    width = 180  # default thumb width
+                self.out.write('<div style="width:%dpx;">' % (int(width) + 2))
 
                 if thumb:
                     self.out.write(img)
                     self.out.write('<div class="thumbcaption">')
                     self.out.write('<div class="magnify" style="float:right">')
-                    self.out.write('<a href="%s" class="internal" title="Enlarge">' % url)
-                    self.out.write('<img src="/static/magnify-clip.png"></img>')
+                    self.out.write('<a href="%s" class="internal" ' % url +
+                            'title="Enlarge">')
+                    self.out.write('<img src="/static/magnify-clip.png">' +
+                            '</img>')
                     self.out.write('</a>')
                     self.out.write('</div>')
                     for x in obj.children:
@@ -405,39 +420,41 @@ class WPHTMLWriter(mwlib.htmlwriter.HTMLWriter):
                 self.out.write(img)
 
             if center:
-                self.out.write('</div>');
+                self.out.write('</div>')
 
             self.imglevel -= 1
         else:
             self.out.write('<a href="%s">' % url.encode('utf8'))
-            
+
             for x in obj.children:
                 self.write(x)
-                
+
             self.out.write('</a>')
 
     def writeTagNode(self, t):
         if t.caption == 'gallery':
-            self.out.write('<table class="gallery"  cellspacing="0" cellpadding="0">')
-            
+            self.out.write('<table class="gallery" cellspacing="0" ' +
+                    'cellpadding="0">')
+
             self.gallerylevel += 1
 
             # TODO: More than one row.
             self.out.write('<tr>')
-            
+
             for x in t.children:
                 self.out.write('<td>')
                 self.write(x)
                 self.out.write('</td>')
-                
+
             self.out.write('</tr>')
 
             self.gallerylevel -= 1
-            
+
             self.out.write('</table>')
         else:
             # All others handled by base class.
             mwlib.htmlwriter.HTMLWriter.writeTagNode(self, t)
+
 
 class WikiRequestHandler(SimpleHTTPRequestHandler):
     def __init__(self, index, conf, request, client_address, server):
@@ -445,8 +462,8 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
         # self.reporturl = 'pullcord.laptop.org:8000'
         self.reporturl = False
         self.index = index
-        self.port  = conf['port']
-        self.lang  = conf['lang']
+        self.port = conf['port']
+        self.lang = conf['lang']
         self.flang = conf['flang']
         self.templateprefix = conf['templateprefix']
         self.templateblacklist = set()
@@ -455,18 +472,18 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
         self.wpfooter = conf['wpfooter']
         self.resultstitle = conf['resultstitle']
 
-        if conf.has_key('editdir'):
+        if 'editdir' in conf:
             self.editdir = conf['editdir']
         else:
             self.editdir = False
-        if conf.has_key('giturl'):
+        if 'giturl' in conf:
             self.giturl = conf['giturl']
         else:
             self.giturl = False
 
         self.wikidb = WPWikiDB(conf['path'], self.lang, self.templateprefix,
                 self.templateblacklist)
-            
+
         self.client_address = client_address
         SimpleHTTPRequestHandler.__init__(
             self, request, client_address, server)
@@ -478,8 +495,9 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
             edited = self.get_editedarticle(title)
             if edited:
                 article_text = edited
-            
-        # Pass ?override=1 in the url to replace wikitext for testing the renderer.
+
+        # Pass ?override=1 in the url to replace wikitext for testing
+        # the renderer.
         if self.params.get('override', 0):
             override = codecs.open('override.txt', 'r', 'utf-8')
             article_text = override.read()
@@ -491,15 +509,16 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
             article_text = self.wikidb.expandArticle(article_text, title)
 
         return article_text
-    
+
     def write_wiki_html(self, htmlout, title, article_text):
         tokens = scanner.tokenize(article_text, title)
 
         wiki_parsed = parser.Parser(tokens, title).parse()
         wiki_parsed.caption = title
-      
+
         imagedb = WPImageDB(self.flang + '/images/')
-        writer = WPHTMLWriter(self.index, htmlout, images=imagedb, lang=self.lang)
+        writer = WPHTMLWriter(self.index, htmlout, images=imagedb,
+                lang=self.lang)
         writer.write(wiki_parsed)
 
     def send_article(self, title):
@@ -511,20 +530,23 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
         # Replace underscores with spaces in title.
         title = title.replace("_", " ")
 
-        # Redirect to Wikipedia if the article text is empty (e.g. an image link)
+        # Redirect to Wikipedia if the article text is empty
+        # (e.g. an image link)
         if article_text == "":
             self.send_response(301)
-            self.send_header("Location", 
-                             'http://' + self.lang + '.wikipedia.org/wiki/' + title.encode('utf8'))
+            self.send_header("Location",
+                            'http://' + self.lang + '.wikipedia.org/wiki/' +
+                            title.encode('utf8'))
             self.end_headers()
             return
 
-        # Pass ?raw=1 in the URL to see the raw wikitext (post expansion, unless noexpand=1 is also set).
+        # Pass ?raw=1 in the URL to see the raw wikitext (post expansion,
+        # unless noexpand=1 is also set).
         if self.params.get('raw', 0):
             self.send_response(200)
             self.send_header("Content-Type", "text/plain; charset=utf-8")
             self.end_headers()
-        
+
             self.wfile.write(article_text.encode('utf8'))
         elif self.params.get('edit', 0):
             self.send_response(200)
@@ -532,17 +554,15 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
             self.end_headers()
 
             self.wfile.write('<html><body><form method="POST">')
-            # self.wfile.write('User: <input type="text" size="30" name="user"><br />')
-            # self.wfile.write('Comment: <input type="text" size="100" name="comment"><br />')
             self.wfile.write('<input type="submit" value="OK"><br />')
-            self.wfile.write('<textarea name="wmcontent" rows="40" cols="80" >')
+            self.wfile.write('<textarea name="wmcontent" rows="40" cols="80">')
             htmlout = HTMLOutputBuffer()
             htmlout.write(article_text.encode('utf8'))
             self.wfile.write(htmlout.getvalue())
             self.wfile.write("</textarea></form></body></html>")
         else:
             htmlout = HTMLOutputBuffer()
-            
+
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
             self.end_headers()
@@ -566,44 +586,48 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
             htmlout.write('    jax: ["input/TeX","output/HTML-CSS"],')
             htmlout.write('    "HTML-CSS": {')
             htmlout.write('      availableFonts:[],')
-            htmlout.write('      styles: {".MathJax_Preview": {visibility: "hidden"}}')
+            htmlout.write('      styles: {".MathJax_Preview": ' +
+                    '{visibility: "hidden"}}')
             htmlout.write('    }')
             htmlout.write('  });')
             htmlout.write('</script>')
 
             htmlout.write("<script type='text/javascript' " +
-                    "src='http://localhost:8000/static/MathJax/MathJax.js'></script>")
-        
+                    "src='http://localhost:8000/static/MathJax/MathJax.js'>" +
+                    "</script>")
+
             htmlout.write("<style type='text/css' media='screen, projection'>"
                              "@import '/static/common.css';"\
                              "@import '/static/monobook.css';"\
                              "@import '/static/styles.css';"\
                              "@import '/static/shared.css';"\
                              "</style>")
-            
+
             htmlout.write("</head>")
-            
+
             htmlout.write("<body>")
 
             htmlout.write("<h1>")
             htmlout.write(title)
             htmlout.write(' <font size="1">&middot; <a class="offsite" ')
-            htmlout.write('href="http://'+self.lang+'.wikipedia.org/wiki/')
+            htmlout.write('href="http://' + self.lang + '.wikipedia.org/wiki/')
             htmlout.write(title)
-            htmlout.write('">'+ self.wpheader + '</a> ')
+            htmlout.write('">' + self.wpheader + '</a> ')
 
             if self.reporturl:
                 # Report rendering problem.
                 htmlout.write('&middot; <a class="offsite" ')
                 htmlout.write('href="http://%s/render?q=' % self.reporturl)
                 htmlout.write(title)
-                htmlout.write('">Haz clic aquí si esta página contiene errores de presentación</a> ')
+                htmlout.write('">Haz clic aquí si esta página contiene ' +
+                        'errores de presentación</a> ')
 
                 # Report inappropriate content.
                 htmlout.write(' &middot; <a class="offsite" ')
                 htmlout.write('href="http://%s/report?q=' % self.reporturl)
                 htmlout.write(title)
-                htmlout.write('">Esta página contiene material inapropiado</a>')
+                htmlout.write('">Esta página contiene material inapropiado' +
+                        '</a>')
 
             if self.editdir:
                 htmlout.write(' &middot; <a ')
@@ -619,10 +643,10 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
                 htmlout.write('href="%s' % self.giturl)
                 htmlout.write(title)
                 htmlout.write('">[ Historial ]</a>')
-                
+
             htmlout.write("</font>")
             htmlout.write('</h1>')
- 
+
             self.write_wiki_html(htmlout, title, article_text)
 
             htmlout.write('<center>' + self.wpfooter + '</center>')
@@ -646,7 +670,7 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
             title = m.group(1)
 
             self._save_page(title)
-            
+
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
             self.end_headers()
@@ -656,26 +680,26 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
 
             self.wfile.write('<html><body>Editado: ')
             self.wfile.write('<a href="')
-            
+
             self.wfile.write(htmlout.getvalue())
             self.wfile.write('">')
             self.wfile.write(htmlout.getvalue())
             self.wfile.write('</body></html>')
-            
+
             return
 
-        # Any other request redirects to the index page.        
+        # Any other request redirects to the index page.
         self.send_response(301)
         self.send_header("Location", "/static/")
         self.end_headers()
 
     def _save_page(self, title):
         formdata = cgi.FieldStorage(fp=self.rfile,
-            headers=self.headers, environ = {'REQUEST_METHOD':'POST'},
-            keep_blank_values = 1)
+            headers=self.headers, environ={'REQUEST_METHOD': 'POST'},
+            keep_blank_values=1)
 
-        user      = formdata.getfirst('user')
-        comment   = formdata.getfirst('comment')
+        user = formdata.getfirst('user')
+        comment = formdata.getfirst('comment')
         wmcontent = formdata.getfirst('wmcontent')
 
         # fix newlines
@@ -710,14 +734,14 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
         if os.path.exists(fpath):
             buf = codecs.open(fpath, 'r', encoding='utf-8').read()
         return buf
-    
+
     def send_searchresult(self, title):
         self.send_response(200)
         self.send_header("Content-Type", "text/html; charset=utf-8")
         self.end_headers()
 
-        self.wfile.write("<html><head><title>" 
-                         + ( self.resultstitle % title.encode('utf8') )
+        self.wfile.write("<html><head><title>"
+                         + (self.resultstitle % title.encode('utf8'))
                          + "</title></head>")
 
         self.wfile.write("<style type='text/css' media='screen, projection'>"\
@@ -726,9 +750,8 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
         self.wfile.write("</head>")
 
         self.wfile.write("<body>")
-        
-        self.wfile.write("<h1>" 
-                         + ( self.resultstitle % title.encode('utf8') ) 
+
+        self.wfile.write("<h1>" + (self.resultstitle % title.encode('utf8'))
                          + "</h1>")
         self.wfile.write("<ul>")
 
@@ -740,7 +763,7 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
                                 (result.encode('utf8'), result.encode('utf8')))
 
         self.wfile.write("</ul>")
-            
+
         self.wfile.write("</body></html>")
 
     def send_image(self, path):
@@ -757,8 +780,9 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
 
     def handle_feedback(self, feedtype, article):
         with codecs.open("feedback.log", "a", "utf-8") as f:
-           f.write(feedtype +"\t"+ article +"\t" + self.client_address[0] +"\n")
-           f.close()
+            f.write(feedtype + "\t" + article + "\t" +
+                    self.client_address[0] + "\n")
+            f.close()
         self.send_response(200)
         self.send_header("Content-Type", "text/html; charset=utf-8")
         self.end_headers()
@@ -768,7 +792,9 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
         elif feedtype == "report":
             strtype = "material inapropriado"
 
-        self.wfile.write("<html><title>Comentario recibido</title>Gracias por reportar %s en la pagina <b>%s</b>.</html>" % (strtype, article.encode('utf8')))
+        self.wfile.write("<html><title>Comentario recibido</title>" +
+                "Gracias por reportar %s en la pagina <b>%s</b>.</html>" %
+                (strtype, article.encode('utf8')))
 
     def do_GET(self):
         real_path = urllib.unquote(self.path)
@@ -811,7 +837,7 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
             self.handle_feedback(m.group(1), self.params.get('q', ''))
             return
 
-        # Any other request redirects to the index page.        
+        # Any other request redirects to the index page.
         self.send_response(301)
         self.send_header("Location", "/static/")
         self.end_headers()
@@ -820,13 +846,14 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
 # Cache articles and specially templates
 @lrudecorator(100)
 def wp_load_article(title):
-    
+
     return wp.wp_load_article(title)
+
 
 def run_server(confvars):
     index = ArticleIndex('%s.processed.idx' % confvars['path'])
 
-    if confvars.has_key('editdir'):
+    if 'editdir' in confvars:
         try:
             for dir in ['wiki', 'wiki.orig']:
                 fdirpath = os.path.join(confvars['editdir'], dir)
@@ -838,28 +865,37 @@ def run_server(confvars):
 
     blacklistpath = os.path.join(os.path.dirname(confvars['path']),
                                'template_blacklist')
+    print "Reading template_blacklist %s" % blacklistpath
     blacklist = set()
     if os.path.exists(blacklistpath):
         with open(blacklistpath, 'r') as f:
             for line in f.readlines():
                 blacklist.add(line.rstrip().decode('utf8'))
+    print "Read %d blacklisted templates" % len(blacklist)
+
     confvars['templateblacklist'] = blacklist
     confvars['lang'] = os.path.basename(confvars['path'])[0:2]
     confvars['flang'] = os.path.basename(confvars['path'])[0:5]
     ## FIXME GETTEXT
-    templateprefixes = { 'en': 'Template:',
-                         'es': 'Plantilla:' }
+    templateprefixes = {'en': 'Template:', 'es': 'Plantilla:'}
     wpheader = {'en': 'From Wikipedia, The Free Encyclopedia',
                 'es': 'De Wikipedia, la enciclopedia libre'}
-    wpfooter = {'en': 'Content available under the <a href="/static/es-gfdl.html">GNU Free Documentation License</a>. <br/> Wikipedia is a registered trademark of the non-profit Wikimedia Foundation, Inc.<br/><a href="/static/about_en.html">About Wikipedia</a>',
-                'es': 'Contenido disponible bajo los términos de la <a href="/static/es-gfdl.html">Licencia de documentación libre de GNU</a>. <br/> Wikipedia es una marca registrada de la organización sin ánimo de lucro Wikimedia Foundation, Inc.<br/><a href="/static/about_es.html">Acerca de Wikipedia</a>'}
-    resultstitle = { 'en': "Search results for '%s'.",
-                     'es': "Resultados de la búsqueda sobre '%s'."
-        }
+    wpfooter = {'en': 'Content available under the ' +
+        '<a href="/static/es-gfdl.html">GNU Free Documentation License</a>.' +
+        ' <br/> Wikipedia is a registered trademark of the non-profit ' +
+        'Wikimedia Foundation, Inc.<br/><a href="/static/about_en.html">' +
+        'About Wikipedia</a>',
+                'es': 'Contenido disponible bajo los términos de la ' +
+        '<a href="/static/es-gfdl.html">Licencia de documentación libre de ' +
+        'GNU</a>. <br/> Wikipedia es una marca registrada de la organización' +
+        ' sin ánimo de lucro Wikimedia Foundation, Inc.<br/>' +
+        '<a href="/static/about_es.html">Acerca de Wikipedia</a>'}
+    resultstitle = {'en': "Search results for '%s'.",
+                    'es': "Resultados de la búsqueda sobre '%s'."}
 
-    confvars['templateprefix'] = templateprefixes[ confvars['lang'] ]
-    confvars['wpheader'] = wpheader[ confvars['lang'] ]
-    confvars['wpfooter'] = wpfooter[ confvars['lang'] ]
+    confvars['templateprefix'] = templateprefixes[confvars['lang']]
+    confvars['wpheader'] = wpheader[confvars['lang']]
+    confvars['wpfooter'] = wpfooter[confvars['lang']]
     confvars['resultstitle'] = resultstitle[confvars['lang']]
     httpd = MyHTTPServer(('', confvars['port']),
         lambda *args: WikiRequestHandler(index, confvars, *args))
@@ -871,15 +907,14 @@ def run_server(confvars):
         server = Thread(target=httpd.serve_forever)
         server.setDaemon(True)
         server.start()
-    
+
     # Tell the world that we're ready to accept request.
     print 'ready'
 
 
 if __name__ == '__main__':
 
-    conf  = {'path': sys.argv[1],
-             'port': int(sys.argv[2])} 
+    conf = {'path': sys.argv[1], 'port': int(sys.argv[2])}
     if len(sys.argv) > 3:
         conf['editdir'] = sys.argv[3]
     if len(sys.argv) > 4:
