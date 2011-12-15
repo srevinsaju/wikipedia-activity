@@ -466,7 +466,7 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
         self.lang = conf['lang']
         self.flang = conf['flang']
         self.templateprefix = conf['templateprefix']
-        self.templateblacklist = set()
+        self.templateblacklist = set(conf['templateblacklist'])
         self.imgbasepath = self.flang + '/images/'
         self.wpheader = conf['wpheader']
         self.wpfooter = conf['wpfooter']
