@@ -567,13 +567,6 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
             self.send_header("Content-Type", "text/html; charset=utf-8")
             self.end_headers()
 
-            htmlout.write(
-                '<?xml version="1.0"?>'\
-                '<!DOCTYPE html PUBLIC '\
-                '"-//W3C//DTD XHTML 1.1 plus MathML 2.0//EN" '\
-                '"http://www.w3.org/TR/MathML2/dtd/xhtml-math11-f.dtd" '\
-                '[ <!ENTITY mathml "http://www.w3.org/1998/Math/MathML"> ]> ')
-
             htmlout.write('<html xmlns="http://www.w3.org/1999/xhtml"> ')
 
             htmlout.write("<head>")
