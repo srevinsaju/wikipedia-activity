@@ -74,14 +74,6 @@ class RedirectParser:
             redirect = None
         return redirect
 
-    def get_redirected(self, article_title):
-        try:
-            article_title = article_title.capitalize()
-            redirected = self.redirects[article_title]
-        except:
-            redirect = None
-        return redirect
-
 
 class LinksFilter():
 
