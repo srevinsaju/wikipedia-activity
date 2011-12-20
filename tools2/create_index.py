@@ -17,14 +17,14 @@ def normalize_title(title):
 
 
 def create_index():
-    output_file  = open("%s.processed.idx" % input_xml_file_name, mode='w')
+    output_file = open("%s.processed.idx" % input_xml_file_name, mode='w')
     num_block = 1
-    index_file  = open("%s.processed.bz2t" % input_xml_file_name, mode='r')
+    index_file = open("%s.processed.bz2t" % input_xml_file_name, mode='r')
     index_line = index_file.readline()
     while index_line:
         parts = index_line.split()
         block_start = int(parts[0])
-        print "Block %d starts at %d" % (num_block, block_start) 
+        print "Block %d starts at %d" % (num_block, block_start)
         position = 0
         # extract the block
         bzip_file = open("%s.processed.bz2" % input_xml_file_name, mode='r')
@@ -59,11 +59,12 @@ def create_index():
 
     output_file.close()
 
+
 def create_bzip_table():
     """
     ../seek-bzip2/seek-bzip2/bzip-table <
     eswiki-20110810-pages-articles.xml.processed.bz2 >
-    eswiki-20110810-pages-articles.xml.processed.bz2t 
+    eswiki-20110810-pages-articles.xml.processed.bz2t
     """
     cmd = ['../seek-bzip2/bzip-table']
     bzip_file = open('%s.processed.bz2' % input_xml_file_name, mode='r')

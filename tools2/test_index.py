@@ -15,6 +15,7 @@ input_xml_file_name = config.input_xml_file_name
 def normalize_title(title):
     return title.strip().replace(' ', '_').capitalize()
 
+
 class RedirectParser:
 
     def __init__(self, file_name):
@@ -156,8 +157,9 @@ class DataRetriever():
             output += line
         return output
 
+
 if __name__ == '__main__':
-    
+
     redirects_checker = RedirectParser(input_xml_file_name)
     data_retriever = DataRetriever(input_xml_file_name, redirects_checker)
     data_retriever.get_expanded_article('Argentina')

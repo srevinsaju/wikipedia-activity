@@ -33,7 +33,7 @@ class WikimediaXmlPagesProcessor(handler.ContentHandler):
                 encoding='utf-8', mode='w')
         self._output_links = codecs.open('%s.links' % file_name,
                 encoding='utf-8', mode='w')
-        self._output_page_templates = codecs.open('%s.page_templates' % 
+        self._output_page_templates = codecs.open('%s.page_templates' %
                 file_name, encoding='utf-8', mode='w')
 
         os.remove('%s.all_redirects.db' % file_name)
@@ -140,11 +140,11 @@ class WikimediaXmlPagesProcessor(handler.ContentHandler):
                     # remove '{{' and '}}'
                     template = template[2:-2]
                     # if there are a pipe remove the right side
-                    pipe_position = template.find('|') 
+                    pipe_position = template.find('|')
                     if pipe_position > -1:
                         template = template[:pipe_position]
                     # if there are a : remove the right side
-                    colon_position = template.find(':') 
+                    colon_position = template.find(':')
                     if colon_position > -1:
                         template = template[:colon_position]
                     if len(template) == 0:
@@ -154,7 +154,7 @@ class WikimediaXmlPagesProcessor(handler.ContentHandler):
                         break
                     template = normalize_title(template)
                     # only add one time by page
-                    if not template in templates_list: 
+                    if not template in templates_list:
                         templates_list.append(template)
 
                 if len(templates_list) > 0:
@@ -162,7 +162,6 @@ class WikimediaXmlPagesProcessor(handler.ContentHandler):
                     for template in templates_list:
                         self._output_page_templates.write('%s ' % template)
                     self._output_page_templates.write('\n')
-
 
         elif name == "mediawiki":
             self._output.close()
