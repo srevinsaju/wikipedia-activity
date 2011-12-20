@@ -12,27 +12,12 @@ import re
 from xml.sax import make_parser, handler
 import os
 from operator import itemgetter
+import config
 
 try:
     from hashlib import md5
 except ImportError:
     from md5 import md5
-
-input_xml_file_name = './eswiki-20111112-pages-articles.xml'
-favorites_file_name = 'favorites.txt'
-blacklist_file_name = './blacklist.txt'
-
-REDIRECT_TAGS = [u'#REDIRECT', u'#REDIRECCIÓN']
-
-BLACKLISTED_NAMESPACES = ['Wikipedia:', 'MediaWiki:']
-
-TEMPLATE_NAMESPACES = ['Plantilla:']
-
-LINKS_NAMESPACES = [u'Categoría']
-
-FILE_TAG = 'Archivo:'
-
-MAX_IMAGE_SIZE = 300
 
 
 def normalize_title(title):
@@ -124,7 +109,7 @@ class PagesProcessor(handler.ContentHandler):
         self._output_page_images = codecs.open('%s.page_images' % file_name,
                 encoding='utf-8', mode='w')
 
-        self.image_re = re.compile('\[\[%s.*?\]\]' % FILE_TAG)
+        self.image_re = re.compile('\[\[%s.*?\]\]' % config.FILE_TAG)
         self._selected_pages_list = selected_pages_list
         self._pages_blacklist = pages_blacklist
 
@@ -160,9 +145,9 @@ class PagesProcessor(handler.ContentHandler):
         parts = image_wiki.split('|')
 
         name = parts[0]
-        name = name[len(FILE_TAG):]
+        name = name[len(config.FILE_TAG):]
 
-        image_size = MAX_IMAGE_SIZE
+        image_size = config.MAX_IMAGE_SIZE
         # check if there are a size defined
         for part in parts:
             # this image sizes are copied from server.py
@@ -191,15 +176,15 @@ class PagesProcessor(handler.ContentHandler):
             self._page = self._text
         elif name == "page":
 
-            for namespace in BLACKLISTED_NAMESPACES:
+            for namespace in config.BLACKLISTED_NAMESPACES:
                 if unicode(self._title).startswith(namespace):
                     return
 
-            for namespace in TEMPLATE_NAMESPACES:
+            for namespace in config.TEMPLATE_NAMESPACES:
                 if unicode(self._title).startswith(namespace):
                     return
 
-            for tag in REDIRECT_TAGS:
+            for tag in config.REDIRECT_TAGS:
                 if unicode(self._page).startswith(tag):
                     return
 
@@ -359,16 +344,17 @@ class RedirectsUsedWriter():
 if __name__ == '__main__':
     MAX_LEVELS = 1
 
-    fav_reader = FileListReader(favorites_file_name)
+    fav_reader = FileListReader(config.favorites_file_name)
     print "Loaded %d favorite pages" % len(fav_reader.list)
 
-    if not os.path.exists(blacklist_file_name):
-        pages_blacklisted_reader = FileListReader(blacklist_file_name)
+    if not os.path.exists(config.blacklist_file_name):
+        pages_blacklisted_reader = FileListReader(config.blacklist_file_name)
         pages_blacklist = pages_blacklisted_reader
         print "Loaded %d blacklisted pages" % len(pages_blacklist)
     else:
         pages_blacklist = []
 
+    input_xml_file_name = config.input_xml_file_name
     print "Init redirects checker"
     redirect_checker = RedirectParser(input_xml_file_name)
 

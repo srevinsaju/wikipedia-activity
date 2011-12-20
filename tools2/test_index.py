@@ -7,7 +7,10 @@ import os
 from subprocess import Popen, PIPE, STDOUT
 import re
 
-input_xml_file_name = './eswiki-20111112-pages-articles.xml'
+import config
+
+input_xml_file_name = config.input_xml_file_name
+
 
 def normalize_title(title):
     return title.strip().replace(' ', '_').capitalize()
@@ -158,5 +161,3 @@ if __name__ == '__main__':
     redirects_checker = RedirectParser(input_xml_file_name)
     data_retriever = DataRetriever(input_xml_file_name, redirects_checker)
     data_retriever.get_expanded_article('Argentina')
-
-    #print data_retriever.get_text_article('Argentina')

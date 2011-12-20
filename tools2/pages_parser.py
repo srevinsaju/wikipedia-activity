@@ -8,15 +8,7 @@ import re
 import sqlite3
 import os
 
-input_xml_file_name = './eswiki-20111112-pages-articles.xml'
-
-REDIRECT_TAGS = [u'#REDIRECT', u'#REDIRECCIÓN']
-
-BLACKLISTED_NAMESPACES = ['Wikipedia:', 'MediaWiki:']
-
-TEMPLATE_NAMESPACES = ['Plantilla:']
-
-LINKS_NAMESPACES = [u'Categoría']
+import config
 
 
 def normalize_title(title):
@@ -80,13 +72,13 @@ class WikimediaXmlPagesProcessor(handler.ContentHandler):
             print "Page %d '%s', length %d                   \r" % \
                     (self._page_counter, title, len(self._page)),
 
-            for namespace in BLACKLISTED_NAMESPACES:
+            for namespace in config.BLACKLISTED_NAMESPACES:
                 if unicode(self._title).startswith(namespace):
                     self._register_page(self._output_blacklisted)
                     return
 
             is_redirect = False
-            for tag in REDIRECT_TAGS:
+            for tag in config.REDIRECT_TAGS:
                 if unicode(self._page).startswith(tag):
                     is_redirect = True
                     break
@@ -108,7 +100,7 @@ class WikimediaXmlPagesProcessor(handler.ContentHandler):
                             'values (?,?)', (title, page_destination))
             else:
 
-                for namespace in TEMPLATE_NAMESPACES:
+                for namespace in config.TEMPLATE_NAMESPACES:
                     if unicode(self._title).startswith(namespace):
                         # templates
                         self._register_page(self._output_templates)
@@ -131,7 +123,7 @@ class WikimediaXmlPagesProcessor(handler.ContentHandler):
                     valid = True
                     if colon_position > -1:
                         namespace = link[:colon_position]
-                        valid = namespace in LINKS_NAMESPACES
+                        valid = namespace in config.LINKS_NAMESPACES
                     if valid:
                         # if there are a pipe remove the right side
                         pipe_position = link.find('|')
@@ -186,5 +178,6 @@ class WikimediaXmlPagesProcessor(handler.ContentHandler):
 
 
 parser = make_parser()
-parser.setContentHandler(WikimediaXmlPagesProcessor(input_xml_file_name))
-parser.parse(input_xml_file_name)
+parser.setContentHandler(
+    WikimediaXmlPagesProcessor(config.input_xml_file_name))
+parser.parse(config.input_xml_file_name)

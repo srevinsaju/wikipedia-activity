@@ -7,7 +7,9 @@ import codecs
 import os
 from subprocess import call, Popen, PIPE, STDOUT
 
-input_xml_file_name = './eswiki-20111112-pages-articles.xml'
+import config
+
+input_xml_file_name = config.input_xml_file_name
 
 
 def normalize_title(title):
