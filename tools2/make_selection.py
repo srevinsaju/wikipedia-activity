@@ -13,6 +13,11 @@ from xml.sax import make_parser, handler
 import os
 from operator import itemgetter
 
+try:
+    from hashlib import md5
+except ImportError:
+    from md5 import md5
+
 input_xml_file_name = './eswiki-20111112-pages-articles.xml'
 favorites_file_name = 'favorites.txt'
 blacklist_file_name = './blacklist.txt'
@@ -24,6 +29,10 @@ BLACKLISTED_NAMESPACES = ['Wikipedia:', 'MediaWiki:']
 TEMPLATE_NAMESPACES = ['Plantilla:']
 
 LINKS_NAMESPACES = [u'Categoría']
+
+FILE_TAG = 'Archivo:'
+
+MAX_IMAGE_SIZE = 300
 
 
 def normalize_title(title):
@@ -112,6 +121,10 @@ class PagesProcessor(handler.ContentHandler):
         self._page = None
         self._output = codecs.open('%s.processed' % file_name,
                 encoding='utf-8', mode='w')
+        self._output_page_images = codecs.open('%s.page_images' % file_name,
+                encoding='utf-8', mode='w')
+
+        self.image_re = re.compile('\[\[%s.*?\]\]' % FILE_TAG)
         self._selected_pages_list = selected_pages_list
         self._pages_blacklist = pages_blacklist
 
@@ -131,6 +144,45 @@ class PagesProcessor(handler.ContentHandler):
         register.write('\02\n')
         register.write('%s\n' % content)
         register.write('\03\n')
+
+    def _hashpath(self, name):
+        name = name.replace(' ', '_')
+        name = name[:1].upper() + name[1:]
+        d = md5(name.encode('utf-8')).hexdigest()
+        return "/".join([d[0], d[:2], name])
+
+    def _get_url_image(self, image_wiki):
+        """
+        [[Archivo:Johann Sebastian Bach.jpg|thumb|200px|right|[[J. S. Bach]]
+        """
+        # remove [[ and ]]
+        image_wiki = image_wiki[2:-2]
+        parts = image_wiki.split('|')
+
+        name = parts[0]
+        name = name[len(FILE_TAG):]
+
+        image_size = MAX_IMAGE_SIZE
+        # check if there are a size defined
+        for part in parts:
+            # this image sizes are copied from server.py
+            if part.strip() == 'thumb':
+                image_size = 180
+                break
+
+            if part.find('px') > -1:
+                try:
+                    image_size = int(part[:part.find('px')])
+                except:
+                    pass
+
+        hashed_name = self._hashpath(name).encode('utf8')
+        url = 'http://upload.wikimedia.org/wikipedia/commons/thumb/' \
+            + hashed_name + ('/%dpx-' % image_size) + name.replace(' ', '_')
+        # the svg files are requested as png
+        if re.match(r'.*\.svg$', url, re.IGNORECASE):
+            url = url + '.png'
+        return url
 
     def endElement(self, name):
         if name == "title":
@@ -160,8 +212,25 @@ class PagesProcessor(handler.ContentHandler):
                 # processed
                 self._register_page(self._output, title, self._page)
 
+                # find images used in the pages
+                images = self.image_re.findall(unicode(self._page))
+                images_list = []
+                for image in images:
+                    print image
+                    url = self._get_url_image(image)
+                    # only add one time by page
+                    if not url in images_list:
+                        images_list.append(url)
+
+                if len(images_list) > 0:
+                    self._output_page_images.write('%s ' % title)
+                    for image in images_list:
+                        self._output_page_images.write('%s ' % image)
+                    self._output_page_images.write('\n')
+
         elif name == "mediawiki":
             self._output.close()
+            self._output_page_images.close()
             print "Processed %d pages." % self._page_counter
 
 
