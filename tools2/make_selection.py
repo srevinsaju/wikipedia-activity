@@ -161,7 +161,7 @@ class PagesProcessor(handler.ContentHandler):
                 except:
                     pass
 
-        hashed_name = self._hashpath(name).encode('utf8')
+        hashed_name = unicode(self._hashpath(name))  # .encode('utf8')
         url = 'http://upload.wikimedia.org/wikipedia/commons/thumb/' \
             + hashed_name + ('/%dpx-' % image_size) + name.replace(' ', '_')
         # the svg files are requested as png
