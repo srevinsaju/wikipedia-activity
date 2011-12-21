@@ -5,8 +5,8 @@
 from xml.sax import make_parser, handler
 import codecs
 import re
-import sqlite3
 import os
+import sys
 
 import config
 
@@ -17,30 +17,29 @@ def normalize_title(title):
 
 class WikimediaXmlPagesProcessor(handler.ContentHandler):
 
-    def __init__(self, file_name):
+    def __init__(self, file_name, debug):
         handler.ContentHandler.__init__(self)
         self._page_counter = 0
         self._page = None
-        self._output = codecs.open('%s.all_pages' % file_name,
-                encoding='utf-8', mode='w')
-        self._output_titles = codecs.open('%s.titles' % file_name,
-                encoding='utf-8', mode='w')
+        self._debug = debug
+        if self._debug:
+            self._output = codecs.open('%s.all_pages' % file_name,
+                    encoding='utf-8', mode='w')
+        if self._debug:
+            self._output_titles = codecs.open('%s.titles' % file_name,
+                    encoding='utf-8', mode='w')
         self._output_redirects = codecs.open('%s.redirects' % file_name,
                 encoding='utf-8', mode='w')
         self._output_templates = codecs.open('%s.templates' % file_name,
                 encoding='utf-8', mode='w')
-        self._output_blacklisted = codecs.open('%s.blacklisted' % file_name,
-                encoding='utf-8', mode='w')
+        if self._debug:
+            self._output_blacklisted = codecs.open('%s.blacklisted' %
+                    file_name, encoding='utf-8', mode='w')
         self._output_links = codecs.open('%s.links' % file_name,
                 encoding='utf-8', mode='w')
         self._output_page_templates = codecs.open('%s.page_templates' %
                 file_name, encoding='utf-8', mode='w')
 
-        os.remove('%s.all_redirects.db' % file_name)
-
-        self.conn = sqlite3.connect('%s.all_redirects.db' % file_name)
-        self.conn.execute('create table redirects(page, redirect_to)')
-        self.cur = self.conn.cursor()
         self.link_re = re.compile('\[\[.*?\]\]')
         self.template_re = re.compile('{{.*?}}')
 
@@ -74,7 +73,8 @@ class WikimediaXmlPagesProcessor(handler.ContentHandler):
 
             for namespace in config.BLACKLISTED_NAMESPACES:
                 if unicode(self._title).startswith(namespace):
-                    self._register_page(self._output_blacklisted)
+                    if self._debug:
+                        self._register_page(self._output_blacklisted)
                     return
 
             is_redirect = False
@@ -95,9 +95,6 @@ class WikimediaXmlPagesProcessor(handler.ContentHandler):
 
                 self._output_redirects.write('[[%s]]\t[[%s]]\n' %
                         (title, page_destination))
-
-                self.cur.execute('insert into redirects (page, redirect_to) ' +
-                            'values (?,?)', (title, page_destination))
             else:
 
                 for namespace in config.TEMPLATE_NAMESPACES:
@@ -107,10 +104,12 @@ class WikimediaXmlPagesProcessor(handler.ContentHandler):
                         return
 
                 # titles
-                self._output_titles.write('%s\n' % title)
+                if self._debug:
+                    self._output_titles.write('%s\n' % title)
 
                 # processed
-                self._register_page(self._output)
+                if self._debug:
+                    self._register_page(self._output)
 
                 # links
                 links = self.link_re.findall(unicode(self._page))
@@ -164,19 +163,22 @@ class WikimediaXmlPagesProcessor(handler.ContentHandler):
                     self._output_page_templates.write('\n')
 
         elif name == "mediawiki":
-            self._output.close()
-            self._output_titles.close()
+            if self._debug:
+                self._output.close()
+                self._output_titles.close()
+                self._output_blacklisted.close()
             self._output_redirects.close()
             self._output_templates.close()
-            self._output_blacklisted.close()
             self._output_links.close()
             self._output_page_templates.close()
-            self.conn.commit()
-            self.conn.close()
             print "Processed %d pages." % self._page_counter
 
+debug = False
+print sys.argv
+if len(sys.argv) > 1:
+    debug = (sys.argv[1] == '--debug')
 
 parser = make_parser()
 parser.setContentHandler(
-    WikimediaXmlPagesProcessor(config.input_xml_file_name))
+    WikimediaXmlPagesProcessor(config.input_xml_file_name, debug))
 parser.parse(config.input_xml_file_name)
