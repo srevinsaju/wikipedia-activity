@@ -190,8 +190,8 @@ class PagesProcessor(handler.ContentHandler):
 
             title = normalize_title(self._title)
 
-            if title not in self._pages_blacklist and \
-                title in self._selected_pages_list:
+            if (title not in self._pages_blacklist) and \
+                (title in self._selected_pages_list):
                 print "%d Page '%s', length %d                   \r" % \
                         (self._page_counter, title, len(self._page)),
                 # processed
@@ -201,7 +201,6 @@ class PagesProcessor(handler.ContentHandler):
                 images = self.image_re.findall(unicode(self._page))
                 images_list = []
                 for image in images:
-                    print image
                     url = self._get_url_image(image)
                     # only add one time by page
                     if not url in images_list:
@@ -347,9 +346,9 @@ if __name__ == '__main__':
     fav_reader = FileListReader(config.favorites_file_name)
     print "Loaded %d favorite pages" % len(fav_reader.list)
 
-    if not os.path.exists(config.blacklist_file_name):
+    if os.path.exists(config.blacklist_file_name):
         pages_blacklisted_reader = FileListReader(config.blacklist_file_name)
-        pages_blacklist = pages_blacklisted_reader
+        pages_blacklist = pages_blacklisted_reader.list
         print "Loaded %d blacklisted pages" % len(pages_blacklist)
     else:
         pages_blacklist = []
