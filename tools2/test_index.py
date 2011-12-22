@@ -6,7 +6,7 @@ import codecs
 import os
 from subprocess import Popen, PIPE, STDOUT
 import re
-
+import sys
 import config
 
 input_xml_file_name = config.input_xml_file_name
@@ -130,7 +130,10 @@ class DataRetriever():
         output = ''
         print "Looking for article %s" % article_title
         num_block, position = self._get_article_position(article_title)
-        print "Found at block %d position %d" % (num_block, position)
+        if num_block == -1:
+            print "Article not found"
+        else:
+            print "Found at block %d position %d" % (num_block, position)
 
         block_start = self._get_block_start(num_block)
         #print "Block %d starts at %d" % (num_block, block_start)
@@ -139,7 +142,7 @@ class DataRetriever():
 
         # extract the block
         bzip_file = open(self._bzip_file_name, mode='r')
-        cmd = ['./seek-bzip2/seek-bunzip', str(block_start)]
+        cmd = ['../seek-bzip2/seek-bunzip', str(block_start)]
         p = Popen(cmd, stdin=bzip_file, stdout=PIPE, stderr=STDOUT,
                 close_fds=True)
 
@@ -160,6 +163,13 @@ class DataRetriever():
 
 if __name__ == '__main__':
 
+    page_title = ''
+    if len(sys.argv) > 1:
+        page_title = sys.argv[1]
+    else:
+        print "Use ../tools2/test_index.py page_title"
+        exit()
+
     redirects_checker = RedirectParser(input_xml_file_name)
     data_retriever = DataRetriever(input_xml_file_name, redirects_checker)
-    data_retriever.get_expanded_article('Argentina')
+    print data_retriever.get_expanded_article(page_title)
