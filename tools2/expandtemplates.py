@@ -6,11 +6,9 @@
 # License: GPLv2
 #
 # Usage:
-#  expandtemplates.py <dbdir/dbfile> 2>expand.log | bzip -c -9 - > foo/bar.processed
-# Or generate the proccessed file and compress it later
+# ./tools2/expandtemplates.py directory 2>expand.log
 # Ex:
-# python ./tools2/expandtemplates.py es_new/eswiki-20111112-pages-articles.xml \
-#     > es_new/eswiki-20111112-pages-articles.xml.processed
+# ./tools2/expandtemplates.py es_lat
 
 import sys
 reload(sys)
@@ -22,7 +20,7 @@ sys.path.append('.')
 
 import os
 import re
-
+import codecs
 from server import WPWikiDB
 from server import ArticleIndex
 
@@ -30,10 +28,21 @@ START_HEADING = chr(1)
 START_TEXT = chr(2)
 END_TEXT = chr(3)
 
+import config
 
 # __main__
 
-path = sys.argv[1]
+if len(sys.argv) > 1:
+    directory = sys.argv[1]
+else:
+    print "Use expandtemplates.py directory"
+    exit()
+
+xml_file_name = config.input_xml_file_name
+if xml_file_name.find('/') > -1:
+    xml_file_name = xml_file_name[xml_file_name.find('/') + 1:]
+path = os.path.join(directory, xml_file_name)
+
 index = ArticleIndex('%s.processed.idx' % path)
 
 lang = os.path.basename(path)[0:2]
@@ -53,6 +62,9 @@ if os.path.exists(templateblacklistpath):
 wikidb = WPWikiDB(path, lang, templateprefix, templateblacklist)
 rx = re.compile('(' + templateprefix + '|Wikipedia:)')
 
+_output = codecs.open('%s.processed_expanded' % path,
+        encoding='utf-8', mode='w')
+
 for title in index.article_index:  # ['Argentina', '1857 revolt']:
     if rx.match(title):
         sys.stderr.write('SKIPPING: ' + title + "\n")
@@ -65,11 +77,13 @@ for title in index.article_index:  # ['Argentina', '1857 revolt']:
         sys.stderr.write('ERROR - SKIPPING: ' + title + "\n")
         continue
 
-    sys.stdout.write(START_HEADING + '\n')
-    sys.stdout.write(title + '\n')
+    _output.write(START_HEADING + '\n')
+    _output.write(title + '\n')
     # in Python 2.x, len() over a unicode string
     # gives us the bytecount. Not compat w Python 3.
-    sys.stdout.write("%s\n" % len(article_text))
-    sys.stdout.write(START_TEXT + '\n')
-    sys.stdout.write(article_text + '\n')
-    sys.stdout.write(END_TEXT + '\n')
+    _output.write("%s\n" % len(article_text))
+    _output.write(START_TEXT + '\n')
+    _output.write(article_text + '\n')
+    _output.write(END_TEXT + '\n')
+
+_output.close()
