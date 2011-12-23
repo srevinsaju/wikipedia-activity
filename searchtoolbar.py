@@ -16,10 +16,16 @@
 
 from gettext import gettext as _
 
-from gi.repository import Gtk
+try:
+    from gi.repository import Gtk
 
-from sugar3.graphics.toolbutton import ToolButton
-from sugar3.graphics.toolcombobox import ToolComboBox
+    from sugar3.graphics.toolbutton import ToolButton
+    from sugar3.graphics.toolcombobox import ToolComboBox
+except ImportError:
+    import gtk as Gtk
+
+    from sugar.graphics.toolbutton import ToolButton
+    from sugar.graphics.toolcombobox import ToolComboBox
 
 
 class SearchToolbar(Gtk.Toolbar):

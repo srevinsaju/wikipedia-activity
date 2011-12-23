@@ -22,11 +22,12 @@ import sys
 import server
 import logging
 
-OLD_TOOLBAR = False
+USE_GTK2 = False
 try:
     from sugar3.graphics.toolbarbox import ToolbarBox, ToolbarButton
 except ImportError:
-    OLD_TOOLBAR = True
+    from sugar.graphics.toolbarbox import ToolbarBox, ToolbarButton
+    USE_GTK2 = True
 
 #from sugar.activity import registry
 #activity_info = registry.get_registry().get_activity('org.laptop.WebActivity')
@@ -61,19 +62,32 @@ class WikipediaActivity(webactivity.WebActivity):
 
         webactivity.WebActivity.__init__(self, handle)
 
+        if USE_GTK2:
+            # Use xpcom to set a RAM cache limit.  (Trac #7081.)
+            from xpcom import components
+            from xpcom.components import interfaces
+            cls = components.classes['@mozilla.org/preferences-service;1']
+            pref_service = cls.getService(interfaces.nsIPrefService)
+            branch = pref_service.getBranch("browser.cache.memory.")
+            branch.setIntPref("capacity", "5000")
+
+            # Use xpcom to turn off "offline mode" detection, which disables
+            # access to localhost for no good reason.  (Trac #6250.)
+            ios_class = components.classes["@mozilla.org/network/io-service;1"]
+            io_service = ios_class.getService(interfaces.nsIIOService2)
+            io_service.manageOfflineStatus = False
+
+
         self.searchtoolbar = SearchToolbar(self)
-        if OLD_TOOLBAR:
-            self.toolbox.add_toolbar(_('Search'), self.searchtoolbar)
-        else:
-            search_toolbar_button = ToolbarButton()
-            search_toolbar_button.set_page(self.searchtoolbar)
-            search_toolbar_button.props.icon_name = 'search-wiki'
-            search_toolbar_button.props.label = _('Search')
-            self.get_toolbar_box().toolbar.insert(search_toolbar_button, 1)
-            search_toolbar_button.show()
-            # Hide add-tabs button
-            if hasattr(self._primary_toolbar, '_add_tab'):
-                self._primary_toolbar._add_tab.hide()
+        search_toolbar_button = ToolbarButton()
+        search_toolbar_button.set_page(self.searchtoolbar)
+        search_toolbar_button.props.icon_name = 'search-wiki'
+        search_toolbar_button.props.label = _('Search')
+        self.get_toolbar_box().toolbar.insert(search_toolbar_button, 1)
+        search_toolbar_button.show()
+        # Hide add-tabs button
+        if hasattr(self._primary_toolbar, '_add_tab'):
+            self._primary_toolbar._add_tab.hide()
 
         self.searchtoolbar.show()
 
