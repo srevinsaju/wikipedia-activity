@@ -5,6 +5,7 @@
 
 import codecs
 import os
+import sys
 from subprocess import call, Popen, PIPE, STDOUT
 
 import config
@@ -71,6 +72,14 @@ def create_bzip_table():
     table_file = open('%s.processed.bz2t' % input_xml_file_name, mode='w')
     call(cmd, stdin=bzip_file, stdout=table_file, close_fds=True)
 
+if len(sys.argv) > 1:
+    if sys.argv[1] == '--delete_old':
+        if os.path.exists('%s.processed.bz2' % input_xml_file_name):
+            os.remove('%s.processed.bz2' % input_xml_file_name)
+        if os.path.exists('%s.processed.bz2t' % input_xml_file_name):
+            os.remove('%s.processed.bz2t' % input_xml_file_name)
+        if os.path.exists('%s.processed.idx' % input_xml_file_name):
+            os.remove('%s.processed.idx' % input_xml_file_name)
 
 print 'Compressing .processed file'
 if not os.path.exists('%s.processed.bz2' % input_xml_file_name):
