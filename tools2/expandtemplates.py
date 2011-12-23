@@ -72,7 +72,7 @@ for title in index.article_index:  # ['Argentina', '1857 revolt']:
 
     sys.stderr.write('PROCESSING: ' + title + "\n")
 
-    article_text = wikidb.getRawArticle(title, followRedirects=False)
+    article_text = wikidb.getExpandedArticle(title)
     if article_text == None:
         sys.stderr.write('ERROR - SKIPPING: ' + title + "\n")
         continue
