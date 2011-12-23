@@ -151,7 +151,19 @@ class WPWikiDB:
         if title in self.templates_cache:
             return self.templates_cache[title]
         else:
-            template_content = self.getRawArticle(title)
+            try:
+                template_content = self.getRawArticle(title)
+                # check recursion in templates
+                template_name = title[title.find(':') + 1:]
+
+                if re.search(template_name, template_content, re.IGNORECASE) \
+                    is not None:
+                    print "Found recursion template %s" % title
+                    template_content = re.sub(template_name, '_not_found_',
+                            template_content)
+            except:
+                template_content = ''
+
             self.templates_cache[title] = template_content
             return template_content
 
