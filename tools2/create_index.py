@@ -61,6 +61,29 @@ def create_index():
     output_file.close()
 
 
+def create_search_index(input_xml_file_name):
+    sys.path.append('..')
+    from whoosh.index import create_in
+    from whoosh.fields import *
+
+    schema = Schema(title=TEXT(stored=True))
+    if not os.path.exists("index_dir"):
+        os.mkdir("index_dir")
+    ix = create_in("index_dir", schema)
+    writer = ix.writer()
+    text_index_file = codecs.open("%s.processed.idx" % input_xml_file_name,
+            encoding='utf-8', mode='r')
+    line = text_index_file.readline()
+    while line:
+        parts = line.split()
+        if len(parts) > 0:
+            title_article = parts[0]
+            title_article = title_article.lower().replace('_', ' ')
+            writer.add_document(title=unicode(title_article))
+        line = text_index_file.readline()
+    writer.commit()
+    text_index_file.close()
+
 def create_bzip_table():
     """
     ../seek-bzip2/seek-bzip2/bzip-table <
@@ -80,6 +103,8 @@ if len(sys.argv) > 1:
             os.remove('%s.processed.bz2t' % input_xml_file_name)
         if os.path.exists('%s.processed.idx' % input_xml_file_name):
             os.remove('%s.processed.idx' % input_xml_file_name)
+        if os.path.exists('index_dir'):
+            shutil.rmtree('index_dir')
 
 print 'Compressing .processed file'
 if not os.path.exists('%s.processed.bz2' % input_xml_file_name):
@@ -96,5 +121,14 @@ if not os.path.exists('%s.processed.bz2t' % input_xml_file_name):
 else:
     print '.bz2t already exists. Skipping'
 
-print 'Creating index file'
-create_index()
+if not os.path.exists('%s.processed.idx' % input_xml_file_name):
+    print 'Creating index file'
+    create_index()
+else:
+    print '.idx already exists. Skipping'
+
+if not os.path.exists('%s.index_dir'):
+    print 'Creating locate database'
+    create_search_index(input_xml_file_name)
+else:
+    print '.locate.db already exists. Skipping'

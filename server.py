@@ -44,6 +44,9 @@ except ImportError:
     from md5 import md5
 
 import dataretriever
+from whoosh.qparser import QueryParser
+from whoosh.index import open_dir
+from whoosh.query import *
 
 ##
 ## Libs we ship -- add lib path for
@@ -62,8 +65,6 @@ platform_dir = "%s_%s%s" % (system_id,
 
 sys.path.append(os.path.join(_root_path, 'binarylibs', platform_dir))
 
-import wp
-from pylru import lrudecorator
 import mwlib.htmlwriter
 from mwlib import parser, scanner, expander
 
@@ -493,6 +494,10 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
         else:
             self.giturl = False
 
+        # init search index
+        base_path = os.path.dirname(conf['path'])
+        self.ix = open_dir(os.path.join(base_path, "index_dir"))
+
         self.wikidb = WPWikiDB(conf['path'], self.lang, self.templateprefix,
                 self.templateblacklist)
 
@@ -760,16 +765,24 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
                          + "</h1>")
         self.wfile.write("<ul>")
 
-        num_results = wp.wp_search(title.encode('utf8'))
-        for i in xrange(0, num_results):
-            result = unicode(wp.wp_result(i), 'utf8')
-            if not result.startswith(self.templateprefix):
-                self.wfile.write('<li><a href="/wiki/%s">%s</a></li>' %
-                                (result.encode('utf8'), result.encode('utf8')))
+        articles = self.search(unicode(title))
+        for article in articles:
+            #if not result.startswith(self.templateprefix):
+            self.wfile.write('<li><a href="/wiki/%s">%s</a></li>' %
+                            (article.encode('utf8'), article.encode('utf8')))
 
         self.wfile.write("</ul>")
 
         self.wfile.write("</body></html>")
+
+    def search(self, article_title):
+        with self.ix.searcher() as searcher:
+            query = QueryParser("title", self.ix.schema).parse(article_title)
+            results = searcher.search(query, limit=None)
+            articles = []
+            for n in range(results.scored_length()):
+                articles.append(results[n]['title'])
+            return articles
 
     def send_image(self, path):
         if os.path.exists(self.imgbasepath + path.encode('utf8')):
@@ -846,13 +859,6 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
         self.send_response(301)
         self.send_header("Location", "/static/")
         self.end_headers()
-
-
-# Cache articles and specially templates
-@lrudecorator(100)
-def wp_load_article(title):
-
-    return wp.wp_load_article(title)
 
 
 def run_server(confvars):
