@@ -22,7 +22,7 @@ import zipfile
 from fnmatch import fnmatch
 from sugar.activity import bundlebuilder
 
-INCLUDE_DIRS = ['activity', 'binarylibs', 'icons', 'locale', 'locale.freebsd',
+INCLUDE_DIRS = ['activity', 'binarylibs', 'icons', 'locale', 'whoosh', 'bin',
                 'mwlib', 'po', 'seek-bzip2', 'static', 'tools2']
 IGNORE_FILES = ['.gitignore', 'MANIFEST', '*.pyc', '*~', '*.bak', 'pseudo.po']
 
@@ -53,8 +53,16 @@ class WikiXOPackager(bundlebuilder.XOPackager):
                                  os.path.join(self.config.bundle_root_dir,
                                               data_file))
 
-            # add images
             data_path = os.path.dirname(self.data_file)
+            # add index directory
+            index_path = os.path.join(data_path, 'index_dir')
+            print "Adding index"
+            for f in self.list_files(index_path):
+                bundle_zip.write(os.path.join(index_path, f),
+                    os.path.join(self.config.bundle_root_dir,
+                        index_path, f))
+
+            # add images
             images_path = os.path.join(data_path, 'images')
             if os.path.exists(images_path):
                 print "Adding images"
@@ -77,6 +85,7 @@ class WikiXOPackager(bundlebuilder.XOPackager):
         base_dir = os.path.abspath(base_dir)
 
         for root, dirs, files in os.walk(base_dir):
+
             if ignore_files:
                 for pattern in ignore_files:
                     files = [f for f in files if not fnmatch(f, pattern)]
@@ -86,13 +95,15 @@ class WikiXOPackager(bundlebuilder.XOPackager):
                 result.append(os.path.join(rel_path, f))
 
             if root == base_dir:
-                for directory in dirs:
-                    print "** Checking directory", directory
+                n = 0
+                while n < len(dirs):
+                    directory = dirs[n]
                     if include_dirs is not None and \
                         not directory in include_dirs:
-                        print "** Removing directory", directory
+                        print "** Ignoring directory", directory
                         dirs.remove(directory)
-        #print result
+                    else:
+                        n = n + 1
         return result
 
 
