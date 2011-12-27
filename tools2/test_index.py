@@ -142,7 +142,7 @@ class DataRetriever():
 
         # extract the block
         bzip_file = open(self._bzip_file_name, mode='r')
-        cmd = ['../seek-bzip2/seek-bunzip', str(block_start)]
+        cmd = ['../bin/%s/seek-bunzip' % config.system_id, str(block_start)]
         p = Popen(cmd, stdin=bzip_file, stdout=PIPE, stderr=STDOUT,
                 close_fds=True)
 

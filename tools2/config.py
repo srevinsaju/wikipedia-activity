@@ -18,3 +18,11 @@ LINKS_NAMESPACES = [u'Categoría']
 FILE_TAG = 'Archivo:'
 
 MAX_IMAGE_SIZE = 300
+
+# This part should not be changed
+import platform
+
+system_id = "%s%s" % (platform.system().lower(),
+                          platform.architecture()[0][0:2])
+if platform.processor().startswith('arm'):
+    system_id = platform.processor()

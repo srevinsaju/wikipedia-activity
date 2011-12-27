@@ -29,7 +29,7 @@ def create_index():
         position = 0
         # extract the block
         bzip_file = open("%s.processed.bz2" % input_xml_file_name, mode='r')
-        cmd = ['../seek-bzip2/seek-bunzip', str(block_start)]
+        cmd = ['../bin/%s/seek-bunzip' % config.system_id, str(block_start)]
         p = Popen(cmd, stdin=bzip_file, stdout=PIPE, stderr=STDOUT,
                 close_fds=True)
         data_line = p.stdout.readline()
@@ -90,7 +90,7 @@ def create_bzip_table():
     eswiki-20110810-pages-articles.xml.processed.bz2 >
     eswiki-20110810-pages-articles.xml.processed.bz2t
     """
-    cmd = ['../seek-bzip2/bzip-table']
+    cmd = ['../bin/%s/bzip-table' % config.system_id]
     bzip_file = open('%s.processed.bz2' % input_xml_file_name, mode='r')
     table_file = open('%s.processed.bz2t' % input_xml_file_name, mode='w')
     call(cmd, stdin=bzip_file, stdout=table_file, close_fds=True)

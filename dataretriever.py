@@ -44,7 +44,8 @@ class RedirectParser:
 
 class DataRetriever():
 
-    def __init__(self, data_files_base):
+    def __init__(self, system_id, data_files_base):
+        self.system_id = system_id
         self._bzip_file_name = '%s.processed.bz2' % data_files_base
         self._bzip_table_file_name = '%s.processed.bz2t' % data_files_base
         self._index_file_name = '%s.processed.idx' % data_files_base
@@ -140,7 +141,7 @@ class DataRetriever():
 
         # extract the block
         bzip_file = open(self._bzip_file_name, mode='r')
-        cmd = ['./seek-bzip2/seek-bunzip', str(block_start)]
+        cmd = ['./bin/%s/seek-bunzip' % self.system_id, str(block_start)]
         p = Popen(cmd, stdin=bzip_file, stdout=PIPE, stderr=STDOUT,
                 close_fds=True)
 
@@ -162,9 +163,3 @@ class DataRetriever():
             output += line
         p.stdout.close()
         return output
-
-if __name__ == '__main__':
-    # only for test
-    data_retriever = DataRetriever('./eswiki-20111112-pages-articles.xml')
-    data_retriever.get_expanded_article('Argentina')
-    #print data_retriever.get_text_article('Argentina')
