@@ -238,7 +238,7 @@ class WPMathRenderer:
         latex = latex.replace('\t', '\\t')
 
         # postpone the process to do it with javascript at client side
-        mathml = '\n$$\n' + latex + '\n$$\n'
+        mathml = '<script type="math/tex">' + latex + '</script>'
         return mathml
 
 
@@ -592,7 +592,7 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
             # MathJs config
             htmlout.write('<script type="text/x-mathjax-config">')
             htmlout.write('  MathJax.Hub.Config({')
-            htmlout.write('    extensions: ["tex2jax.js"],')
+            htmlout.write('    extensions: [],')
             htmlout.write('    jax: ["input/TeX","output/HTML-CSS"],')
             htmlout.write('    "HTML-CSS": {')
             htmlout.write('      availableFonts:[],')
