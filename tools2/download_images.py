@@ -5,12 +5,13 @@
 import codecs
 import re
 import md5
-import urllib
+from urllib import FancyURLopener
 import os
 import sys
 import shutil
 
 import config
+
 
 class FileListReader():
 
@@ -21,6 +22,12 @@ class FileListReader():
         while line:
             self.list.append(line.strip())
             line = _file.readline()
+
+
+class CustomUrlOpener(FancyURLopener):
+
+    version = 'Mozilla/5.0 (X11; Linux x86_64; rv:9.0) Gecko/20100101 ' + \
+            'Firefox/9.0'
 
 
 class ImagesDownloader:
@@ -63,7 +70,8 @@ class ImagesDownloader:
                     shutil.copyfile(cache_file, dest)
                     return
             print "Downloading %s" % url
-            urllib.urlretrieve(url, dest)
+            opener = CustomUrlOpener()
+            opener.retrieve(url, dest)
 
 downlad_all = False
 cache_dir = None
