@@ -17,10 +17,10 @@
 from gettext import gettext as _
 
 try:
-    from gi.repository import Gtk
-
     from sugar3.graphics.toolbutton import ToolButton
     from sugar3.graphics.toolcombobox import ToolComboBox
+    # check first sugar3 because in os883 gi.repository is found but not sugar3
+    from gi.repository import Gtk
 except ImportError:
     import gtk as Gtk
 
