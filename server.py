@@ -192,6 +192,12 @@ class WPImageDB:
         d = md5(name.encode('utf-8')).hexdigest()
         return "/".join([d[0], d[:2], name])
 
+    def hashpath_dir(self, name):
+        name = name.replace(' ', '_')
+        name = name[:1].upper() + name[1:]
+        d = md5(name.encode('utf-8')).hexdigest()
+        return "/".join([d[0], d[:2]])
+
     def getPath(self, name, size=None):
         hashed_name = self.hashpath(name).encode('utf8')
         path = self.basepath + '/%s' % hashed_name
@@ -199,8 +205,15 @@ class WPImageDB:
 
     def getURL(self, name, size=None):
         hashed_name = self.hashpath(name).encode('utf8')
-        if os.path.exists(self.basepath + hashed_name):
-            url = '/' + self.basepath + hashed_name
+        if size is not None:
+            file_name = self.basepath + self.hashpath_dir(name) + '/' + \
+                    ('%dpx-' % size) + name.replace(' ', '_')
+        else:
+            file_name = self.basepath + self.hashpath_dir(name) + '/' + \
+                    name.replace(' ', '_')
+
+        if os.path.exists(file_name):
+            url = '/' + file_name
         else:
             if size is None:
                 url = 'http://upload.wikimedia.org/wikipedia/commons/' + \
@@ -480,7 +493,6 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
         self.flang = conf['flang']
         self.templateprefix = conf['templateprefix']
         self.templateblacklist = set(conf['templateblacklist'])
-        self.imgbasepath = self.flang + '/images/'
         self.wpheader = conf['wpheader']
         self.wpfooter = conf['wpfooter']
         self.resultstitle = conf['resultstitle']
@@ -495,8 +507,8 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
             self.giturl = False
 
         # init search index
-        base_path = os.path.dirname(conf['path'])
-        self.ix = open_dir(os.path.join(base_path, "index_dir"))
+        self.base_path = os.path.dirname(conf['path'])
+        self.ix = open_dir(os.path.join(self.base_path, "index_dir"))
 
         self.wikidb = WPWikiDB(conf['path'], self.lang, self.templateprefix,
                 self.templateblacklist)
@@ -533,7 +545,7 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
         wiki_parsed = parser.Parser(tokens, title).parse()
         wiki_parsed.caption = title
 
-        imagedb = WPImageDB(self.flang + '/images/')
+        imagedb = WPImageDB(self.base_path + '/images/')
         writer = WPHTMLWriter(self.index, htmlout, images=imagedb,
                 lang=self.lang)
         writer.write(wiki_parsed)
@@ -785,7 +797,7 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
             return articles
 
     def send_image(self, path):
-        if os.path.exists(self.imgbasepath + path.encode('utf8')):
+        if os.path.exists(path.encode('utf8')[1:]):
             # If image exists locally, serve it as normal.
             SimpleHTTPRequestHandler.do_GET(self)
         else:
@@ -838,9 +850,9 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
 
         # Image requests are handled locally or are referenced from Wikipedia.
         # matches /es_PE/images/, /en_US/images/ etc
-        m = re.match(r'^/\w\w_\w\w/images/(.+)$', real_path)
+        m = re.match(r'^/\w\w_\w*/images/(.+)$', real_path)
         if m:
-            self.send_image(m.group(1))
+            self.send_image(real_path)
             return
 
         # Static requests handed off to SimpleHTTPServer.
