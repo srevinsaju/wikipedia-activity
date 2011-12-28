@@ -47,7 +47,6 @@ import dataretriever
 from whoosh.qparser import QueryParser
 from whoosh.index import open_dir
 from whoosh.query import *
-
 ##
 ## Libs we ship -- add lib path for
 ## shared objects
@@ -245,6 +244,10 @@ class HTMLOutputBuffer:
 
 
 class WPMathRenderer:
+
+    def __init__(self, html_writer):
+        self.writer = html_writer
+
     def render(self, latex):
         print "MathRenderer %s" % latex
         latex = latex.replace('\f', '\\f')
@@ -252,6 +255,7 @@ class WPMathRenderer:
 
         # postpone the process to do it with javascript at client side
         mathml = '<script type="math/tex">' + latex + '</script>'
+        self.writer.math_processed = True
         return mathml
 
 
@@ -262,8 +266,9 @@ class WPHTMLWriter(mwlib.htmlwriter.HTMLWriter):
         self.index = index
         self.gallerylevel = 0
         self.lang = lang
+        self.math_processed = False
 
-        math_renderer = WPMathRenderer()
+        math_renderer = WPMathRenderer(self)
         mwlib.htmlwriter.HTMLWriter.__init__(self, wfile, images,
                 math_renderer=math_renderer)
 
@@ -549,6 +554,7 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
         writer = WPHTMLWriter(self.index, htmlout, images=imagedb,
                 lang=self.lang)
         writer.write(wiki_parsed)
+        return writer.math_processed
 
     def send_article(self, title):
         article_text = self.get_wikitext(title)
@@ -601,23 +607,6 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
             htmlout.write("<head>")
             htmlout.write("<title>%s</title>" % title.encode('utf8'))
 
-            # MathJs config
-            htmlout.write('<script type="text/x-mathjax-config">')
-            htmlout.write('  MathJax.Hub.Config({')
-            htmlout.write('    extensions: [],')
-            htmlout.write('    jax: ["input/TeX","output/HTML-CSS"],')
-            htmlout.write('    "HTML-CSS": {')
-            htmlout.write('      availableFonts:[],')
-            htmlout.write('      styles: {".MathJax_Preview": ' +
-                    '{visibility: "hidden"}}')
-            htmlout.write('    }')
-            htmlout.write('  });')
-            htmlout.write('</script>')
-
-            htmlout.write("<script type='text/javascript' " +
-                    "src='http://localhost:8000/static/MathJax/MathJax.js'>" +
-                    "</script>")
-
             htmlout.write("<style type='text/css' media='screen, projection'>"
                              "@import '/static/common.css';"\
                              "@import '/static/monobook.css';"\
@@ -669,7 +658,25 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
             htmlout.write("</font>")
             htmlout.write('</h1>')
 
-            self.write_wiki_html(htmlout, title, article_text)
+            needs_math = self.write_wiki_html(htmlout, title, article_text)
+
+            if needs_math:
+                # MathJs config
+                htmlout.write('<script type="text/x-mathjax-config">')
+                htmlout.write('  MathJax.Hub.Config({')
+                htmlout.write('    extensions: [],')
+                htmlout.write('    jax: ["input/TeX","output/HTML-CSS"],')
+                htmlout.write('    "HTML-CSS": {')
+                htmlout.write('      availableFonts:[],')
+                htmlout.write('      styles: {".MathJax_Preview": ' +
+                        '{visibility: "hidden"}}')
+                htmlout.write('    }')
+                htmlout.write('  });')
+                htmlout.write('</script>')
+
+                htmlout.write("<script type='text/javascript' " +
+                    "src='http://localhost:8000/static/MathJax/MathJax.js'>" +
+                    "</script>")
 
             htmlout.write('<center>' + self.wpfooter + '</center>')
             htmlout.write("</body>")
