@@ -26,10 +26,8 @@ from __future__ import with_statement
 import sys
 import os
 import platform
-import subprocess
 import select
 import codecs
-from StringIO import StringIO
 import BaseHTTPServer
 from SimpleHTTPServer import SimpleHTTPRequestHandler
 import cgi
@@ -37,7 +35,6 @@ import errno
 import urllib
 import tempfile
 import re
-import xml.dom.minidom
 try:
     from hashlib import md5
 except ImportError:
@@ -46,7 +43,6 @@ except ImportError:
 import dataretriever
 from whoosh.qparser import QueryParser
 from whoosh.index import open_dir
-from whoosh.query import *
 ##
 ## Libs we ship -- add lib path for
 ## shared objects

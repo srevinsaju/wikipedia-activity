@@ -3,7 +3,6 @@
 # create index
 
 import codecs
-import os
 from subprocess import Popen, PIPE, STDOUT
 import re
 
@@ -21,7 +20,6 @@ class RedirectParser:
                 encoding='utf-8', mode='r')
 
         self.redirects = {}
-        count = 0
         for line in input_redirects.readlines():
             links = self.link_re.findall(unicode(line))
             if len(links) == 2:
@@ -29,7 +27,6 @@ class RedirectParser:
                 destination = links[1][2:-2]
                 self.redirects[normalize_title(origin)] = \
                         normalize_title(destination)
-            count += 1
             #print "Processing %s" % normalize_title(origin)
         input_redirects.close()
 
