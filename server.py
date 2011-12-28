@@ -248,6 +248,8 @@ class WPMathRenderer:
         print "MathRenderer %s" % latex
         latex = latex.replace('\f', '\\f')
         latex = latex.replace('\t', '\\t')
+        # \bold gives a error
+        latex = latex.replace('\\bold', '')
 
         # postpone the process to do it with javascript at client side
         mathml = '<script type="math/tex">' + latex + '</script>'
