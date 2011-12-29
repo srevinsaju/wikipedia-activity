@@ -7,6 +7,7 @@ import codecs
 import os
 import sys
 from subprocess import call, Popen, PIPE, STDOUT
+import shutil
 
 import config
 
@@ -64,7 +65,7 @@ def create_index():
 def create_search_index(input_xml_file_name):
     sys.path.append('..')
     from whoosh.index import create_in
-    from whoosh.fields import *
+    from whoosh.fields import TEXT, Schema
 
     schema = Schema(title=TEXT(stored=True))
     if not os.path.exists("index_dir"):
