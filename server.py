@@ -152,11 +152,25 @@ class WPWikiDB:
                 # check recursion in templates
                 template_name = title[title.find(':') + 1:]
 
-                if re.search(template_name, template_content, re.IGNORECASE) \
-                    is not None:
+                # Remove <noinclude>  because expandtemplates doesn't detect it
+                # and follow recursions
+                lower_content = template_content.lower()
+                start_noinclude = lower_content.find('<noinclude>')
+                while start_noinclude > -1:
+                    end_noinclude = lower_content.find('</noinclude>')
+                    content = template_content[:start_noinclude]
+                    if end_noinclude > -1:
+                        content = content + template_content[end_noinclude + \
+                                len('</noinclude>'):]
+                    template_content = content
+                    lower_content = template_content.lower()
+                    start_noinclude = lower_content.find('<noinclude>')
+
+                if re.search('{{' + template_name, template_content, \
+                    re.IGNORECASE) is not None:
                     print "Found recursion template %s" % title
                     template_content = re.sub(template_name, '_not_found_',
-                            template_content)
+                            template_content, re.IGNORECASE)
             except:
                 template_content = ''
 
