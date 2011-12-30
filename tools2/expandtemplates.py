@@ -47,7 +47,9 @@ index = ArticleIndex('%s.processed.idx' % path)
 
 lang = os.path.basename(path)[0:2]
 ## FIXME GETTEXT
-templateprefixes = {'en': 'Template:', 'es': 'Plantilla:'}
+templateprefixes = {'en': 'Template:',
+        'es': 'Plantilla:',
+        'qu': 'Plantilla:'}
 templateprefix = templateprefixes[lang]
 
 # load blacklist only once
