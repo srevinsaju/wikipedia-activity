@@ -69,6 +69,30 @@ class RedirectParser:
         return redirect
 
 
+class PagesLinksFilter():
+
+    def __init__(self, file_name, redirects_checker):
+        """
+        Read the list of pages from the .links file
+        """
+        self.pages = []
+        input_links = codecs.open('%s.links' % file_name,
+                encoding='utf-8', mode='r')
+        line = input_links.readline()
+        while line:
+            words = line.split()
+            if len(words) > 0:
+                page = words[0]
+                print "Adding page %s" % page
+                redirected = redirects_checker.get_redirected(page)
+                if redirected is not None:
+                    page = redirected
+                if not page in self.pages:
+                    self.pages.append(page)
+            line = input_links.readline()
+        input_links.close()
+
+
 class LinksFilter():
 
     def __init__(self, file_name, redirects_checker, favorites):
@@ -341,10 +365,20 @@ class RedirectsUsedWriter():
 
 
 if __name__ == '__main__':
+
+    select_all = False
+    if len(sys.argv) > 1:
+        for argn in range(1, len(sys.argv)):
+            arg = sys.argv[argn]
+            if arg == '--all':
+                select_all = True
+                print "Selecting all the pages"
+
     MAX_LEVELS = 1
 
-    fav_reader = FileListReader(config.favorites_file_name)
-    print "Loaded %d favorite pages" % len(fav_reader.list)
+    if not select_all:
+        fav_reader = FileListReader(config.favorites_file_name)
+        print "Loaded %d favorite pages" % len(fav_reader.list)
 
     if os.path.exists(config.blacklist_file_name):
         pages_blacklisted_reader = FileListReader(config.blacklist_file_name)
@@ -359,23 +393,42 @@ if __name__ == '__main__':
 
     level = 1
 
-    selected_pages_file_name = '%s.pages_selected-level-%d' % \
-                    (input_xml_file_name, MAX_LEVELS)
-    if not os.path.exists(selected_pages_file_name):
-        while level <= MAX_LEVELS:
-            print "Processing links level %d" % level
-            links_filter = LinksFilter(input_xml_file_name,
-                    redirect_checker, fav_reader.list)
-            fav_reader.list.extend(links_filter.links)
-            level += 1
+    if not select_all:
+        selected_pages_file_name = '%s.pages_selected-level-%d' % \
+                        (input_xml_file_name, MAX_LEVELS)
+    else:
+        selected_pages_file_name = '%s.pages_selected' % input_xml_file_name
 
-        print "Writing pages_selected-level-%d file" % MAX_LEVELS
-        output_file = codecs.open(selected_pages_file_name,
-                        encoding='utf-8', mode='w')
-        for page  in fav_reader.list:
-            output_file.write('%s\n' % page)
-        output_file.close()
-        selected_pages_list = fav_reader.list
+    if not os.path.exists(selected_pages_file_name):
+        if not select_all:
+            while level <= MAX_LEVELS:
+                print "Processing links level %d" % level
+                links_filter = LinksFilter(input_xml_file_name,
+                        redirect_checker, fav_reader.list)
+                fav_reader.list.extend(links_filter.links)
+                level += 1
+
+            print "Writing pages_selected-level-%d file" % MAX_LEVELS
+            output_file = codecs.open(selected_pages_file_name,
+                            encoding='utf-8', mode='w')
+            for page  in fav_reader.list:
+                output_file.write('%s\n' % page)
+            output_file.close()
+            selected_pages_list = fav_reader.list
+        else:
+            print "Processing links"
+            links_filter = PagesLinksFilter(input_xml_file_name,
+                redirect_checker)
+
+            print "Writing pages_selected file %d pages" % \
+                    len(links_filter.pages)
+            output_file = codecs.open(selected_pages_file_name,
+                         encoding='utf-8', mode='w')
+            for page  in links_filter.pages:
+                output_file.write('%s\n' % page)
+            output_file.close()
+            selected_pages_list = links_filter.pages
+
     else:
         print "Loading selected pages"
         pages_selected_reader = FileListReader(selected_pages_file_name)
