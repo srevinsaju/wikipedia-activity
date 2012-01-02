@@ -204,7 +204,7 @@ class Link(Node):
     ])
     
     imageKeywords = set([
-        "image", "imagen", "bild", "archivo", "anexo"
+        "image", "imagen", "bild", "archivo", "anexo", "rikcha"
     ])
     
     categoryKeywords = set([
