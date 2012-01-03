@@ -143,7 +143,10 @@ class HTMLWriter(object):
         self.out.write(t.endtext.encode('utf8'))
             
     def writeRow(self, row):
-        self.out.write('<tr>')
+        svl = ""
+        if row.vlist:
+            svl = self.serializeVList(row.vlist)
+        self.out.write('<tr %s>' % svl)
         for x in row:
             self.write(x)
             
