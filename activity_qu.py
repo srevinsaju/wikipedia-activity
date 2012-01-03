@@ -4,9 +4,9 @@
 def configure():
     confvars = {}
     confvars['comandline'] = False
-    confvars['path'] = 'es_lat/eswiki-20111112-pages-articles.xml'
-    confvars['port'] = 8000
-    confvars['home_page'] = '/static/index_es.html'
+    confvars['path'] = 'qu_pe/quwiki-20111228-pages-articles.xml'
+    confvars['port'] = 8002
+    confvars['home_page'] = '/wiki/Piruw'
     confvars['templateprefix'] = 'Plantilla:'
     confvars['wpheader'] = 'De Wikipedia, la enciclopedia libre'
     confvars['wpfooter'] = 'Contenido disponible bajo los ' + \
@@ -37,7 +37,7 @@ if __name__ == '__main__':
 else:
     import activity
 
-    class WikipediaActivityES(activity.WikipediaActivity):
+    class WikipediaActivityQU(activity.WikipediaActivity):
 
         def __init__(self, handle):
             self.confvars = configure()

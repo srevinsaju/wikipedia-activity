@@ -918,31 +918,11 @@ def run_server(confvars):
     confvars['templateblacklist'] = blacklist
     confvars['lang'] = os.path.basename(confvars['path'])[0:2]
     confvars['flang'] = os.path.basename(confvars['path'])[0:5]
-    ## FIXME GETTEXT
-    templateprefixes = {'en': 'Template:', 'es': 'Plantilla:'}
-    wpheader = {'en': 'From Wikipedia, The Free Encyclopedia',
-                'es': 'De Wikipedia, la enciclopedia libre'}
-    wpfooter = {'en': 'Content available under the ' +
-        '<a href="/static/es-gfdl.html">GNU Free Documentation License</a>.' +
-        ' <br/> Wikipedia is a registered trademark of the non-profit ' +
-        'Wikimedia Foundation, Inc.<br/><a href="/static/about_en.html">' +
-        'About Wikipedia</a>',
-                'es': 'Contenido disponible bajo los términos de la ' +
-        '<a href="/static/es-gfdl.html">Licencia de documentación libre de ' +
-        'GNU</a>. <br/> Wikipedia es una marca registrada de la organización' +
-        ' sin ánimo de lucro Wikimedia Foundation, Inc.<br/>' +
-        '<a href="/static/about_es.html">Acerca de Wikipedia</a>'}
-    resultstitle = {'en': "Search results for '%s'.",
-                    'es': "Resultados de la búsqueda sobre '%s'."}
 
-    confvars['templateprefix'] = templateprefixes[confvars['lang']]
-    confvars['wpheader'] = wpheader[confvars['lang']]
-    confvars['wpfooter'] = wpfooter[confvars['lang']]
-    confvars['resultstitle'] = resultstitle[confvars['lang']]
     httpd = MyHTTPServer(('', confvars['port']),
         lambda *args: WikiRequestHandler(index, confvars, *args))
 
-    if __name__ == '__main__':
+    if confvars['comandline']:
         httpd.serve_forever()
     else:
         from threading import Thread
@@ -956,10 +936,5 @@ def run_server(confvars):
 
 if __name__ == '__main__':
 
-    conf = {'path': sys.argv[1], 'port': int(sys.argv[2])}
-    if len(sys.argv) > 3:
-        conf['editdir'] = sys.argv[3]
-    if len(sys.argv) > 4:
-        conf['giturl'] = sys.argv[4]
-
-    run_server(conf)
+    print "Execute the starting class fror your language wikipedia"
+    print "Ex: activity_es.py"

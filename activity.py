@@ -50,15 +50,14 @@ class WikipediaActivity(webactivity.WebActivity):
     def __init__(self, handle):
 
         logging.error("Starting server database: %s port: %s" %
-                (self.WIKIDB, self.HTTP_PORT))
+                (self.confvars['path'], self.confvars['port']))
 
         os.chdir(os.environ['SUGAR_BUNDLE_PATH'])
 
-        #server.load_db(self.WIKIDB)
-        server.run_server({'path': self.WIKIDB,
-                           'port': int(self.HTTP_PORT)})
+        server.run_server(self.confvars)
 
-        handle.uri = 'http://localhost:%s%s' % (self.HTTP_PORT, self.HOME_PAGE)
+        handle.uri = 'http://localhost:%s%s' % (self.confvars['port'],
+                self.confvars['home_page'])
 
         webactivity.WebActivity.__init__(self, handle)
 
@@ -76,7 +75,6 @@ class WikipediaActivity(webactivity.WebActivity):
             ios_class = components.classes["@mozilla.org/network/io-service;1"]
             io_service = ios_class.getService(interfaces.nsIIOService2)
             io_service.manageOfflineStatus = False
-
 
         self.searchtoolbar = SearchToolbar(self)
         search_toolbar_button = ToolbarButton()
@@ -99,6 +97,7 @@ class WikipediaActivity(webactivity.WebActivity):
             return self._tabbed_view.props.current_browser
 
     def _go_home_button_cb(self, button):
-        home_url = 'http://localhost:%s%s' % (self.HTTP_PORT, self.HOME_PAGE)
+        home_url = 'http://localhost:%s%s' % (self.confvars['port'],
+                self.confvars['home_page'])
         browser = self._get_browser()
         browser.load_uri(home_url)

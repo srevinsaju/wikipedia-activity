@@ -39,11 +39,14 @@ class SearchToolbar(Gtk.Toolbar):
         self.insert(self._providercombo, -1)
         self._providercombo.show()
 
+        search_url = 'http://localhost:' + str(activity.confvars['port']) \
+                        + '/search?q=%s'
+
         default_search_providers = {
             'schoolserver': {
                 'order': 3,
                 'name':  _('Wiki'),
-                'url':   'http://localhost:'+ self._activity.HTTP_PORT + '/search?q=%s',
+                'url':   search_url,
                 'icon':  'zoom-home'
             },
         }
