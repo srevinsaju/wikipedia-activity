@@ -32,7 +32,7 @@ class SearchToolbar(Gtk.Toolbar):
     def __init__(self, activity):
         Gtk.Toolbar.__init__(self)
 
-        self._activity = activity        
+        self._activity = activity
 
         self._providercombo = ToolComboBox()
 
@@ -52,7 +52,7 @@ class SearchToolbar(Gtk.Toolbar):
         }
 
         self.set_providers(default_search_providers)
-        
+
         self._entry = Gtk.Entry()
         self._entry.connect('activate', self._entry_activate_cb)
 
@@ -60,28 +60,28 @@ class SearchToolbar(Gtk.Toolbar):
         entry_item.set_expand(True)
         entry_item.add(self._entry)
         self._entry.show()
-        
+
         self.insert(entry_item, -1)
         entry_item.show()
-  
+
     def _entry_activate_cb(self, entry):
         k = self._providercombo.combo.get_active_item()[0]
         p = self._providers[k]
-        
+
         browser = self._activity._get_browser()
         browser.load_uri(p['url'] % entry.props.text)
         browser.grab_focus()
 
     def _cmp_provider_order(self, a, b):
         return self._providers[a]['order'] - self._providers[b]['order']
-    
+
     def set_providers(self, providers):
         self._providers = providers
-        
+
         self._providercombo.combo.remove_all()
-        
+
         for k in sorted(self._providers.keys(), cmp=self._cmp_provider_order):
             p = self._providers[k]
             self._providercombo.combo.append_item(k, p['name'], p['icon'])
-        
+
         self._providercombo.combo.set_active(0)
