@@ -633,6 +633,7 @@ class Parser(object):
     
     parseDIVTag = parseTag
     parseSPANTag = parseTag
+    parseSUPTag = parseTag
     parseINDEXTag = parseTag
     parseTTTag = parseTag
 
@@ -1129,7 +1130,7 @@ class Parser(object):
         token = self.token[0]
         if style is None:
             style = Style(token.t)
-        
+
         b = style        
         end = EndTagToken(token.t)
         start = TagToken(token.t)
@@ -1167,7 +1168,7 @@ class Parser(object):
 
         return b
 
-    parseVARTag = parseCITETag = parseSTag = parseSUPTag = parseSUBTag = parseBIGTag = parseSMALLTag = _parseStyledTag
+    parseVARTag = parseCITETag = parseSTag = parseSUBTag = parseBIGTag = parseSMALLTag = _parseStyledTag
     
     def parseBRTag(self):
         token = self.token[0]
@@ -1255,7 +1256,11 @@ class Parser(object):
         return self._parseHTMLList(False)
 
     def parseLITag(self):
+
         p = item = Item()
+
+        p.vlist = parseParams(self.token[1])
+
         self.next()
         break_at = TokenSet([EndTagToken, 'ENDTABLE', 'SECTION'])
         while self.left:
@@ -1283,7 +1288,7 @@ class Parser(object):
                 self.next()
 
         return item
-        
+
         
     def _parseHTMLList(self, numbered):
         lst = ItemList()

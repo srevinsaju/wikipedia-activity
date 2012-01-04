@@ -113,7 +113,12 @@ class HTMLWriter(object):
     def writeTagNode(self, t):
         if t.caption == 'ref':
             self.references.append(t)
-            self.out.write("<sup>%s</sup>" % len(self.references))
+            svl = ""
+            if t.vlist:
+                svl = self.serializeVList(t.vlist)
+
+            self.out.write("<sup %s>%s</sup>" % (svl, len(self.references)))
+
             return
         elif t.caption == 'references':
             if not self.references:
@@ -121,7 +126,10 @@ class HTMLWriter(object):
 
             self.out.write("<ol>")
             for r in self.references:
-                self.out.write("<li>")
+                svl = ""
+                if r.vlist:
+                    svl = self.serializeVList(r.vlist)
+                self.out.write("<li %s>" % svl)
                 for x in r:                    
                     self.write(x)
                 self.out.write("</li>")
@@ -400,7 +408,10 @@ class HTMLWriter(object):
         self.out.write("</%s>" % tag)
 
     def writeItem(self, item):
-        self.out.write("<li>")
+        svl = ""
+        if item.vlist:
+            svl = self.serializeVList(item.vlist)
+        self.out.write("<li %s>" % svl)
         for x in item:
             self.write(x)
         self.out.write("</li>\n")

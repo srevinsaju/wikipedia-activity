@@ -289,37 +289,44 @@ class WPHTMLWriter(mwlib.htmlwriter.HTMLWriter):
             return
 
         article = obj.target
-
-        # Parser appending '/' characters to link targets for some reason.
-        article = article.rstrip('/')
-
-        title = article
-        title = title[0].capitalize() + title[1:]
-        title = title.replace("_", " ")
-
-        article_exists = title.encode('utf8') in self.index
-
-        if article_exists:
-            # Exact match.  Internal link.
-            LinkStats.allhits += 1
-            LinkStats.alltotal += 1
-            LinkStats.pagehits += 1
-            LinkStats.pagetotal += 1
-            link_attr = ''
-            link_baseurl = '/wiki/'
+        #print "writeLink", article, obj.caption
+        if article.startswith('#'):
+            #print "----> <a href='%s'>" % article
+            self.out.write("<a href='%s'>" % article)
         else:
-            # No match.  External link.  Use {lang}.wikipedia.org.
-            # FIXME:  Decide between {lang}.w.o and schoolserver.
-            LinkStats.alltotal += 1
-            LinkStats.pagetotal += 1
-            link_attr = "class='offsite' "
-            link_baseurl = 'http://' + self.lang + '.wikipedia.org/wiki/'
 
-        parts = article.encode('utf-8').split('#')
-        parts[0] = parts[0].replace(" ", "_")
-        url = ("#".join([x for x in parts]))
+            # Parser appending '/' characters to link targets for some reason.
+            article = article.rstrip('/')
 
-        self.out.write("<a %s href='%s%s'>" % (link_attr, link_baseurl, url))
+            title = article
+            title = title[0].capitalize() + title[1:]
+            title = title.replace("_", " ")
+
+            article_exists = title.encode('utf8') in self.index
+
+            if article_exists:
+                # Exact match.  Internal link.
+                LinkStats.allhits += 1
+                LinkStats.alltotal += 1
+                LinkStats.pagehits += 1
+                LinkStats.pagetotal += 1
+                link_attr = ''
+                link_baseurl = '/wiki/'
+            else:
+                # No match.  External link.  Use {lang}.wikipedia.org.
+                # FIXME:  Decide between {lang}.w.o and schoolserver.
+                LinkStats.alltotal += 1
+                LinkStats.pagetotal += 1
+                link_attr = "class='offsite' "
+                link_baseurl = 'http://' + self.lang + '.wikipedia.org/wiki/'
+
+            parts = article.encode('utf-8').split('#')
+            parts[0] = parts[0].replace(" ", "_")
+            url = ("#".join([x for x in parts]))
+
+            #print "----> ""<a %s href='%s%s'>" % (link_attr, link_baseurl, url)
+            self.out.write("<a %s href='%s%s'>" % (link_attr, link_baseurl,
+                    url))
 
         if obj.children:
             for x in obj.children:
