@@ -112,12 +112,13 @@ class HTMLWriter(object):
 
     def writeTagNode(self, t):
         if t.caption == 'ref':
-            self.references.append(t)
-            svl = ""
-            if t.vlist:
-                svl = self.serializeVList(t.vlist)
+            if t.children:
+                self.references.append(t)
+                svl = ""
+                if t.vlist:
+                    svl = self.serializeVList(t.vlist)
 
-            self.out.write("<sup %s>%s</sup>" % (svl, len(self.references)))
+                self.out.write("<sup %s>%s</sup>" % (svl, len(self.references)))
 
             return
         elif t.caption == 'references':
