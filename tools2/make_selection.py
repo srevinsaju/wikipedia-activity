@@ -11,6 +11,7 @@ import codecs
 import re
 from xml.sax import make_parser, handler
 import os
+import sys
 from operator import itemgetter
 import config
 
@@ -193,6 +194,22 @@ class PagesProcessor(handler.ContentHandler):
             url = url + '.png'
         return url
 
+    def get_images(self, title):
+        # find images used in the pages
+        images = self.image_re.findall(unicode(self._page))
+        images_list = []
+        for image in images:
+            url = self._get_url_image(image)
+            # only add one time by page
+            if not url in images_list:
+                images_list.append(url)
+
+        if len(images_list) > 0:
+            self._output_page_images.write('%s ' % title)
+            for image in images_list:
+                self._output_page_images.write('%s ' % image)
+            self._output_page_images.write('\n')
+
     def endElement(self, name):
         if name == "title":
             self._title = self._text
@@ -204,15 +221,16 @@ class PagesProcessor(handler.ContentHandler):
                 if unicode(self._title).startswith(namespace):
                     return
 
+            title = normalize_title(self._title)
+
             for namespace in config.TEMPLATE_NAMESPACES:
                 if unicode(self._title).startswith(namespace):
+                    self.get_images(title)
                     return
 
             for tag in config.REDIRECT_TAGS:
                 if unicode(self._page).startswith(tag):
                     return
-
-            title = normalize_title(self._title)
 
             if (title not in self._pages_blacklist) and \
                 (title in self._selected_pages_list):
@@ -220,21 +238,7 @@ class PagesProcessor(handler.ContentHandler):
                         (self._page_counter, title, len(self._page)),
                 # processed
                 self._register_page(self._output, title, self._page)
-
-                # find images used in the pages
-                images = self.image_re.findall(unicode(self._page))
-                images_list = []
-                for image in images:
-                    url = self._get_url_image(image)
-                    # only add one time by page
-                    if not url in images_list:
-                        images_list.append(url)
-
-                if len(images_list) > 0:
-                    self._output_page_images.write('%s ' % title)
-                    for image in images_list:
-                        self._output_page_images.write('%s ' % image)
-                    self._output_page_images.write('\n')
+                self.get_images(title)
 
         elif name == "mediawiki":
             self._output.close()
