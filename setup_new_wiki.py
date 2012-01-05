@@ -18,6 +18,7 @@
 #
 import sys
 import os
+import shutil
 import zipfile
 from fnmatch import fnmatch
 from sugar.activity import bundlebuilder
@@ -111,8 +112,18 @@ if __name__ == '__main__':
 
     if len(sys.argv) < 2:
         data_file = None
+        lang = 'base'
     else:
         data_file = sys.argv[1]
+
+        lang = data_file[:2]
+
+    print "Lang:", lang
+    # copy activty/activity.info.lang as activty/activity.info
+    f = 'activity/activity.info.' + lang
+    if os.path.exists(f):
+        shutil.copyfile(f, 'activity/activity.info')
+
     config = bundlebuilder.Config()
     packager = WikiXOPackager(bundlebuilder.Builder(config), data_file)
     packager.package()
