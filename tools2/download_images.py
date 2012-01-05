@@ -9,6 +9,7 @@ from urllib import FancyURLopener
 import os
 import sys
 import shutil
+import magic
 
 import config
 
@@ -35,7 +36,8 @@ class ImagesDownloader:
     def __init__(self, file_name, pages_selected, base_dir, cache_dir):
         self.base_dir = base_dir
         self.cache_dir = cache_dir
-        self.templates_to_counter = {}
+        self.mime_checker = magic.open(magic.MAGIC_MIME)
+        self.mime_checker.load()
         input_links = open('%s.page_images' % file_name, mode='r')
         line = input_links.readline()
         while line:
@@ -50,19 +52,25 @@ class ImagesDownloader:
             line = input_links.readline()
         input_links.close()
 
-    def download_image(self, url):
-        sliced_url = url.split('thumb/')
-        image_part = sliced_url[1]
-        dirs = image_part.split('/')
-        destdir = "%s/%s/%s" % (self.base_dir, dirs[0], dirs[1])
-        image_name = dirs[len(dirs) - 1]
-        try:
-            os.makedirs(destdir)
-        except:
-            pass  # This just means that destdir already exists
-        dest = "%s/%s" % (destdir, image_name)
-        if not os.path.exists(dest):
-            if self.cache_dir is not None:
+    def download_image(self, url, dest=None):
+        # avoid downloading .ogg files
+        if url.lower().endswith('.ogg'):
+            return
+        overwrite = True
+        if dest is None:
+            overwrite = False
+            sliced_url = url.split('thumb/')
+            image_part = sliced_url[1]
+            dirs = image_part.split('/')
+            destdir = "%s/%s/%s" % (self.base_dir, dirs[0], dirs[1])
+            image_name = dirs[len(dirs) - 1]
+            try:
+                os.makedirs(destdir)
+            except:
+                pass  # This just means that destdir already exists
+            dest = "%s/%s" % (destdir, image_name)
+        if not os.path.exists(dest) or overwrite:
+            if self.cache_dir is not None and not overwrite:
                 # Verify if the file is in the cahce_dir
                 cache_file = "%s/%s/%s/%s" % (self.cache_dir, dirs[0], dirs[1],
                         image_name)
@@ -72,6 +80,18 @@ class ImagesDownloader:
             print "Downloading %s" % url
             opener = CustomUrlOpener()
             opener.retrieve(url, dest)
+        # Verify the mime type
+        # wikipedia return a html file with a error, if the size requested
+        # is small than the real image
+        # then if the file is a html we need request the unescaled image
+        if url.find('/thumb/')> -1:
+            mime_type = str(self.mime_checker.file(dest))
+            if mime_type.find('text/html') > -1:
+                url = url[0:url.rfind('/')]
+                url = url.replace('thumb/', '')
+                print 'Wrong mime type, redownloading %s to %s' % (url, dest)
+                self.download_image(url, dest)
+
 
 downlad_all = False
 cache_dir = None
