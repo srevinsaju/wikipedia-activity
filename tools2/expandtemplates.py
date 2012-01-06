@@ -46,11 +46,8 @@ path = os.path.join(directory, xml_file_name)
 index = ArticleIndex('%s.processed.idx' % path)
 
 lang = os.path.basename(path)[0:2]
-## FIXME GETTEXT
-templateprefixes = {'en': 'Template:',
-        'es': 'Plantilla:',
-        'qu': 'Plantilla:'}
-templateprefix = templateprefixes[lang]
+
+templateprefix = config.TEMPLATE_NAMESPACES[0]
 
 # load blacklist only once
 templateblacklist = set()
