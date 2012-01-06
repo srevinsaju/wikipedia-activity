@@ -9,7 +9,7 @@ blacklist_file_name = './blacklist_es.txt'
 
 REDIRECT_TAGS = [u'#REDIRECT', u'#REDIRECCIÓN']
 
-BLACKLISTED_NAMESPACES = ['Wikipedia:', 'MediaWiki:']
+BLACKLISTED_NAMESPACES = ['WIKIPEDIA:', 'MEDIAWIKI:']
 
 TEMPLATE_NAMESPACES = ['Plantilla:']
 

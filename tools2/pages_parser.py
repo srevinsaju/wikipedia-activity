@@ -50,6 +50,8 @@ class WikimediaXmlPagesProcessor(handler.ContentHandler):
         self._text = ""
 
     def characters(self, content):
+        if self._text == '':
+            self._first_line = content.lstrip().upper()
         self._text = self._text + content
 
     def _register_page(self, register):
@@ -72,14 +74,15 @@ class WikimediaXmlPagesProcessor(handler.ContentHandler):
                     (self._page_counter, title, len(self._page)),
 
             for namespace in config.BLACKLISTED_NAMESPACES:
-                if unicode(self._title).startswith(namespace):
+                if unicode(self._title.upper()).startswith(namespace):
                     if self._debug:
                         self._register_page(self._output_blacklisted)
                     return
 
             is_redirect = False
+
             for tag in config.REDIRECT_TAGS:
-                if unicode(self._page).startswith(tag):
+                if unicode(self._first_line).startswith(tag):
                     is_redirect = True
                     break
 
@@ -93,8 +96,9 @@ class WikimediaXmlPagesProcessor(handler.ContentHandler):
                     page_destination = search.group()[2:-2]
                     page_destination = normalize_title(page_destination)
 
-                self._output_redirects.write('[[%s]]\t[[%s]]\n' %
-                        (title, page_destination))
+                if title != page_destination:
+                    self._output_redirects.write('[[%s]]\t[[%s]]\n' %
+                            (title, page_destination))
             else:
 
                 for namespace in config.TEMPLATE_NAMESPACES:
@@ -174,7 +178,6 @@ class WikimediaXmlPagesProcessor(handler.ContentHandler):
             print "Processed %d pages." % self._page_counter
 
 debug = False
-print sys.argv
 if len(sys.argv) > 1:
     debug = (sys.argv[1] == '--debug')
 
