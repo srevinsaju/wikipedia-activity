@@ -5,7 +5,7 @@
 import codecs
 from subprocess import Popen, PIPE, STDOUT
 import re
-
+import logging
 
 def normalize_title(title):
     return title.strip().replace(' ', '_').capitalize()
@@ -25,13 +25,14 @@ class RedirectParser:
             if len(links) == 2:
                 origin = links[0][2:-2]
                 destination = links[1][2:-2]
-                self.redirects[normalize_title(origin)] = \
-                        normalize_title(destination)
+                self.redirects[origin] = destination
             #print "Processing %s" % normalize_title(origin)
+        logging.debug("Loaded %d redirects" % len(self.redirects))
         input_redirects.close()
 
     def get_redirected(self, article_title):
         try:
+            logging.debug("get_redirect %s" % article_title)
             article_title = article_title.capitalize()
             redirect = self.redirects[article_title]
         except:
@@ -70,7 +71,7 @@ class DataRetriever():
 
         if num_block == -1:
             # look at redirects
-            # print "looking for '%s' at redirects table" % article_title
+            logging.debug("looking for '%s' at redirects" % article_title)
             redirect = self.redirects_checker.get_redirected(article_title)
             if redirect is not None:
                 if redirect == article_title:
