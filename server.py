@@ -507,14 +507,13 @@ class WPHTMLWriter(mwlib.htmlwriter.HTMLWriter):
 
 
 class WikiRequestHandler(SimpleHTTPRequestHandler):
-    def __init__(self, index, conf, request, client_address, server):
+    def __init__(self, wikidb, index, conf, request, client_address, server):
         # pullcord is currently offline
         # self.reporturl = 'pullcord.laptop.org:8000'
         self.reporturl = False
         self.index = index
         self.port = conf['port']
         self.lang = conf['lang']
-        self.flang = conf['flang']
         self.templateprefix = conf['templateprefix']
         self.templateblacklist = set(conf['templateblacklist'])
         self.wpheader = conf['wpheader']
@@ -534,8 +533,7 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
         self.base_path = os.path.dirname(conf['path'])
         self.ix = open_dir(os.path.join(self.base_path, "index_dir"))
 
-        self.wikidb = WPWikiDB(conf['path'], self.lang, self.templateprefix,
-                self.templateblacklist)
+        self.wikidb = wikidb
 
         self.client_address = client_address
         SimpleHTTPRequestHandler.__init__(
@@ -926,8 +924,11 @@ def run_server(confvars):
     confvars['lang'] = os.path.basename(confvars['path'])[0:2]
     confvars['flang'] = os.path.basename(confvars['path'])[0:5]
 
+    wikidb = WPWikiDB(confvars['path'], confvars['lang'],
+            confvars['templateprefix'], confvars['templateblacklist'])
+
     httpd = MyHTTPServer(('', confvars['port']),
-        lambda *args: WikiRequestHandler(index, confvars, *args))
+        lambda *args: WikiRequestHandler(wikidb, index, confvars, *args))
 
     if confvars['comandline']:
         httpd.serve_forever()
