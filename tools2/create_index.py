@@ -8,7 +8,8 @@ import os
 import sys
 from subprocess import call, Popen, PIPE, STDOUT
 import shutil
-
+import re
+import logging
 import config
 
 input_xml_file_name = config.input_xml_file_name
@@ -62,6 +63,26 @@ def create_index():
     output_file.close()
 
 
+class RedirectParser:
+
+    def __init__(self, file_name):
+        self.link_re = re.compile('\[\[.*?\]\]')
+        # Load redirects
+        input_redirects = codecs.open('%s.redirects_used' % file_name,
+                encoding='utf-8', mode='r')
+
+        self.redirects = {}
+        for line in input_redirects.readlines():
+            links = self.link_re.findall(unicode(line))
+            if len(links) == 2:
+                origin = links[0][2:-2]
+                destination = links[1][2:-2]
+                self.redirects[origin] = destination
+            #print "Processing %s" % normalize_title(origin)
+        logging.error("Loaded %d redirects" % len(self.redirects))
+        input_redirects.close()
+
+
 def create_search_index(input_xml_file_name):
     sys.path.append('..')
     from whoosh.index import create_in
@@ -82,6 +103,13 @@ def create_search_index(input_xml_file_name):
             title_article = title_article.lower().replace('_', ' ')
             writer.add_document(title=unicode(title_article))
         line = text_index_file.readline()
+
+    # add redirects
+    redirects_parser = RedirectParser(input_xml_file_name)
+    for origin in redirects_parser.redirects.keys():
+        origin = origin.replace('_', ' ')
+        writer.add_document(title=unicode(origin))
+
     writer.commit()
     text_index_file.close()
 
