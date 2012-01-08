@@ -49,6 +49,7 @@ class RedirectParser:
                 encoding='utf-8', mode='r')
 
         self.redirects = {}
+        self.reversed_index = {}
         count = 0
         for line in input_redirects.readlines():
             links = links = self.link_re.findall(unicode(line))
@@ -57,6 +58,12 @@ class RedirectParser:
                 destination = links[1][2:-2]
                 self.redirects[normalize_title(origin)] = \
                         normalize_title(destination)
+                # add to the reversed index
+                if destination in self.reversed_index:
+                    self.reversed_index[destination].append(origin)
+                else:
+                    self.reversed_index[destination] = [origin]
+
             count += 1
             #print "Processing %s" % normalize_title(origin)
         input_redirects.close()
@@ -342,28 +349,29 @@ class RedirectsUsedWriter():
         _output_redirects = codecs.open('%s.redirects_used' % file_name,
                 encoding='utf-8', mode='w')
 
-        pages_redirects = {}
+        counter = 0
         # check pages in redirects
         for title in selected_pages_list:
             title = normalize_title(title)
-            redirected = redirect_checker.get_redirected(title)
-            if redirected is not None:
-                pages_redirects[title] = redirected
-                _output_redirects.write('[[%s]]\t[[%s]]\n' %
-                        (title, redirected))
-        print "Found %d redirected pages" % len(pages_redirects)
+            if title in redirect_checker.reversed_index:
+                for origin in redirect_checker.reversed_index[title]:
+                    _output_redirects.write('[[%s]]\t[[%s]]\n' %
+                            (origin, title))
+                    counter += 1
+        print "Found %d redirected pages" % counter
 
         templates_redirects = {}
         # check pages in redirects
+        counter = 0
         for title in templates_used_reader.templates.keys():
             title = normalize_title(title)
-            redirected = redirect_checker.get_redirected(title)
-            if redirected is not None:
-                templates_redirects[title] = redirected
-                _output_redirects.write('[[%s]]\t[[%s]]\n' %
-                        (title, redirected))
+            if title in redirect_checker.reversed_index:
+                for origin in redirect_checker.reversed_index[title]:
+                    _output_redirects.write('[[%s]]\t[[%s]]\n' %
+                            (origin, title))
+                    counter += 1
 
-        print "Found %d redirected templates" % len(templates_redirects)
+        print "Found %d redirected templates" % counter
 
         _output_redirects.close()
 
@@ -450,6 +458,7 @@ if __name__ == '__main__':
         if os.path.exists('%s.templates_counted' % input_xml_file_name):
             os.remove('%s.templates_counted' % input_xml_file_name)
 
+    templates_used_reader = None
     if not os.path.exists('%s.templates_counted' % input_xml_file_name):
         print "Processing templates"
         templates_counter = TemplatesCounter(input_xml_file_name,
@@ -474,7 +483,13 @@ if __name__ == '__main__':
         templates_loader = TemplatesLoader(input_xml_file_name,
                 templates_used_reader.templates)
 
-        if not os.path.exists('%s.redirects_used' % input_xml_file_name):
-            redirects_used_writer = RedirectsUsedWriter(input_xml_file_name,
-                    selected_pages_list, templates_used_reader.templates,
-                    redirect_checker)
+    if not os.path.exists('%s.redirects_used' % input_xml_file_name):
+        if templates_used_reader is None:
+            print "Loading templates used"
+            templates_used_reader = CountedTemplatesReader(input_xml_file_name)
+            print "Readed %d templates used" % \
+                    len(templates_used_reader.templates)
+
+        redirects_used_writer = RedirectsUsedWriter(input_xml_file_name,
+                selected_pages_list, templates_used_reader.templates,
+                redirect_checker)
