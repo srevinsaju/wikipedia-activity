@@ -380,7 +380,7 @@ class ParserFunctions(object):
         try:
             numseg = int(args[1])
         except ValueError:
-            numseq = 0
+            numseg = 0
             
         try:
             start = int(args[2])
