@@ -171,6 +171,12 @@ class WPWikiDB:
                     print "Found recursion template %s" % title
                     template_content = re.sub(template_name, '_not_found_',
                             template_content, re.IGNORECASE)
+
+                    # Search again
+                    if re.search('{{' + template_name, template_content, \
+                        re.IGNORECASE) is not None:
+                        template_content = ''
+
             except:
                 template_content = ''
 
