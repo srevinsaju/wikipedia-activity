@@ -32,18 +32,50 @@ import config
 
 # __main__
 
+only_page = None
+start_at = None
+stdout = False
+
 if len(sys.argv) > 1:
     directory = sys.argv[1]
+
+    for argn in range(1, len(sys.argv)):
+        arg = sys.argv[argn]
+        if arg.startswith('--only='):
+            only_page = arg[len('--only='):]
+            print "Processing only article '%s'" % only_page
+        if arg.startswith('--start_at='):
+            start_at = arg[len('--start_at='):]
+            print "Starting to process at article '%s'" % start_at
+        if arg == '--stdout':
+            stdout = True
+            print "Writing output to stdout"
+
 else:
     print "Use expandtemplates.py directory"
     exit()
+
 
 xml_file_name = config.input_xml_file_name
 if xml_file_name.find('/') > -1:
     xml_file_name = xml_file_name[xml_file_name.find('/') + 1:]
 path = os.path.join(directory, xml_file_name)
 
-index = ArticleIndex('%s.processed.idx' % path)
+articles_list = []
+if only_page is not None:
+    articles_list = [only_page]
+else:
+    index = ArticleIndex('%s.processed.idx' % path)
+    articles_list = index.article_index
+    if start_at is not None:
+        filtered_list = []
+        found = False
+        for title in articles_list:
+            if title == start_at:
+                found = True
+            if found:
+                filtered_list.append(title)
+        articles_list = filtered_list
 
 lang = os.path.basename(path)[0:2]
 
@@ -61,10 +93,17 @@ if os.path.exists(templateblacklistpath):
 wikidb = WPWikiDB(path, lang, templateprefix, templateblacklist)
 rx = re.compile('(' + templateprefix + '|Wikipedia:)')
 
-_output = codecs.open('%s.processed_expanded' % path,
-        encoding='utf-8', mode='w')
+if not stdout:
+    file_mode = 'w'
+    if os.path.exists('%s.processed_expanded' % path):
+        file_mode = 'a'
 
-for title in index.article_index:  # ['Argentina', '1857 revolt']:
+    _output = codecs.open('%s.processed_expanded' % path,
+            encoding='utf-8', mode=file_mode)
+else:
+    _output = sys.stdout
+
+for title in articles_list:
     if rx.match(title):
         sys.stderr.write('SKIPPING: ' + title + "\n")
         continue
