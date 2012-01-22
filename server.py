@@ -880,7 +880,7 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
 
         # Image requests are handled locally or are referenced from Wikipedia.
         # matches /es_PE/images/, /en_US/images/ etc
-        m = re.match(r'^/\w\w_\w*/images/(.+)$', real_path)
+        m = re.match(r'^/\w*/images/(.+)$', real_path)
         if m:
             self.send_image(real_path)
             return
