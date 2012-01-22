@@ -267,11 +267,6 @@ class TemplatesCounter:
                 print "Processing page %s \r" % page,
                 for n in range(1, len(words) - 1):
                     template = words[n]
-                    # check if is a redirect
-                    redirected = redirect_checker.get_redirected(template)
-                    if redirected is not None:
-                        template = redirected
-
                     try:
                         self.templates_to_counter[template] = \
                                 self.templates_to_counter[template] + 1
@@ -279,6 +274,21 @@ class TemplatesCounter:
                         self.templates_to_counter[template] = 1
             line = input_links.readline()
         input_links.close()
+
+        # Verify redirects
+        print "Verifying redirects"
+        for template in self.templates_to_counter.keys():
+            redirected = redirect_checker.get_redirected(template)
+            if redirected is not None:
+                if redirected in self.templates_to_counter:
+                    self.templates_to_counter[redirected] = \
+                        self.templates_to_counter[redirected] + \
+                        self.templates_to_counter[template]
+                    self.templates_to_counter[template] = 0
+                else:
+                    self.templates_to_counter[redirected] = \
+                        self.templates_to_counter[template]
+                    self.templates_to_counter[template] = 0
 
 
 class CountedTemplatesReader():
@@ -472,7 +482,8 @@ if __name__ == '__main__':
         output_file = codecs.open('%s.templates_counted' % input_xml_file_name,
                         encoding='utf-8', mode='w')
         for n  in range(len(items)):
-            output_file.write('%s %d\n' % (items[n][0], items[n][1]))
+            if int(items[n][1]) > 0:
+                output_file.write('%s %d\n' % (items[n][0], items[n][1]))
         output_file.close()
 
         print "Loading templates used"
