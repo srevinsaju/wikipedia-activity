@@ -927,7 +927,7 @@ def run_server(confvars):
     print "Read %d blacklisted templates" % len(blacklist)
 
     confvars['templateblacklist'] = blacklist
-    confvars['lang'] = os.path.basename(confvars['path'])[0:2]
+    confvars['lang'] = confvars['path'][0:2]
     confvars['flang'] = os.path.basename(confvars['path'])[0:5]
 
     wikidb = WPWikiDB(confvars['path'], confvars['lang'],
