@@ -116,7 +116,7 @@ if __name__ == '__main__':
     else:
         data_file = sys.argv[1]
 
-        lang = data_file[:2]
+        lang = data_file[:data_file.find('/')]
 
     print "Lang:", lang
     # copy activty/activity.info.lang as activty/activity.info
