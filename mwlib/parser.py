@@ -266,7 +266,7 @@ class Link(Node):
         if linktype not in self.imageKeywords:
             # assume a LangLink
             log.info("Unknown linktype:", repr(linktype))
-            if len(linktype)==2:
+            if len(linktype) in [2, 3]:
                 self.__class__ = LangLink
             return
         
