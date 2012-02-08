@@ -91,6 +91,10 @@ class ImagesDownloader:
                 url = url.replace('thumb/', '')
                 print 'Wrong mime type, redownloading %s to %s' % (url, dest)
                 self.download_image(url, dest)
+                mime_type = str(self.mime_checker.file(dest))
+                if mime_type.find('text/html') > -1:
+                    # if the file downloaded is html/text remove it
+                    os.remove(dest)
 
 
 downlad_all = False
