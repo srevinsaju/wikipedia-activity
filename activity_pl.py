@@ -4,7 +4,7 @@
 def configure():
     confvars = {}
     confvars['comandline'] = False
-    confvars['path'] = 'pl_pl/plwiki-20111227-pages-articles.xml'
+    confvars['path'] = 'pl/plwiki-20111227-pages-articles.xml'
     confvars['port'] = 8003
     confvars['home_page'] = '/static/index_pl.html'
     confvars['templateprefix'] = 'Szablon:'
