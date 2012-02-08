@@ -4,9 +4,9 @@
 def configure():
     confvars = {}
     confvars['comandline'] = False
-    confvars['path'] = 'qu_pe/quwiki-20111228-pages-articles.xml'
+    confvars['path'] = 'qu/quwiki-20111228-pages-articles.xml'
     confvars['port'] = 8002
-    confvars['home_page'] = '/wiki/Piruw'
+    confvars['home_page'] = '/static/index_qu.html'
     confvars['templateprefix'] = 'Plantilla:'
     confvars['wpheader'] = 'De Wikipedia, la enciclopedia libre'
     confvars['wpfooter'] = 'Contenido disponible bajo los ' + \
