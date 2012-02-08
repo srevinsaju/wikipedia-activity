@@ -33,7 +33,7 @@ class CustomUrlOpener(FancyURLopener):
 
 class ImagesDownloader:
 
-    def __init__(self, file_name, pages_selected, base_dir, cache_dir):
+    def __init__(self, file_name, pages_selected, base_dir, cache_dir, lang):
         self.base_dir = base_dir
         self.cache_dir = cache_dir
         self.mime_checker = magic.open(magic.MAGIC_MIME)
@@ -45,14 +45,14 @@ class ImagesDownloader:
             page = words[0]
             if pages_selected is None or (page in pages_selected):
                 print "Processing page %s \r" % page,
-                for n in range(1, len(words) - 1):
+                for n in range(1, len(words)):
                     image_url = words[n]
-                    self.download_image(image_url)
+                    self.download_image(image_url, lang)
 
             line = input_links.readline()
         input_links.close()
 
-    def download_image(self, url, dest=None):
+    def download_image(self, url, lang, dest=None):
         # avoid downloading .ogg files
         if url.lower().endswith('.ogg'):
             return
@@ -86,20 +86,27 @@ class ImagesDownloader:
         # then if the file is a html we need request the unescaled image
         if url.find('/thumb/')> -1:
             mime_type = str(self.mime_checker.file(dest))
-            if mime_type.find('text/html') > -1:
+            if mime_type.find('text') > -1:
+                url_ori = url
                 url = url[0:url.rfind('/')]
                 url = url.replace('thumb/', '')
                 print 'Wrong mime type, redownloading %s to %s' % (url, dest)
-                self.download_image(url, dest)
+                self.download_image(url, lang, dest)
                 mime_type = str(self.mime_checker.file(dest))
-                if mime_type.find('text/html') > -1:
+                if mime_type.find('text') > -1:
+                    # try downloading from the lang instead of commons
+                    if url_ori.find('commons') > -1:
+                        url_lang = url_ori.replace('commons', lang)
+			self.download_image(url_lang, lang, dest)
+
+                mime_type = str(self.mime_checker.file(dest))
+                if mime_type.find('text') > -1:
                     # if the file downloaded is html/text remove it
                     os.remove(dest)
 
 
 downlad_all = False
 cache_dir = None
-print sys.argv
 if len(sys.argv) > 1:
     for argn in range(1, len(sys.argv)):
         arg = sys.argv[argn]
@@ -112,6 +119,16 @@ if len(sys.argv) > 1:
 
 input_xml_file_name = config.input_xml_file_name
 
+# TODO: take the lang from the first two letters
+# in the xml file, but this is not the best, because does not works
+# ever (example simplewiki)
+lang = input_xml_file_name
+if lang.find('/'):
+    lang = lang[lang.find('/') + 1:]
+lang = lang[:2]
+
+print 'Lang: %s' % lang
+
 selected_pages = None
 if not downlad_all:
     print "Loading selected pages"
@@ -120,4 +137,4 @@ if not downlad_all:
 
 print "Downloading images"
 templates_counter = ImagesDownloader(input_xml_file_name,
-        selected_pages, "./images", cache_dir)
+        selected_pages, "./images", cache_dir, lang)
