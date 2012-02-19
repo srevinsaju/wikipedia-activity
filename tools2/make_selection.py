@@ -36,9 +36,6 @@ class FileListReader():
             self.list.append(normalize_title(line))
             line = _file.readline()
 
-    def clean(self):
-        self.conn.close()
-
 
 class RedirectParser:
 
