@@ -19,7 +19,7 @@ def normalize_title(title):
     return title.strip().replace(' ', '_').capitalize()
 
 
-def create_index():
+def create_index(pages_blacklist):
     output_file = open("%s.processed.idx" % input_xml_file_name, mode='w')
     num_block = 1
     index_file = open("%s.processed.bz2t" % input_xml_file_name, mode='r')
@@ -50,10 +50,13 @@ def create_index():
                     data_line = p.stdout.readline()
                     position += len(data_line)
                     title = title[0:-1].strip().capitalize()
-                    output_file.write("%s %d %d\n" % \
-                        (title, num_block, position))
-                    print "Article %s block %d position %d" % \
-                        (title, num_block, position)
+                    if title not in pages_blacklist:
+                        output_file.write("%s %d %d\n" % \
+                            (title, num_block, position))
+                        print "Article %s block %d position %d" % \
+                            (title, num_block, position)
+                    else:
+                        print "* Blacklisted %s " % title
 
             data_line = p.stdout.readline()
 
@@ -61,6 +64,18 @@ def create_index():
         index_line = index_file.readline()
 
     output_file.close()
+
+
+class FileListReader():
+
+    def __init__(self, file_name):
+        _file = codecs.open(file_name,
+                                encoding='utf-8', mode='r')
+        self.list = []
+        line = _file.readline()
+        while line:
+            self.list.append(normalize_title(line))
+            line = _file.readline()
 
 
 class RedirectParser:
@@ -83,7 +98,7 @@ class RedirectParser:
         input_redirects.close()
 
 
-def create_search_index(input_xml_file_name):
+def create_search_index(input_xml_file_name, pages_blacklist):
     sys.path.append('..')
     from whoosh.index import create_in
     from whoosh.fields import TEXT, Schema
@@ -100,15 +115,23 @@ def create_search_index(input_xml_file_name):
         parts = line.split()
         if len(parts) > 0:
             title_article = parts[0]
-            title_article = title_article.lower().replace('_', ' ')
-            writer.add_document(title=unicode(title_article))
+            title_article = normalize_title(title_article)
+            if title_article not in pages_blacklist:
+                writer.add_document(title=unicode(title_article))
+            else:
+                print "* Blacklisted %s " % title_article
         line = text_index_file.readline()
 
     # add redirects
     redirects_parser = RedirectParser(input_xml_file_name)
     for origin in redirects_parser.redirects.keys():
-        origin = origin.replace('_', ' ')
-        writer.add_document(title=unicode(origin))
+        origin = normalize_title(origin)
+        destination = normalize_title(redirects_parser.redirects[origin])
+        if origin not in pages_blacklist and \
+                destination not in pages_blacklist:
+            writer.add_document(title=unicode(origin))
+        else:
+            print "* Blacklisted %s " % origin
 
     writer.commit()
     text_index_file.close()
@@ -135,6 +158,13 @@ if len(sys.argv) > 1:
         if os.path.exists('index_dir'):
             shutil.rmtree('index_dir')
 
+if os.path.exists(config.blacklist_file_name):
+    pages_blacklisted_reader = FileListReader(config.blacklist_file_name)
+    pages_blacklist = pages_blacklisted_reader.list
+    print "Loaded %d blacklisted pages" % len(pages_blacklist)
+else:
+    pages_blacklist = []
+
 print 'Compressing .processed file'
 if not os.path.exists('%s.processed.bz2' % input_xml_file_name):
     cmd = ['bzip2', '-zk', '%s.processed' % input_xml_file_name]
@@ -152,12 +182,12 @@ else:
 
 if not os.path.exists('%s.processed.idx' % input_xml_file_name):
     print 'Creating index file'
-    create_index()
+    create_index(pages_blacklist)
 else:
     print '.idx already exists. Skipping'
 
 if not os.path.exists('%s.index_dir'):
     print 'Creating locate database'
-    create_search_index(input_xml_file_name)
+    create_search_index(input_xml_file_name, pages_blacklist)
 else:
     print '.locate.db already exists. Skipping'
