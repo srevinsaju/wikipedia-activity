@@ -103,8 +103,10 @@ class ArticleIndex:
     # index file.
 
     def __init__(self, path):
+        self.index_path = '%s.processed.idx' % path
+        self.redirect_parser = dataretriever.RedirectParser(path)
         self.article_index = set()
-        with open(path, mode='r') as f:
+        with open(self.index_path, mode='r') as f:
             for line in f.readlines():
                 m = re.search(r'(.*?)\s*\d+\s*\d+$', line)
                 if m is None:
@@ -114,6 +116,11 @@ class ArticleIndex:
 
     def __contains__(self, x):
         found = dataretriever.normalize_title(x) in self.article_index
+        if not found:
+            redirect = self.redirect_parser.get_redirected(x)
+            if redirect is not None:
+                found = True
+
         #print "TEST INDEX %s %s" % (dataretriever.normalize_title(x), found)
         return found
 
@@ -904,7 +911,7 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
 
 
 def run_server(confvars):
-    index = ArticleIndex('%s.processed.idx' % confvars['path'])
+    index = ArticleIndex(confvars['path'])
 
     if 'editdir' in confvars:
         try:

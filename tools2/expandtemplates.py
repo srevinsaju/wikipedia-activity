@@ -65,7 +65,7 @@ articles_list = []
 if only_page is not None:
     articles_list = [only_page]
 else:
-    index = ArticleIndex('%s.processed.idx' % path)
+    index = ArticleIndex(path)
     articles_list = index.article_index
     if start_at is not None:
         filtered_list = []
