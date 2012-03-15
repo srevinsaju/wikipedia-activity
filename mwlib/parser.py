@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-
+# -*- coding: utf-8 -*-
 # Copyright (c) 2007-2008 PediaPress GmbH
 # See README.txt for additional licensing information.
 
@@ -204,11 +204,12 @@ class Link(Node):
     ])
     
     imageKeywords = set([
-        "image", "imagen", "bild", "archivo", "rikcha", "plik", "fichier", "file"
+        "image", "imagen", "bild", "archivo", "rikcha", "plik", "fichier", "file",
+        u"ta'ãnga"
     ])
     
     categoryKeywords = set([
-        "category", "kategorie", "categor\\xeda"
+        "category", "kategorie", "categor\\xeda", u"\\xf1emohenda"
     ])
     
     from mwlib.lang import languages
