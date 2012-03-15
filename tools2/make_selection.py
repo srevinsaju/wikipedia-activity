@@ -306,7 +306,7 @@ class CountedTemplatesReader():
 
 class TemplatesLoader():
 
-    def __init__(self, file_name, templates_used):
+    def __init__(self, file_name, templates_used, select_all=False):
         _file = codecs.open('%s.templates' % file_name,
                                 encoding='utf-8', mode='r')
         self._output = codecs.open('%s.processed' % file_name,
@@ -333,7 +333,7 @@ class TemplatesLoader():
                     template_name = normalize_title(template_name)
                     #print "checking", template_name,
 
-                    if template_name in templates_used.keys():
+                    if select_all or template_name in templates_used.keys():
                         #print "Adding", template_name,
                         title = template_namespace + ":" + template_name
                         self._register_page(title, template_content.strip())
@@ -467,37 +467,46 @@ if __name__ == '__main__':
 
     templates_used_reader = None
     if not os.path.exists('%s.templates_counted' % input_xml_file_name):
-        print "Processing templates"
-        templates_counter = TemplatesCounter(input_xml_file_name,
-                selected_pages_list, redirect_checker)
+        if select_all:
+            templates_loader = TemplatesLoader(input_xml_file_name, [], True)
+        else:
+            print "Processing templates"
+            templates_counter = TemplatesCounter(input_xml_file_name,
+                    selected_pages_list, redirect_checker)
 
-        print "Sorting counted templates"
-        items = templates_counter.templates_to_counter.items()
-        items.sort(key=itemgetter(1), reverse=True)
+            print "Sorting counted templates"
+            items = templates_counter.templates_to_counter.items()
+            items.sort(key=itemgetter(1), reverse=True)
 
-        print "Writing templates_counted file"
-        output_file = codecs.open('%s.templates_counted' % input_xml_file_name,
-                        encoding='utf-8', mode='w')
-        for n  in range(len(items)):
-            if int(items[n][1]) > 0:
-                output_file.write('%s %d\n' % (items[n][0], items[n][1]))
-        output_file.close()
+            print "Writing templates_counted file"
+            output_file = codecs.open('%s.templates_counted' % \
+                    input_xml_file_name, encoding='utf-8', mode='w')
+            for n  in range(len(items)):
+                if int(items[n][1]) > 0:
+                    output_file.write('%s %d\n' % (items[n][0], items[n][1]))
+            output_file.close()
 
-        print "Loading templates used"
-        templates_used_reader = CountedTemplatesReader(input_xml_file_name)
-        print "Readed %d templates used" % len(templates_used_reader.templates)
-
-        print "Adding used templates to .processed file"
-        templates_loader = TemplatesLoader(input_xml_file_name,
-                templates_used_reader.templates)
-
-    if not os.path.exists('%s.redirects_used' % input_xml_file_name):
-        if templates_used_reader is None:
             print "Loading templates used"
             templates_used_reader = CountedTemplatesReader(input_xml_file_name)
-            print "Readed %d templates used" % \
-                    len(templates_used_reader.templates)
+            print "Readed %d templates used" % len(
+                    templates_used_reader.templates)
 
-        redirects_used_writer = RedirectsUsedWriter(input_xml_file_name,
-                selected_pages_list, templates_used_reader.templates,
-                redirect_checker)
+            print "Adding used templates to .processed file"
+            templates_loader = TemplatesLoader(input_xml_file_name,
+                    templates_used_reader.templates)
+
+    if not os.path.exists('%s.redirects_used' % input_xml_file_name):
+        if select_all:
+            os.link('%s.redirects' % input_xml_file_name,
+                    '%s.redirects_used' % input_xml_file_name)
+        else:
+            if templates_used_reader is None:
+                print "Loading templates used"
+                templates_used_reader = \
+                        CountedTemplatesReader(input_xml_file_name)
+                print "Readed %d templates used" % \
+                        len(templates_used_reader.templates)
+
+            redirects_used_writer = RedirectsUsedWriter(input_xml_file_name,
+                    selected_pages_list, templates_used_reader.templates,
+                    redirect_checker)
