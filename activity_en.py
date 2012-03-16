@@ -4,7 +4,7 @@
 def configure():
     confvars = {}
     confvars['comandline'] = False
-    confvars['path'] = 'en_US_g1g1/en_US_g1g1.xml.bz2'
+    confvars['path'] = 'en/enwiki-20111201-pages-articles.xml'
     confvars['port'] = 8001
     confvars['home_page'] = '/static/index_en.html'
     confvars['templateprefix'] = 'Template:'
