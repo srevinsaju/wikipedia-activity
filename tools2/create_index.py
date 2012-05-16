@@ -101,9 +101,10 @@ class RedirectParser:
 def create_search_index(input_xml_file_name, pages_blacklist):
     sys.path.append('..')
     from whoosh.index import create_in
-    from whoosh.fields import TEXT, Schema
+    from whoosh.fields import TEXT, NUMERIC, Schema
 
-    schema = Schema(title=TEXT(stored=True))
+    schema = Schema(title=TEXT(stored=True), block=NUMERIC(stored=True),
+                position=NUMERIC(stored=True), redirect_to=TEXT(stored=True))
     if not os.path.exists("index_dir"):
         os.mkdir("index_dir")
     ix = create_in("index_dir", schema)
@@ -115,9 +116,13 @@ def create_search_index(input_xml_file_name, pages_blacklist):
         parts = line.split()
         if len(parts) > 0:
             title_article = parts[0]
+            block_article = parts[1]
+            position_article = parts[2]
             title_article = normalize_title(title_article)
             if title_article not in pages_blacklist:
-                writer.add_document(title=unicode(title_article))
+                writer.add_document(title=unicode(title_article),
+                    block=int(block_article), position=int(position_article),
+                    redirect_to=unicode(''))
             else:
                 print "* Blacklisted %s " % title_article
         line = text_index_file.readline()
@@ -126,15 +131,19 @@ def create_search_index(input_xml_file_name, pages_blacklist):
     redirects_parser = RedirectParser(input_xml_file_name)
     for origin in redirects_parser.redirects.keys():
         origin = normalize_title(origin)
-        destination = normalize_title(redirects_parser.redirects[origin])
-        if origin not in pages_blacklist and \
-                destination not in pages_blacklist:
-            writer.add_document(title=unicode(origin))
-        else:
-            print "* Blacklisted %s " % origin
-
+        try:
+            destination = normalize_title(redirects_parser.redirects[origin])
+            if origin not in pages_blacklist and \
+                    destination not in pages_blacklist:
+                writer.add_document(title=unicode(origin), block=0, position=0,
+                                    redirect_to=unicode(destination))
+            else:
+                print "* Blacklisted %s " % origin
+        except:
+            print "ERROR: origin %s destination %s" % (origin, destination)
     writer.commit()
     text_index_file.close()
+
 
 def create_bzip_table():
     """

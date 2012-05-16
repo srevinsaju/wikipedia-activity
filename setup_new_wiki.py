@@ -45,8 +45,7 @@ class WikiXOPackager(bundlebuilder.XOPackager):
 
         if self.data_file is not None:
             # Add the data files
-            needed_sufix = ['.processed.bz2', '.processed.bz2t',
-                            '.processed.idx', '.redirects_used']
+            needed_sufix = ['.processed.bz2', '.processed.bz2t']
             for sufix in needed_sufix:
                 data_file = self.data_file + sufix
                 print "Add %s" % data_file

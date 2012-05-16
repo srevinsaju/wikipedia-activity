@@ -2,42 +2,17 @@
 # -*- coding: utf-8 -*-
 # create index
 
-import codecs
 from subprocess import Popen, PIPE, STDOUT
 import re
+import os
 import logging
+
+from whoosh.qparser import QueryParser
+from whoosh.index import open_dir
+
 
 def normalize_title(title):
     return title.strip().replace(' ', '_').capitalize()
-
-
-class RedirectParser:
-
-    def __init__(self, file_name):
-        self.link_re = re.compile('\[\[.*?\]\]')
-        # Load redirects
-        input_redirects = codecs.open('%s.redirects_used' % file_name,
-                encoding='utf-8', mode='r')
-
-        self.redirects = {}
-        for line in input_redirects.readlines():
-            links = self.link_re.findall(unicode(line))
-            if len(links) == 2:
-                origin = links[0][2:-2]
-                destination = links[1][2:-2]
-                self.redirects[origin] = destination
-            #print "Processing %s" % normalize_title(origin)
-        logging.debug("Loaded %d redirects" % len(self.redirects))
-        input_redirects.close()
-
-    def get_redirected(self, article_title):
-        try:
-            logging.debug("get_redirect %s" % article_title)
-            article_title = article_title.capitalize()
-            redirect = self.redirects[article_title]
-        except:
-            redirect = None
-        return redirect
 
 
 class DataRetriever():
@@ -46,40 +21,44 @@ class DataRetriever():
         self.system_id = system_id
         self._bzip_file_name = '%s.processed.bz2' % data_files_base
         self._bzip_table_file_name = '%s.processed.bz2t' % data_files_base
-        self._index_file_name = '%s.processed.idx' % data_files_base
         self.template_re = re.compile('({{.*?}})')
-        self.redirects_checker = RedirectParser(data_files_base)
+        base_path = os.path.dirname(data_files_base)
+        self.ix = open_dir(os.path.join(base_path, "index_dir"))
         # TODO: I need control cache size
         self.templates_cache = {}
 
+    def check_existence(self, article_title):
+        article_title = normalize_title(article_title)
+        with self.ix.searcher() as searcher:
+            query = QueryParser("title",
+                    self.ix.schema).parse("'%s'" % article_title)
+            results = searcher.search(query, limit=1)
+            return results.scored_length() > 0
+
     def _get_article_position(self, article_title):
         article_title = normalize_title(article_title)
-        index_file = codecs.open(self._index_file_name, encoding='utf-8',
-                mode='r')
-        #index_file = open(self._index_file_name, mode='r')
-
-        num_block = -1
-        position = -1
-        for index_line in  index_file.readlines():
-            words = index_line.split()
-            article = words[0]
-            if article == article_title:
-                num_block = int(words[1])
-                position = int(words[2])
-                break
-        index_file.close()
-
-        if num_block == -1:
-            # look at redirects
-            logging.debug("looking for '%s' at redirects" % article_title)
-            redirect = self.redirects_checker.get_redirected(article_title)
-            if redirect is not None:
-                if redirect == article_title:
-                    # to avoid infinite recursion
-                    return -1, -1
-                return self._get_article_position(redirect)
-
+        # look at the title in the index database
+        with self.ix.searcher() as searcher:
+            query = QueryParser("title",
+                            self.ix.schema).parse("'%s'" % article_title)
+            results = searcher.search(query, limit=1)
+            logging.error('Search article %s returns %s', article_title,
+                    results[0])
+            num_block = results[0]['block']
+            position = results[0]['position']
+            if num_block == 0 and position == 0:
+                # if block and position = 0 serach with the redirect_to value
+                return self._get_article_position(results[0]['redirect_to'])
         return num_block, position
+
+    def search(self, article_title):
+        with self.ix.searcher() as searcher:
+            query = QueryParser("title", self.ix.schema).parse(article_title)
+            results = searcher.search(query, limit=None)
+            articles = []
+            for n in range(results.scored_length()):
+                articles.append(results[n]['title'])
+            return articles
 
     def _get_block_start(self, num_block):
         bzip_table_file = open(self._bzip_table_file_name, mode='r')

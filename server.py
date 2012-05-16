@@ -41,8 +41,6 @@ except ImportError:
     from md5 import md5
 
 import dataretriever
-from whoosh.qparser import QueryParser
-from whoosh.index import open_dir
 ##
 ## Libs we ship -- add lib path for
 ## shared objects
@@ -98,33 +96,6 @@ class LinkStats:
     pagetotal = 1
 
 
-class ArticleIndex:
-    # Prepare an in-memory index, using the already generated
-    # index file.
-
-    def __init__(self, path):
-        self.index_path = '%s.processed.idx' % path
-        self.redirect_parser = dataretriever.RedirectParser(path)
-        self.article_index = set()
-        with open(self.index_path, mode='r') as f:
-            for line in f.readlines():
-                m = re.search(r'(.*?)\s*\d+\s*\d+$', line)
-                if m is None:
-                    raise AssertionError("Match didn't work")
-                self.article_index.add(m.group(1))
-        print "INDEX HAVE %d articles" % len(self.article_index)
-
-    def __contains__(self, x):
-        found = dataretriever.normalize_title(x) in self.article_index
-        if not found:
-            redirect = self.redirect_parser.get_redirected(x)
-            if redirect is not None:
-                found = True
-
-        #print "TEST INDEX %s %s" % (dataretriever.normalize_title(x), found)
-        return found
-
-
 class WPWikiDB:
     """Retrieves article contents for mwlib."""
 
@@ -132,7 +103,7 @@ class WPWikiDB:
         self.lang = lang
         self.templateprefix = templateprefix
         self.templateblacklist = templateblacklist
-        self.data_retriever = dataretriever.DataRetriever(system_id, path)
+        self.dataretriever = dataretriever.DataRetriever(system_id, path)
         self.templates_cache = {'!' : '|'}  # a special case
 
     def getRawArticle(self, title, followRedirects=True):
@@ -142,7 +113,7 @@ class WPWikiDB:
             return ''
 
         article_text = \
-                self.data_retriever.get_text_article(title).decode('utf-8')
+                self.dataretriever.get_text_article(title).decode('utf-8')
 
         # Stripping leading & trailing whitespace fixes template expansion.
         article_text = article_text.lstrip()
@@ -151,6 +122,7 @@ class WPWikiDB:
         return article_text
 
     def getTemplate(self, title, followRedirects=False):
+        logging.error('getTemplate: %s', title)
         if title in self.templates_cache:
             return self.templates_cache[title]
         else:
@@ -287,8 +259,8 @@ class WPMathRenderer:
 class WPHTMLWriter(mwlib.htmlwriter.HTMLWriter):
     """Customizes HTML output from mwlib."""
 
-    def __init__(self, index, wfile, images=None, lang='en'):
-        self.index = index
+    def __init__(self, dataretriever, wfile, images=None, lang='en'):
+        self.dataretriever = dataretriever
         self.gallerylevel = 0
         self.lang = lang
         self.math_processed = False
@@ -315,7 +287,7 @@ class WPHTMLWriter(mwlib.htmlwriter.HTMLWriter):
             title = title[0].capitalize() + title[1:]
             title = title.replace("_", " ")
 
-            article_exists = title.encode('utf8') in self.index
+            article_exists = self.dataretriever.check_existence(article)
 
             if article_exists:
                 # Exact match.  Internal link.
@@ -337,7 +309,6 @@ class WPHTMLWriter(mwlib.htmlwriter.HTMLWriter):
             parts[0] = parts[0].replace(" ", "_")
             url = ("#".join([x for x in parts]))
 
-            #print "----> ""<a %s href='%s%s'>" % (link_attr, link_baseurl, url)
             self.out.write("<a %s href='%s%s'>" % (link_attr, link_baseurl,
                     url))
 
@@ -520,11 +491,10 @@ class WPHTMLWriter(mwlib.htmlwriter.HTMLWriter):
 
 
 class WikiRequestHandler(SimpleHTTPRequestHandler):
-    def __init__(self, wikidb, index, conf, request, client_address, server):
+    def __init__(self, wikidb, conf, request, client_address, server):
         # pullcord is currently offline
         # self.reporturl = 'pullcord.laptop.org:8000'
         self.reporturl = False
-        self.index = index
         self.port = conf['port']
         self.lang = conf['lang']
         self.templateprefix = conf['templateprefix']
@@ -532,6 +502,7 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
         self.wpheader = conf['wpheader']
         self.wpfooter = conf['wpfooter']
         self.resultstitle = conf['resultstitle']
+        self.base_path = os.path.dirname(conf['path'])
 
         if 'editdir' in conf:
             self.editdir = conf['editdir']
@@ -541,10 +512,6 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
             self.giturl = conf['giturl']
         else:
             self.giturl = False
-
-        # init search index
-        self.base_path = os.path.dirname(conf['path'])
-        self.ix = open_dir(os.path.join(self.base_path, "index_dir"))
 
         self.wikidb = wikidb
 
@@ -581,8 +548,8 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
         wiki_parsed.caption = title
 
         imagedb = WPImageDB(self.base_path + '/images/')
-        writer = WPHTMLWriter(self.index, htmlout, images=imagedb,
-                lang=self.lang)
+        writer = WPHTMLWriter(self.wikidb.dataretriever, htmlout,
+                images=imagedb, lang=self.lang)
         writer.write(wiki_parsed)
         return writer.math_processed
 
@@ -825,13 +792,7 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
         self.wfile.write("</body></html>")
 
     def search(self, article_title):
-        with self.ix.searcher() as searcher:
-            query = QueryParser("title", self.ix.schema).parse(article_title)
-            results = searcher.search(query, limit=None)
-            articles = []
-            for n in range(results.scored_length()):
-                articles.append(results[n]['title'])
-            return articles
+        return self.wikidb.dataretriever.search(article_title)
 
     def send_image(self, path):
         if os.path.exists(path.encode('utf8')[1:]):
@@ -911,7 +872,6 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
 
 
 def run_server(confvars):
-    index = ArticleIndex(confvars['path'])
 
     if 'editdir' in confvars:
         try:
@@ -941,7 +901,7 @@ def run_server(confvars):
             confvars['templateprefix'], confvars['templateblacklist'])
 
     httpd = MyHTTPServer(('', confvars['port']),
-        lambda *args: WikiRequestHandler(wikidb, index, confvars, *args))
+        lambda *args: WikiRequestHandler(wikidb, confvars, *args))
 
     if confvars['comandline']:
         httpd.serve_forever()
