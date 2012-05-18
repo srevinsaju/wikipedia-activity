@@ -41,6 +41,9 @@ except ImportError:
     from md5 import md5
 
 import dataretriever
+import pylru
+import simplejson
+
 ##
 ## Libs we ship -- add lib path for
 ## shared objects
@@ -89,13 +92,6 @@ class MyHTTPServer(BaseHTTPServer.HTTPServer):
         self._BaseServer__is_shut_down.set()
 
 
-class LinkStats:
-    allhits = 1
-    alltotal = 1
-    pagehits = 1
-    pagetotal = 1
-
-
 class WPWikiDB:
     """Retrieves article contents for mwlib."""
 
@@ -122,7 +118,6 @@ class WPWikiDB:
         return article_text
 
     def getTemplate(self, title, followRedirects=False):
-        logging.error('getTemplate: %s', title)
         if title in self.templates_cache:
             return self.templates_cache[title]
         else:
@@ -264,6 +259,7 @@ class WPHTMLWriter(mwlib.htmlwriter.HTMLWriter):
         self.gallerylevel = 0
         self.lang = lang
         self.math_processed = False
+        self.links_list = []
 
         math_renderer = WPMathRenderer(self)
         mwlib.htmlwriter.HTMLWriter.__init__(self, wfile, images,
@@ -286,31 +282,13 @@ class WPHTMLWriter(mwlib.htmlwriter.HTMLWriter):
             title = article
             title = title[0].capitalize() + title[1:]
             title = title.replace("_", " ")
-
-            article_exists = self.dataretriever.check_existence(article)
-
-            if article_exists:
-                # Exact match.  Internal link.
-                LinkStats.allhits += 1
-                LinkStats.alltotal += 1
-                LinkStats.pagehits += 1
-                LinkStats.pagetotal += 1
-                link_attr = ''
-                link_baseurl = '/wiki/'
-            else:
-                # No match.  External link.  Use {lang}.wikipedia.org.
-                # FIXME:  Decide between {lang}.w.o and schoolserver.
-                LinkStats.alltotal += 1
-                LinkStats.pagetotal += 1
-                link_attr = "class='offsite' "
-                link_baseurl = 'http://' + self.lang + '.wikipedia.org/wiki/'
+            self.links_list.append(article)
 
             parts = article.encode('utf-8').split('#')
             parts[0] = parts[0].replace(" ", "_")
             url = ("#".join([x for x in parts]))
 
-            self.out.write("<a %s href='%s%s'>" % (link_attr, link_baseurl,
-                    url))
+            self.out.write("<a href='/wiki/%s'>" % url)
 
         if obj.children:
             for x in obj.children:
@@ -491,7 +469,8 @@ class WPHTMLWriter(mwlib.htmlwriter.HTMLWriter):
 
 
 class WikiRequestHandler(SimpleHTTPRequestHandler):
-    def __init__(self, wikidb, conf, request, client_address, server):
+    def __init__(self, wikidb, conf, links_cache, request, client_address,
+            server):
         # pullcord is currently offline
         # self.reporturl = 'pullcord.laptop.org:8000'
         self.reporturl = False
@@ -503,6 +482,7 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
         self.wpfooter = conf['wpfooter']
         self.resultstitle = conf['resultstitle']
         self.base_path = os.path.dirname(conf['path'])
+        self.links_cache = links_cache
 
         if 'editdir' in conf:
             self.editdir = conf['editdir']
@@ -551,6 +531,7 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
         writer = WPHTMLWriter(self.wikidb.dataretriever, htmlout,
                 images=imagedb, lang=self.lang)
         writer.write(wiki_parsed)
+        self.links_cache[title] = writer.links_list
         return writer.math_processed
 
     def send_article(self, title):
@@ -675,6 +656,9 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
                     "src='http://localhost:8000/static/MathJax/MathJax.js'>" +
                     "</script>")
 
+            # validate links
+            self.write_process_links_js(htmlout, title)
+
             htmlout.write('<center>' + self.wpfooter + '</center>')
             htmlout.write("</body>")
             htmlout.write("</html>")
@@ -682,6 +666,68 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
             html = htmlout.getvalue()
 
             self.wfile.write(html)
+
+    def write_process_links_js(self, htmlout, title):
+        """
+        write javascript to request a array of external links using ajax
+        and compare with the links in the page, if one link is external
+        change the url and the className
+        """
+        htmlout.write("<script type='text/javascript'>\n")
+        htmlout.write("  xmlhttp=new XMLHttpRequest();\n")
+        htmlout.write("  xmlhttp.onreadystatechange=function() {\n")
+        htmlout.write("    if (xmlhttp.readyState==4 && " \
+                                            "xmlhttp.status==200) {\n")
+        htmlout.write("      external_links = eval(xmlhttp.responseText);\n")
+        htmlout.write("      for (var i = 0; i < document.links.length;" \
+                                                                "i++) {\n")
+        htmlout.write("        link_url = document.links[i].href;\n")
+        htmlout.write("        last_bar = link_url.lastIndexOf('/');\n")
+        htmlout.write("        loc_article = link_url.substr(last_bar+1);\n")
+        htmlout.write("        external = false;\n")
+        htmlout.write("        for (var j = 0; j < external_links.length;" \
+                                                                "j++) {\n")
+        htmlout.write("          external_link = external_links[j]\n")
+
+        htmlout.write("          if (loc_article == external_link) {\n")
+        htmlout.write("            external = true; break;}\n")
+        htmlout.write("        }\n")
+        htmlout.write("        if (external) {\n")
+        link_baseurl = 'http://' + self.lang + '.wikipedia.org/wiki/'
+        htmlout.write(("           href = '%s'" % link_baseurl) + \
+                "+ external_links[j];\n")
+        htmlout.write("           document.links[i].href = href;\n")
+        htmlout.write("           document.links[i].className = 'offsite';\n")
+        htmlout.write("        }\n")
+        htmlout.write("      }\n")
+        htmlout.write("    }\n")
+        htmlout.write("  };\n")
+
+        val_links = "http://localhost:%s/links/%s" % (self.port, title)
+        htmlout.write("  xmlhttp.open('GET','%s',true);" % val_links)
+        htmlout.write("  xmlhttp.send();")
+        htmlout.write("</script>")
+
+    def send_links(self, title):
+        """
+        send a json array of string with the list of url not availables
+        in the local database
+        """
+        links = self.links_cache[title]
+        # validate the links
+        external_links = []
+        for article in links:
+            if not self.wikidb.dataretriever.check_existence(article):
+                article = article.replace(" ", "_").encode('utf8')
+                # needed to have the same format than url in the page
+                # when is compared in javascript
+                quoted = urllib.quote(article, safe='~@#$&()*!+=:;,.?/\'')
+                external_links.append(quoted)
+
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.end_headers()
+        self.wfile.write(simplejson.dumps(external_links))
 
     def do_POST(self):
 
@@ -859,6 +905,12 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
             SimpleHTTPRequestHandler.do_GET(self)
             return
 
+        # Handle link validation requests
+        m = re.match(r'^/links/(.*)$', real_path)
+        if m:
+            self.send_links(m.group(1))
+            return
+
         # Feedback links.
         m = re.match(r'^/(report|render)$', real_path)
         if m:
@@ -900,8 +952,9 @@ def run_server(confvars):
     wikidb = WPWikiDB(confvars['path'], confvars['lang'],
             confvars['templateprefix'], confvars['templateblacklist'])
 
+    links_cache = pylru.lrucache(10)
     httpd = MyHTTPServer(('', confvars['port']),
-        lambda *args: WikiRequestHandler(wikidb, confvars, *args))
+        lambda *args: WikiRequestHandler(wikidb, confvars, links_cache, *args))
 
     if confvars['comandline']:
         httpd.serve_forever()
