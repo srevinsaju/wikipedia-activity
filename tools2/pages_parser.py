@@ -95,6 +95,9 @@ class WikimediaXmlPagesProcessor(handler.ContentHandler):
                     # keep out the [[]]
                     page_destination = search.group()[2:-2]
                     page_destination = normalize_title(page_destination)
+                if page_destination.find('|') > -1:
+                    page_destination = \
+                            page_destination[:page_destination.find('|')]
 
                 if title != page_destination:
                     self._output_redirects.write('[[%s]]\t[[%s]]\n' %
