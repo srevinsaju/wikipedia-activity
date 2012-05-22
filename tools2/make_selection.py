@@ -352,8 +352,8 @@ class TemplatesLoader():
 class RedirectsUsedWriter():
 
     def __init__(self, file_name, selected_pages_list, templates_used,
-            redirect_checker):
-        _output_redirects = codecs.open('%s.redirects_used' % file_name,
+            redirect_checker, postfix='redirects_used'):
+        _output_redirects = codecs.open('%s.%s' % (file_name, postfix),
                 encoding='utf-8', mode='w')
 
         counter = 0
@@ -370,7 +370,7 @@ class RedirectsUsedWriter():
         templates_redirects = {}
         # check pages in redirects
         counter = 0
-        for title in templates_used_reader.templates.keys():
+        for title in templates_used.keys():
             title = normalize_title(title)
             if title in redirect_checker.reversed_index:
                 for origin in redirect_checker.reversed_index[title]:
@@ -407,6 +407,7 @@ if __name__ == '__main__':
         pages_blacklist = []
 
     input_xml_file_name = config.input_xml_file_name
+
     print "Init redirects checker"
     redirect_checker = RedirectParser(input_xml_file_name)
 
