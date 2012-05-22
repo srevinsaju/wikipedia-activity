@@ -103,8 +103,9 @@ def create_search_index(input_xml_file_name, pages_blacklist):
     from whoosh.index import create_in
     from whoosh.fields import TEXT, NUMERIC, Schema
 
-    schema = Schema(title=TEXT(stored=True), block=NUMERIC(stored=True),
-                position=NUMERIC(stored=True), redirect_to=TEXT(stored=True))
+    schema = Schema(title=TEXT(stored=True, phrase=False),
+                block=NUMERIC(stored=True), position=NUMERIC(stored=True),
+                redirect_to=TEXT(stored=True, phrase=False))
     if not os.path.exists("index_dir"):
         os.mkdir("index_dir")
     ix = create_in("index_dir", schema)
