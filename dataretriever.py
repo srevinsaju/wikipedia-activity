@@ -7,8 +7,7 @@ import re
 import os
 import logging
 
-from whoosh.qparser import QueryParser
-from whoosh.index import open_dir
+import sqlite3
 
 
 def normalize_title(title):
@@ -23,7 +22,7 @@ class DataRetriever():
         self._bzip_table_file_name = '%s.processed.bz2t' % data_files_base
         self.template_re = re.compile('({{.*?}})')
         base_path = os.path.dirname(data_files_base)
-        self.ix = open_dir(os.path.join(base_path, "index_dir"))
+        self._db_path = os.path.join(base_path, "search.db")
         # TODO: I need control cache size
         self.templates_cache = {}
 
@@ -35,39 +34,73 @@ class DataRetriever():
     def _get_article_position(self, article_title):
         article_title = normalize_title(article_title)
         # look at the title in the index database
-        with self.ix.searcher() as searcher:
-            query = QueryParser("title",
-                            self.ix.schema).parse("'%s'" % article_title)
-            results = searcher.search(query, limit=10)
+        conn = sqlite3.connect(self._db_path)
 
+        sql = 'SELECT * from articles where title ="%s"' % article_title
+        results = conn.execute(sql)
+        try:
+            row = results.next()
+            num_block = row[1]
+            position = row[2]
+            redirect_to = row[3]
+            logging.error('Search article %s returns %s',
+                    article_title, row)
+        except:
             num_block = -1
             position = -1
-            for result in  results:
-                if result['title'] == article_title:
-                    num_block = result['block']
-                    position = result['position']
-                    logging.error('Search article %s returns %s',
-                            article_title, result)
+        conn.close()
 
-            if num_block == 0 and position == 0:
-                # if block and position = 0 serach with the redirect_to value
-                num_block2, position2 = \
-                        self._get_article_position(results[0]['redirect_to'])
-                if num_block2 == 0 and position2 == 0:
-                    logging.error('Prevent recursion')
-                    return -1, -1
-                else:
-                    return num_block2, position2
+        if num_block == 0 and position == 0:
+            # if block and position = 0 serach with the redirect_to value
+            num_block2, position2 = \
+                    self._get_article_position(redirect_to)
+            if num_block2 == 0 and position2 == 0:
+                logging.error('Prevent recursion')
+                return -1, -1
+            else:
+                return num_block2, position2
         return num_block, position
 
+    def check_existence_list(self, article_title_list):
+        if not article_title_list:
+            return []
+
+        conn = sqlite3.connect(self._db_path)
+        search_list = '('
+        for article_title in article_title_list:
+            search_list = search_list + \
+                    '"' + normalize_title(article_title) + '",'
+        search_list = search_list[:-1] + ')'
+        #logging.error(search_list)
+        sql = 'SELECT * from articles where title in %s' % search_list
+        #logging.error(sql)
+        results = conn.execute(sql)
+        row = results.next()
+        articles = []
+        try:
+            while row:
+                articles.append(row[0])
+                row = results.next()
+        except:
+            pass
+        conn.close()
+        return articles
+
     def search(self, article_title):
-        with self.ix.searcher() as searcher:
-            query = QueryParser("title", self.ix.schema).parse(article_title)
-            results = searcher.search(query, limit=None)
-            articles = []
-            for n in range(results.scored_length()):
-                articles.append(results[n]['title'])
-            return articles
+        conn = sqlite3.connect(self._db_path)
+        search_word = '%' + article_title + '%'
+        sql = "SELECT * from articles where title like'%s'" % search_word
+        results = conn.execute(sql)
+        row = results.next()
+        articles = []
+        try:
+            while row:
+                articles.append(row[0])
+                row = results.next()
+        except:
+            pass
+        conn.close()
+        return articles
 
     def _get_block_start(self, num_block):
         bzip_table_file = open(self._bzip_table_file_name, mode='r')

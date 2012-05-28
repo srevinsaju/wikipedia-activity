@@ -98,18 +98,16 @@ class RedirectParser:
         input_redirects.close()
 
 
-def create_search_index(input_xml_file_name, pages_blacklist):
-    sys.path.append('..')
-    from whoosh.index import create_in
-    from whoosh.fields import TEXT, NUMERIC, Schema
+def create_sql_index(input_xml_file_name, pages_blacklist):
+    import sqlite3
+    dbpath = './search.db'
+    if os.path.exists(dbpath):
+        return
+    print 'Creating sqlite database file'
+    conn = sqlite3.connect(dbpath)
+    conn.execute("create table articles(title, block INTEGER, " +
+            "position INTEGER, redirect_to)")
 
-    schema = Schema(title=TEXT(stored=True, phrase=False),
-                block=NUMERIC(stored=True), position=NUMERIC(stored=True),
-                redirect_to=TEXT(stored=True, phrase=False))
-    if not os.path.exists("index_dir"):
-        os.mkdir("index_dir")
-    ix = create_in("index_dir", schema)
-    writer = ix.writer()
     text_index_file = codecs.open("%s.processed.idx" % input_xml_file_name,
             encoding='utf-8', mode='r')
     line = text_index_file.readline()
@@ -121,13 +119,20 @@ def create_search_index(input_xml_file_name, pages_blacklist):
             position_article = parts[2]
             title_article = normalize_title(title_article)
             if title_article not in pages_blacklist:
-                writer.add_document(title=unicode(title_article),
-                    block=int(block_article), position=int(position_article),
-                    redirect_to=unicode(''))
+                if title_article.find("'") > -1:
+                    title_article = title_article.replace("'", "\\'")
+                if title_article.find('"') > -1:
+                    title_article = title_article.replace('"', '')
+
+                command = 'insert into articles values ("%s", %s, %s, "%s")' \
+                     % (unicode(title_article), int(block_article),
+                    int(position_article), unicode(''))
+                print ".",
+                conn.execute(command)
             else:
                 print "* Blacklisted %s " % title_article
         line = text_index_file.readline()
-
+    conn.commit()
     # add redirects
     redirects_parser = RedirectParser(input_xml_file_name)
     for origin in redirects_parser.redirects.keys():
@@ -136,14 +141,20 @@ def create_search_index(input_xml_file_name, pages_blacklist):
             destination = normalize_title(redirects_parser.redirects[origin])
             if origin not in pages_blacklist and \
                     destination not in pages_blacklist:
-                writer.add_document(title=unicode(origin), block=0, position=0,
-                                    redirect_to=unicode(destination))
+                if origin.find("'") > -1:
+                    origin = origin.replace("'", "\\'")
+                if destination.find("'") > -1:
+                    destination = destination.replace("'", "\\'")
+                print ".",
+                conn.execute(
+                    'insert into articles values ("%s", %s, %s, "%s")' %
+                    (unicode(origin), 0, 0, unicode(destination)))
             else:
                 print "* Blacklisted %s " % origin
         except:
             print "ERROR: origin %s destination %s" % (origin, destination)
-    writer.commit()
     text_index_file.close()
+    conn.commit()
 
 
 def create_bzip_table():
@@ -196,8 +207,4 @@ if not os.path.exists('%s.processed.idx' % input_xml_file_name):
 else:
     print '.idx already exists. Skipping'
 
-if not os.path.exists('%s.index_dir'):
-    print 'Creating locate database'
-    create_search_index(input_xml_file_name, pages_blacklist)
-else:
-    print '.locate.db already exists. Skipping'
+create_sql_index(input_xml_file_name, pages_blacklist)

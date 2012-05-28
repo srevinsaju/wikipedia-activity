@@ -716,8 +716,9 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
         links = self.links_cache[title]
         # validate the links
         external_links = []
+        articles_found = self.wikidb.dataretriever.check_existence_list(links)
         for article in links:
-            if not self.wikidb.dataretriever.check_existence(article):
+            if not dataretriever.normalize_title(article) in articles_found:
                 article = article.replace(" ", "_").encode('utf8')
                 # needed to have the same format than url in the page
                 # when is compared in javascript

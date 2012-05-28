@@ -23,7 +23,7 @@ import zipfile
 from fnmatch import fnmatch
 from sugar.activity import bundlebuilder
 
-INCLUDE_DIRS = ['activity', 'binarylibs', 'icons', 'locale', 'whoosh', 'bin',
+INCLUDE_DIRS = ['activity', 'binarylibs', 'icons', 'locale', 'bin',
                 'mwlib', 'po', 'seek-bzip2', 'static', 'tools2']
 IGNORE_FILES = ['.gitignore', 'MANIFEST', '*.pyc', '*~', '*.bak', 'pseudo.po']
 
@@ -54,13 +54,11 @@ class WikiXOPackager(bundlebuilder.XOPackager):
                                               data_file))
 
             data_path = os.path.dirname(self.data_file)
-            # add index directory
-            index_path = os.path.join(data_path, 'index_dir')
-            print "Adding index"
-            for f in self.list_files(index_path):
-                bundle_zip.write(os.path.join(index_path, f),
-                    os.path.join(self.config.bundle_root_dir,
-                        index_path, f))
+
+            index_file = os.path.join(data_path, 'search.db')
+            print "Add %s" % index_file
+            bundle_zip.write(index_file,
+                         os.path.join(self.config.bundle_root_dir, index_file))
 
             # add images
             images_path = os.path.join(data_path, 'images')
