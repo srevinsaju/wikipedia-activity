@@ -100,7 +100,7 @@ class WPWikiDB:
         self.templateprefix = templateprefix
         self.templateblacklist = templateblacklist
         self.dataretriever = dataretriever.DataRetriever(system_id, path)
-        self.templates_cache = {'!' : '|'}  # a special case
+        self.templates_cache = {'!' : '|', u'!': '|'}  # a special case
 
     def getRawArticle(self, title, followRedirects=True):
 
