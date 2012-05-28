@@ -20,9 +20,12 @@ print "Searching %s" % search_word
 
 from whoosh.qparser import QueryParser
 with ix.searcher() as searcher:
-    query = QueryParser("title", ix.schema).parse(unicode(search_word))
+    query = QueryParser("title", ix.schema).parse("'%s'" %
+            unicode(search_word))
     results = searcher.search(query, limit=None)
     print "Found %d articles" % results.scored_length()
     print dir(results)
-    for n in range(results.scored_length()):
-        print results[n]
+    print "Exact search:"
+    for result in results:
+        if result['title'] == unicode(search_word):
+            print result
