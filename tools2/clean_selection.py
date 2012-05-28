@@ -59,8 +59,9 @@ if __name__ == '__main__':
     output_file.close()
 
     # clean redirects used
-    print "Loading redirects"
-    redirect_checker = RedirectParser(input_xml_file_name)
+    print "Loading redirects used "
+    redirect_checker = RedirectParser(input_xml_file_name,
+            postfix='redirects_used')
 
     print "Loading selected pages"
     selected_pages_reader = FileListReader('%s.pages_selected-level-1' %
