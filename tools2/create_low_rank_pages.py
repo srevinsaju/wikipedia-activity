@@ -5,7 +5,7 @@
 
 import codecs
 import sys
-
+from make_selection import FileListReader
 import config
 
 if __name__ == '__main__':
@@ -19,6 +19,9 @@ if __name__ == '__main__':
 
     print "Adding articles with less than %d links" % min_cant_links
 
+    # Read favorites list
+    favorites_reader = FileListReader(config.favorites_file_name)
+
     ranking_file = codecs.open('%s.links_counted' % input_xml_file_name,
                             encoding='utf-8', mode='r')
 
@@ -31,7 +34,8 @@ if __name__ == '__main__':
         parts = line.split()
         article = parts[0]
         cant_links = int(parts[1])
-        if cant_links < min_cant_links:
+        if cant_links < min_cant_links and \
+                article not in favorites_reader.list:
             output_file.write('%s\n' % article)
 
         line = ranking_file.readline()
