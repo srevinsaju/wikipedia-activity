@@ -22,7 +22,7 @@ import os
 import re
 import codecs
 from server import WPWikiDB
-from server import ArticleIndex
+from make_selection import FileListReader
 
 START_HEADING = chr(1)
 START_TEXT = chr(2)
@@ -63,10 +63,11 @@ path = os.path.join(directory, xml_file_name)
 
 articles_list = []
 if only_page is not None:
-    articles_list = [only_page]
+    articles_list = [unicode(only_page)]
 else:
-    index = ArticleIndex(path)
-    articles_list = index.article_index
+    articles_reader = FileListReader('%s.pages_selected-level-1' % path)
+
+    articles_list = articles_reader.list
     if start_at is not None:
         filtered_list = []
         found = False
@@ -104,6 +105,12 @@ else:
     _output = sys.stdout
 
 for title in articles_list:
+    if title.find('#') > -1:
+        if title.find('#') == 0:
+            continue
+        else:
+            title = title[:title.find('#')]
+
     if rx.match(title):
         sys.stderr.write('SKIPPING: ' + title + "\n")
         continue
