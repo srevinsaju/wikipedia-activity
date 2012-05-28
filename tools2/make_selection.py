@@ -39,10 +39,10 @@ class FileListReader():
 
 class RedirectParser:
 
-    def __init__(self, file_name):
+    def __init__(self, file_name, postfix='redirects'):
         self.link_re = re.compile('\[\[.*?\]\]')
         # Load redirects
-        input_redirects = codecs.open('%s.redirects' % file_name,
+        input_redirects = codecs.open('%s.%s' % (file_name, postfix),
                 encoding='utf-8', mode='r')
 
         self.redirects = {}
@@ -115,6 +115,15 @@ class LinksFilter():
                     for n in range(1, len(words) - 1):
                         link = words[n]
                         link = normalize_title(link)
+
+                        if link.find('#') > -1:
+                            # don't count links in the same page
+                            if link.find('#') == 0:
+                                continue
+                            else:
+                                # use only the article part of the link
+                                link = link[:link.find('#')]
+
                         # check if is a redirect
                         redirected = redirects_checker.get_redirected(link)
                         if redirected is not None:
