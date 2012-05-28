@@ -29,11 +29,8 @@ class DataRetriever():
 
     def check_existence(self, article_title):
         article_title = normalize_title(article_title)
-        with self.ix.searcher() as searcher:
-            query = QueryParser("title",
-                    self.ix.schema).parse("'%s'" % article_title)
-            results = searcher.search(query, limit=1)
-            return results.scored_length() > 0
+        num_block, posi = self._get_article_position(article_title)
+        return num_block > -1 and posi > -1
 
     def _get_article_position(self, article_title):
         article_title = normalize_title(article_title)
@@ -41,14 +38,26 @@ class DataRetriever():
         with self.ix.searcher() as searcher:
             query = QueryParser("title",
                             self.ix.schema).parse("'%s'" % article_title)
-            results = searcher.search(query, limit=1)
-            logging.error('Search article %s returns %s', article_title,
-                    results[0])
-            num_block = results[0]['block']
-            position = results[0]['position']
+            results = searcher.search(query, limit=10)
+
+            num_block = -1
+            position = -1
+            for result in  results:
+                if result['title'] == article_title:
+                    num_block = result['block']
+                    position = result['position']
+                    logging.error('Search article %s returns %s',
+                            article_title, result)
+
             if num_block == 0 and position == 0:
                 # if block and position = 0 serach with the redirect_to value
-                return self._get_article_position(results[0]['redirect_to'])
+                num_block2, position2 = \
+                        self._get_article_position(results[0]['redirect_to'])
+                if num_block2 == 0 and position2 == 0:
+                    logging.error('Prevent recursion')
+                    return -1, -1
+                else:
+                    return num_block2, position2
         return num_block, position
 
     def search(self, article_title):
