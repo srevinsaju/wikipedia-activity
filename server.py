@@ -31,6 +31,8 @@ import select
 import codecs
 import BaseHTTPServer
 from SimpleHTTPServer import SimpleHTTPRequestHandler
+import SocketServer
+import socket
 
 import cgi
 import errno
@@ -93,6 +95,14 @@ class MyHTTPServer(BaseHTTPServer.HTTPServer):
             if r:
                 self._handle_request_noblock()
         self._BaseServer__is_shut_down.set()
+
+    def server_bind(self):
+        """Override server_bind in HTTPServer to not use
+        getfqdn to get the server name because is very slow."""
+        SocketServer.TCPServer.server_bind(self)
+        host, port = self.socket.getsockname()[:2]
+        self.server_name = 'localhost'
+        self.server_port = port
 
 
 class WPWikiDB:
