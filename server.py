@@ -23,6 +23,7 @@
 #
 ## Standard libs
 from __future__ import with_statement
+import logging
 import sys
 import os
 import platform
@@ -30,6 +31,7 @@ import select
 import codecs
 import BaseHTTPServer
 from SimpleHTTPServer import SimpleHTTPRequestHandler
+
 import cgi
 import errno
 import urllib
@@ -76,6 +78,7 @@ class MyHTTPServer(BaseHTTPServer.HTTPServer):
         self._BaseServer__serving = True
         self._BaseServer__is_shut_down.clear()
         while self._BaseServer__serving:
+
             # XXX: Consider using another file descriptor or
             # connecting to the socket to wake this up instead of
             # polling. Polling reduces our responsiveness to a
@@ -84,7 +87,7 @@ class MyHTTPServer(BaseHTTPServer.HTTPServer):
                 r, w, e = select.select([self], [], [], poll_interval)
             except select.error, e:
                 if e[0] == errno.EINTR:
-                    print "got eintr"
+                    logging.debug("got eintr")
                     continue
                 raise
             if r:
@@ -142,7 +145,7 @@ class WPWikiDB:
 
                 if re.search('{{' + template_name, template_content, \
                     re.IGNORECASE) is not None:
-                    print "Found recursion template %s" % title
+                    logging.error("Found recursion template %s" % title)
                     template_content = re.sub(template_name, '_not_found_',
                             template_content, re.IGNORECASE)
 
@@ -239,7 +242,7 @@ class WPMathRenderer:
         self.writer = html_writer
 
     def render(self, latex):
-        print "MathRenderer %s" % latex
+        logging.debug("MathRenderer %s" % latex)
         latex = latex.replace('\f', '\\f')
         latex = latex.replace('\t', '\\t')
         # \bold gives a error
@@ -496,6 +499,7 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
         self.wikidb = wikidb
 
         self.client_address = client_address
+
         SimpleHTTPRequestHandler.__init__(
             self, request, client_address, server)
 
@@ -933,18 +937,19 @@ def run_server(confvars):
                 if not os.path.exists(fdirpath):
                     os.mkdir(fdirpath)
         except:
-            print "Error setting up directories:"
-            print "%s must be a writable directory" % confvars['editdir']
+            logging.error("Error setting up directories:")
+            logging.debug("%s must be a writable directory" %
+                    confvars['editdir'])
 
     blacklistpath = os.path.join(os.path.dirname(confvars['path']),
                                'template_blacklist')
-    print "Reading template_blacklist %s" % blacklistpath
+    logging.debug("Reading template_blacklist %s" % blacklistpath)
     blacklist = set()
     if os.path.exists(blacklistpath):
         with open(blacklistpath, 'r') as f:
             for line in f.readlines():
                 blacklist.add(line.rstrip().decode('utf8'))
-    print "Read %d blacklisted templates" % len(blacklist)
+    logging.debug("Read %d blacklisted templates" % len(blacklist))
 
     confvars['templateblacklist'] = blacklist
     confvars['lang'] = confvars['path'][0:2]
@@ -954,6 +959,7 @@ def run_server(confvars):
             confvars['templateprefix'], confvars['templateblacklist'])
 
     links_cache = pylru.lrucache(10)
+
     httpd = MyHTTPServer(('', confvars['port']),
         lambda *args: WikiRequestHandler(wikidb, confvars, links_cache, *args))
 
@@ -963,13 +969,15 @@ def run_server(confvars):
         from threading import Thread
         server = Thread(target=httpd.serve_forever)
         server.setDaemon(True)
+        logging.debug("Before start server")
         server.start()
+        logging.debug("After start server")
 
     # Tell the world that we're ready to accept request.
-    print 'ready'
+    logging.debug('Ready')
 
 
 if __name__ == '__main__':
 
-    print "Execute the starting class fror your language wikipedia"
-    print "Ex: activity_es.py"
+    logging.error("Execute the starting class for your language wikipedia")
+    logging.error("Ex: activity_es.py")
