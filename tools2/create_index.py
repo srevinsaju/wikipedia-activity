@@ -176,8 +176,8 @@ if len(sys.argv) > 1:
             os.remove('%s.processed.bz2t' % input_xml_file_name)
         if os.path.exists('%s.processed.idx' % input_xml_file_name):
             os.remove('%s.processed.idx' % input_xml_file_name)
-        if os.path.exists('index_dir'):
-            shutil.rmtree('index_dir')
+        if os.path.exists('search.db'):
+            os.remove('search.db')
 
 if os.path.exists(config.blacklist_file_name):
     pages_blacklisted_reader = FileListReader(config.blacklist_file_name)
