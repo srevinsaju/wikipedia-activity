@@ -35,6 +35,8 @@ class DataRetriever():
         article_title = normalize_title(article_title)
         # look at the title in the index database
         conn = sqlite3.connect(self._db_path)
+        if article_title.find('"'):
+            article_title = article_title.replace('"', '')
 
         sql = 'SELECT * from articles where title ="%s"' % article_title
         results = conn.execute(sql)
@@ -181,4 +183,5 @@ class DataRetriever():
                     break
             output += line
         p.stdout.close()
+        #logging.error(output)
         return output
