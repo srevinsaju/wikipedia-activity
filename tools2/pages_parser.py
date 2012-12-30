@@ -22,6 +22,7 @@ class WikimediaXmlPagesProcessor(handler.ContentHandler):
         self._page_counter = 0
         self._page = None
         self._debug = debug
+        self._parsing_element = None
         if self._debug:
             self._output = codecs.open('%s.all_pages' % file_name,
                     encoding='utf-8', mode='w')
@@ -48,11 +49,14 @@ class WikimediaXmlPagesProcessor(handler.ContentHandler):
             self._page = {}
             self._page_counter += 1
         self._text = ""
+        self._parsing_element = name
 
     def characters(self, content):
-        if self._text == '':
-            self._first_line = content.lstrip().upper()
-        self._text = self._text + content
+        if self._parsing_element == 'text':
+            if self._text == '':
+                self._first_line = content.lstrip().upper()
+        if self._parsing_element in ('title', 'text'):
+            self._text = self._text + content
 
     def _register_page(self, register):
         register.write('\01\n')
@@ -82,7 +86,7 @@ class WikimediaXmlPagesProcessor(handler.ContentHandler):
             is_redirect = False
 
             for tag in config.REDIRECT_TAGS:
-                if unicode(self._first_line).startswith(tag):
+                if self._first_line.startswith(tag):
                     is_redirect = True
                     break
 
