@@ -49,15 +49,17 @@ def create_index(pages_blacklist):
                     # \02
                     data_line = p.stdout.readline()
                     position += len(data_line)
-                    title = title[0:-1].strip().capitalize()
-                    if title not in pages_blacklist:
-                        output_file.write("%s %d %d\n" % \
-                            (title, num_block, position))
-                        print "Article %s block %d position %d" % \
-                            (title, num_block, position)
-                    else:
-                        print "* Blacklisted %s " % title
-
+                    try:
+                        title = title[0:-1].strip().capitalize()
+                        if title not in pages_blacklist:
+                            output_file.write("%s %d %d\n" % \
+                                (title, num_block, position))
+                            print "Article %s block %d position %d" % \
+                                (title, num_block, position)
+                        else:
+                            print "* Blacklisted %s " % title
+                    except:
+                        print "*** Malformed utf8 title"
             data_line = p.stdout.readline()
 
         num_block += 1
@@ -108,30 +110,35 @@ def create_sql_index(input_xml_file_name, pages_blacklist):
     conn.execute("create table articles(title, block INTEGER, " +
             "position INTEGER, redirect_to)")
 
-    text_index_file = codecs.open("%s.processed.idx" % input_xml_file_name,
-            encoding='utf-8', mode='r')
+    text_index_file = open("%s.processed.idx" % input_xml_file_name, mode='r')
     line = text_index_file.readline()
     while line:
         parts = line.split()
         if len(parts) > 0:
-            title_article = parts[0]
-            block_article = parts[1]
-            position_article = parts[2]
-            title_article = normalize_title(title_article)
-            if title_article not in pages_blacklist:
-                if title_article.find("'") > -1:
-                    title_article = title_article.replace("'", "\\'")
-                if title_article.find('"') > -1:
-                    title_article = title_article.replace('"', '')
+            try:
+                title_article = parts[0]
+                title_article = title_article.decode('utf8')
+                block_article = parts[1]
+                position_article = parts[2]
+                title_article = normalize_title(title_article)
+                if title_article not in pages_blacklist:
+                    if title_article.find("'") > -1:
+                        title_article = title_article.replace("'", "\\'")
+                    if title_article.find('"') > -1:
+                        title_article = title_article.replace('"', '')
 
-                command = 'insert into articles values ("%s", %s, %s, "%s")' \
-                     % (unicode(title_article), int(block_article),
-                    int(position_article), unicode(''))
-                print ".",
-                conn.execute(command)
-            else:
-                print "* Blacklisted %s " % title_article
+                    command = 'insert into articles values ("%s", %s, %s, "%s")' \
+                         % (unicode(title_article), int(block_article),
+                        int(position_article), unicode(''))
+                    print ".",
+                    conn.execute(command)
+                else:
+                    print "* Blacklisted %s " % title_article
+            except:
+                print "Bad encoding", title_article
+
         line = text_index_file.readline()
+
     conn.commit()
     # add redirects
     redirects_parser = RedirectParser(input_xml_file_name)
