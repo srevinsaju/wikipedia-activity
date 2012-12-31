@@ -77,9 +77,12 @@ class DataRetriever():
         if num_block == -1:
             # look at redirects
             redirect = self.redirects_checker.get_redirected(article_title)
+            print "Searching redirect from %s to %s" % (article_title,
+                    redirect)
             if redirect is not None:
                 return self._get_article_position(redirect)
 
+        print "Numblock %d, position %d" % (num_block, position)
         return num_block, position
 
     def _get_block_start(self, num_block):
