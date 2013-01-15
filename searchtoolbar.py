@@ -19,6 +19,7 @@ from gettext import gettext as _
 try:
     from sugar3.graphics.toolbutton import ToolButton
     from sugar3.graphics.toolcombobox import ToolComboBox
+    from sugar3.graphics import iconentry
     # check first sugar3 because in os883 gi.repository is found but not sugar3
     from gi.repository import Gtk
 except ImportError:
@@ -26,6 +27,7 @@ except ImportError:
 
     from sugar.graphics.toolbutton import ToolButton
     from sugar.graphics.toolcombobox import ToolComboBox
+    from sugar.graphics import iconentry
 
 
 class SearchToolbar(Gtk.Toolbar):
@@ -53,7 +55,15 @@ class SearchToolbar(Gtk.Toolbar):
 
         self.set_providers(default_search_providers)
 
-        self._entry = Gtk.Entry()
+        separator = Gtk.SeparatorToolItem()
+        separator.set_draw(False)
+        self.insert(separator, -1)
+        separator.show()
+
+        self._entry = iconentry.IconEntry()
+        self._entry.add_clear_button()
+        self._entry.set_icon_from_name(iconentry.ICON_ENTRY_PRIMARY,
+                                       'entry-search')
         self._entry.connect('activate', self._entry_activate_cb)
 
         entry_item = Gtk.ToolItem()
