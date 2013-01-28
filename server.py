@@ -487,6 +487,7 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
         # pullcord is currently offline
         # self.reporturl = 'pullcord.laptop.org:8000'
         self.reporturl = False
+        self.ip = conf['ip']
         self.port = conf['port']
         self.lang = conf['lang']
         self.templateprefix = conf['templateprefix']
@@ -634,11 +635,13 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
 
             if self.editdir:
                 htmlout.write(' &middot; <a ')
-                htmlout.write('href="http://localhost:%s/wiki/' % self.port)
+                htmlout.write('href="http://%s:%s/wiki/' % (self.ip,
+                        self.port))
                 htmlout.write(title)
                 htmlout.write('?edit=true">[ Editar ]</a>')
                 htmlout.write(' &middot; <a ')
-                htmlout.write('href="http://localhost:%s/wiki/' % self.port)
+                htmlout.write('href="http://%s:%s/wiki/' % (self.ip,
+                        self.port))
                 htmlout.write(title)
                 htmlout.write('?edit=true">[ Vista OK ]</a>')
             if self.giturl:
@@ -667,8 +670,8 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
                 htmlout.write('</script>')
 
                 htmlout.write("<script type='text/javascript' " +
-                    "src='http://localhost:8000/static/MathJax/MathJax.js'>" +
-                    "</script>")
+                    "src='http://%s:%s/static/MathJax/MathJax.js'>" %
+                    (self.ip, self.port) + "</script>")
 
             # validate links
             self.write_process_links_js(htmlout, title)
@@ -717,7 +720,7 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
         htmlout.write("    }\n")
         htmlout.write("  };\n")
 
-        val_links = "http://localhost:%s/links/%s" % (self.port, title)
+        val_links = "http://%s:%s/links/%s" % (self.ip, self.port, title)
         htmlout.write("  xmlhttp.open('GET','%s',true);" % val_links)
         htmlout.write("  xmlhttp.send();")
         htmlout.write("</script>")

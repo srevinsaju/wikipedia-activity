@@ -54,10 +54,12 @@ class WikipediaActivity(webactivity.WebActivity):
 
         os.chdir(os.environ['SUGAR_BUNDLE_PATH'])
 
+        self.confvars['ip'] = '0.0.0.0'
+
         server.run_server(self.confvars)
 
-        handle.uri = 'http://localhost:%s%s' % (self.confvars['port'],
-                self.confvars['home_page'])
+        handle.uri = 'http://%s:%s%s' % (self.confvars['ip'],
+                self.confvars['port'], self.confvars['home_page'])
 
         webactivity.WebActivity.__init__(self, handle)
 
@@ -97,7 +99,7 @@ class WikipediaActivity(webactivity.WebActivity):
             return self._tabbed_view.props.current_browser
 
     def _go_home_button_cb(self, button):
-        home_url = 'http://localhost:%s%s' % (self.confvars['port'],
-                self.confvars['home_page'])
+        home_url = 'http://%s:%s%s' % (self.confvars['ip'],
+                self.confvars['port'], self.confvars['home_page'])
         browser = self._get_browser()
         browser.load_uri(home_url)

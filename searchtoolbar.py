@@ -39,8 +39,8 @@ class SearchToolbar(Gtk.Toolbar):
         self.insert(self._providercombo, -1)
         self._providercombo.show()
 
-        search_url = 'http://localhost:' + str(activity.confvars['port']) \
-                        + '/search?q=%s'
+        search_url = 'http://'+ activity.confvars['ip'] + ':' + \
+                str(activity.confvars['port']) + '/search?q=%s'
 
         default_search_providers = {
             'schoolserver': {
