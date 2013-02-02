@@ -38,8 +38,8 @@ class DataRetriever():
         if article_title.find('"'):
             article_title = article_title.replace('"', '')
 
-        sql = 'SELECT * from articles where title ="%s"' % article_title
-        results = conn.execute(sql)
+        sql = 'SELECT * from articles where title=?'
+        results = conn.execute(sql, (article_title,))
         try:
             row = results.next()
             num_block = row[1]
@@ -91,8 +91,8 @@ class DataRetriever():
     def search(self, article_title):
         conn = sqlite3.connect(self._db_path)
         search_word = '%' + article_title + '%'
-        sql = "SELECT * from articles where title like'%s'" % search_word
-        results = conn.execute(sql)
+        sql = "SELECT * from articles where title like ?"
+        results = conn.execute(sql, (search_word,))
         row = results.next()
         articles = []
         try:
