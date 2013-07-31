@@ -849,7 +849,8 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
         for article in articles:
             #if not result.startswith(self.templateprefix):
             self.wfile.write('<li><a href="/wiki/%s">%s</a></li>' %
-                            (article.encode('utf8'), article.encode('utf8')))
+                             (article.encode('utf8'),
+                              article.encode('utf8').replace('_', ' ')))
 
         self.wfile.write("</ul>")
 
