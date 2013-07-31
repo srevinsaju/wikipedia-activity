@@ -17,16 +17,11 @@
 from gettext import gettext as _
 
 try:
-    from sugar3.graphics.toolbutton import ToolButton
-    from sugar3.graphics.toolcombobox import ToolComboBox
     from sugar3.graphics import iconentry
     # check first sugar3 because in os883 gi.repository is found but not sugar3
     from gi.repository import Gtk
 except ImportError:
     import gtk as Gtk
-
-    from sugar.graphics.toolbutton import ToolButton
-    from sugar.graphics.toolcombobox import ToolComboBox
     from sugar.graphics import iconentry
 
 
@@ -36,24 +31,14 @@ class SearchToolbar(Gtk.Toolbar):
 
         self._activity = activity
 
-        self._providercombo = ToolComboBox()
+        label = Gtk.Label(_('Search in the Wiki'))
+        label_item = Gtk.ToolItem()
+        label_item.add(label)
+        label_item.show_all()
+        self.insert(label_item, -1)
 
-        self.insert(self._providercombo, -1)
-        self._providercombo.show()
-
-        search_url = 'http://'+ activity.confvars['ip'] + ':' + \
-                str(activity.confvars['port']) + '/search?q=%s'
-
-        default_search_providers = {
-            'schoolserver': {
-                'order': 3,
-                'name':  _('Wiki'),
-                'url':   search_url,
-                'icon':  'zoom-home'
-            },
-        }
-
-        self.set_providers(default_search_providers)
+        self._search_url = 'http://' + activity.confvars['ip'] + ':' + \
+                           str(activity.confvars['port']) + '/search?q=%s'
 
         separator = Gtk.SeparatorToolItem()
         separator.set_draw(False)
@@ -75,23 +60,7 @@ class SearchToolbar(Gtk.Toolbar):
         entry_item.show()
 
     def _entry_activate_cb(self, entry):
-        k = self._providercombo.combo.get_active_item()[0]
-        p = self._providers[k]
 
         browser = self._activity._get_browser()
-        browser.load_uri(p['url'] % entry.props.text)
+        browser.load_uri(self._search_url % entry.props.text)
         browser.grab_focus()
-
-    def _cmp_provider_order(self, a, b):
-        return self._providers[a]['order'] - self._providers[b]['order']
-
-    def set_providers(self, providers):
-        self._providers = providers
-
-        self._providercombo.combo.remove_all()
-
-        for k in sorted(self._providers.keys(), cmp=self._cmp_provider_order):
-            p = self._providers[k]
-            self._providercombo.combo.append_item(k, p['name'], p['icon'])
-
-        self._providercombo.combo.set_active(0)
