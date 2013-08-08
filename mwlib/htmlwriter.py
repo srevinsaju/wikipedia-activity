@@ -411,10 +411,7 @@ class HTMLWriter(object):
         self.out.write("</%s>" % tag)
 
     def writeItem(self, item):
-        svl = ""
-        if item.vlist:
-            svl = self.serializeVList(item.vlist)
-        self.out.write("<li %s>" % svl)
+        self.out.write("<li>")
         for x in item:
             self.write(x)
         self.out.write("</li>\n")
@@ -424,10 +421,10 @@ class HTMLWriter(object):
             tag = "ol"
         else:
             tag = "ul"
-            
+        
         self.out.write("<%s>" % tag)
-            
-        for x in lst:
+
+        for x in lst.children:
             self.write(x)
             self.out.write("\n")
 
