@@ -315,6 +315,8 @@ class WPHTMLWriter(mwlib.htmlwriter.HTMLWriter):
 
     writeArticleLink = writeLink
 
+    writeNamespaceLink = writeLink
+
     def writeImageLink(self, obj):
         if self.images is None:
             return
