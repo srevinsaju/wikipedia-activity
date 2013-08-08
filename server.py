@@ -313,6 +313,8 @@ class WPHTMLWriter(mwlib.htmlwriter.HTMLWriter):
 
     writeInterwikiLink = writeLink
 
+    writeArticleLink = writeLink
+
     def writeImageLink(self, obj):
         if self.images is None:
             return
