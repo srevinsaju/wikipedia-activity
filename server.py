@@ -349,7 +349,11 @@ class WPHTMLWriter(mwlib.htmlwriter.HTMLWriter):
 
             align = obj.align
             thumb = obj.thumb
-            frame = obj.frame
+            try:
+                frame = obj.frame
+            except:
+                frame = False
+
             caption = obj.caption
 
             # SVG images must be included using <object data=''> rather than
