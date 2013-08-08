@@ -4,9 +4,9 @@
 def configure():
     confvars = {}
     confvars['comandline'] = False
-    confvars['path'] = 'en_simple/simplewiki-20120112-pages-articles.xml'
+    confvars['path'] = 'en_simple/simplewiki-20130724-pages-articles.xml'
     confvars['port'] = 8011
-    confvars['home_page'] = '/static/index_en.html'
+    confvars['home_page'] = '/static/index_en_simple.html'
     confvars['templateprefix'] = 'Template:'
     confvars['wpheader'] = 'From Wikipedia, The Free Encyclopedia'
     confvars['wpfooter'] = 'Content available under the ' + \
