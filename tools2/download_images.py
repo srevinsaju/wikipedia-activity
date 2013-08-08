@@ -2,11 +2,9 @@
 # -*- coding: utf-8 -*-
 # Create a list of pages with a nuber of how many links are directed to them.
 
-import codecs
-import re
-import md5
 from urllib import FancyURLopener
 import os
+import time
 import sys
 import shutil
 import magic
@@ -78,8 +76,15 @@ class ImagesDownloader:
                     shutil.copyfile(cache_file, dest)
                     return
             print "Downloading %s" % url
-            opener = CustomUrlOpener()
-            opener.retrieve(url, dest)
+            for intent in range(3):
+                try:
+                    opener = CustomUrlOpener()
+                    opener.retrieve(url, dest)
+                    break
+                except:
+                    print "Trying again, waiting 10 seconds"
+                    time.sleep(10)
+
         # Verify the mime type
         # wikipedia return a html file with a error, if the size requested
         # is small than the real image
