@@ -1,2 +1,9 @@
 *~
 *.pyc
+*-pages-articles.xml*
+*search.db
+*.patch
+*.png
+activity/activity.info
+tools2/config.py
+*.diff
