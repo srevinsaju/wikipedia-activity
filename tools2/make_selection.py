@@ -14,16 +14,12 @@ import os
 import sys
 from operator import itemgetter
 import config
+from wikitools_utils import normalize_title
 
 try:
     from hashlib import md5
 except ImportError:
     from md5 import md5
-
-
-def normalize_title(title):
-    s = title.strip().replace(' ', '_')
-    return s[0].capitalize() + s[1:]
 
 
 class FileListReader():
