@@ -5,7 +5,7 @@
 
 import codecs
 import sys
-from make_selection import FileListReader
+from wikitools_utils import FileListReader
 import config
 
 if __name__ == '__main__':

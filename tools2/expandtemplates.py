@@ -22,7 +22,7 @@ import os
 import re
 import codecs
 from server import WPWikiDB
-from make_selection import FileListReader
+from wikitools_utils import FileListReader
 
 START_HEADING = chr(1)
 START_TEXT = chr(2)

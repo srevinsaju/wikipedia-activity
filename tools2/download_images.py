@@ -10,6 +10,7 @@ import shutil
 import magic
 
 import config
+from wikitools_utils import LinksFilter, RedirectParser
 
 
 class FileListReader():
@@ -112,6 +113,7 @@ class ImagesDownloader:
 
 downlad_all = False
 cache_dir = None
+max_level = 0
 if len(sys.argv) > 1:
     for argn in range(1, len(sys.argv)):
         arg = sys.argv[argn]
@@ -121,6 +123,9 @@ if len(sys.argv) > 1:
         if arg.startswith('--cache_dir='):
             cache_dir = arg[arg.find('=') + 1:]
             print "Using cache directory", cache_dir
+        if arg.startswith('--max_level='):
+            max_level = int(arg[arg.find('=') + 1:])
+            print "Using max_level ", max_level
 
 input_xml_file_name = config.input_xml_file_name
 
@@ -132,6 +137,9 @@ if lang.find('/'):
     lang = lang[lang.find('/') + 1:]
 lang = lang[:2]
 
+if input_xml_file_name.find('simplewiki') > -1:
+    lang = 'en'
+
 print 'Lang: %s' % lang
 
 selected_pages = None
@@ -139,6 +147,19 @@ if not downlad_all:
     print "Loading selected pages"
     favorites_reader = FileListReader(config.favorites_file_name)
     selected_pages = favorites_reader.list
+
+    print "Init redirects checker"
+    redirect_checker = RedirectParser(input_xml_file_name)
+
+    level = 1
+    while level <= max_level:
+        print "Processing links level %d" % level
+        links_filter = LinksFilter(input_xml_file_name,
+                redirect_checker, selected_pages)
+        selected_pages.extend(links_filter.links)
+        level += 1
+
+print "Downloading images from %d pages" % len(selected_pages)
 
 print "Downloading images"
 templates_counter = ImagesDownloader(input_xml_file_name,

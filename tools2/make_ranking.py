@@ -4,8 +4,9 @@
 
 import codecs
 import re
+import os
 from operator import itemgetter
-from make_selection import RedirectParser, FileListReader
+from wikitools_utils import RedirectParser, FileListReader
 import config
 
 class LinksCounter:
@@ -43,8 +44,12 @@ redirect_parser = RedirectParser(input_xml_file_name)
 print "Processed %d redirects" % len(redirect_parser.redirects)
 
 print "Loading selected pages"
-selected_pages_reader = FileListReader('%s.pages_selected-level-1' %
-        input_xml_file_name)
+if os.path.exists('%s.pages_selected-level-1' % input_xml_file_name):
+    selected_pages_reader = FileListReader('%s.pages_selected-level-1' %
+                                           input_xml_file_name)
+else:
+    selected_pages_reader = FileListReader('%s.pages_selected' %
+                                           input_xml_file_name)
 
 print "Processing links"
 links_counter = LinksCounter(input_xml_file_name, redirect_parser.redirects,

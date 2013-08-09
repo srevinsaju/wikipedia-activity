@@ -4,22 +4,33 @@
 # and create a new file with part of these articles based in
 # ignoring the articles in a list
 
-import codecs
 import os
+import sys
+from operator import itemgetter
+
 import config
-from make_selection import FileListReader, RedirectParser, RedirectsUsedWriter
-from make_selection import CountedTemplatesReader, normalize_title
+from wikitools_utils import FileListReader, RedirectParser
+from wikitools_utils import RedirectsUsedWriter
+from wikitools_utils import CountedTemplatesReader, normalize_title
+from wikitools_utils import TemplatesCounter, TemplatesCounterWriter
+
 if __name__ == '__main__':
 
     input_xml_file_name = config.input_xml_file_name
 
-    print "Loading low rank pages"
-    ignored_pages_reader = FileListReader('%s.low_rank_pages' %
-            input_xml_file_name)
+    if len(sys.argv) > 1:
+        remove_pages_list_path = sys.argv[1]
+        print "Loading list of pages to remove from %s" % \
+            remove_pages_list_path
+    else:
+        print "Need select the file with the list of pages to remove"
+        exit()
+
+    ignored_pages_reader = FileListReader(remove_pages_list_path)
 
     processed_file = open("%s.processed" % input_xml_file_name, mode='r')
-    output_file = open("%s.processed_filtered" % input_xml_file_name, mode='w')
-
+    output_file = open("%s.processed_filtered" % input_xml_file_name,
+                       mode='w')
 
     data_line = processed_file.readline()
     while data_line:
@@ -64,8 +75,12 @@ if __name__ == '__main__':
             postfix='redirects_used')
 
     print "Loading selected pages"
-    selected_pages_reader = FileListReader('%s.pages_selected-level-1' %
-            input_xml_file_name)
+    if os.path.exists('%s.pages_selected-level-1' % input_xml_file_name):
+        selected_pages_reader = FileListReader('%s.pages_selected-level-1' %
+                                               input_xml_file_name)
+    else:
+        selected_pages_reader = FileListReader('%s.pages_selected' %
+                                               input_xml_file_name)
 
     print "Cleaning selected pages list"
     # clean selected_pages_reader list
@@ -74,10 +89,25 @@ if __name__ == '__main__':
         if article not in ignored_pages_reader.list:
             filtered_list.append(article)
 
+    if not os.path.exists('%s.templates_counted' % input_xml_file_name):
+        # if was processed with --select-all, the templates_counted file
+        # was not created
+        print "Processing templates"
+        templates_counter = TemplatesCounter(input_xml_file_name,
+                selected_pages_reader.list, redirect_checker)
+
+        print "Sorting counted templates"
+        items = templates_counter.templates_to_counter.items()
+        items.sort(key=itemgetter(1), reverse=True)
+
+        print "Writing templates_counted file"
+        _writer = TemplatesCounterWriter(input_xml_file_name, items)
+
     print "Loading templates used"
     templates_used_reader = CountedTemplatesReader(input_xml_file_name)
 
     print "Writing redirects used filtered"
     redirect_writer = RedirectsUsedWriter(input_xml_file_name, filtered_list,
-            templates_used_reader.templates,
-            redirect_checker, postfix='redirects_used_filtered')
+                                          templates_used_reader.templates,
+                                          redirect_checker,
+                                          postfix='redirects_used_filtered')
