@@ -1,0 +1,24 @@
+SIMPLE WIKI CREATION
+
+cd en_simple
+../tools2/make_selection.py --all
+../tools2/create_index.py 
+cd ..
+./tools2/expandtemplates.py es_lat
+
+# When made the selection, the directory didn't hace a updated
+# blacklist, then needed do a clan_selection later.
+
+
+
+# Download images
+cd en_simple
+../tools2/download_images.py --max_level=1 --cache_dir=./images_all
+
+# Remove big images
+mkdir big-images
+find images -size +500k  -exec mv {} big-images \;
+
+# create .xo
+cd ..
+./setup_new_wiki.py en_simple/simplewiki-20130724-pages-articles.xm
