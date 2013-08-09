@@ -48,6 +48,12 @@ import dataretriever
 import pylru
 import simplejson
 
+# to render the svg icons
+import StringIO
+import cairo
+from sugar3.graphics.icon import _IconBuffer
+from sugar3 import profile
+
 ##
 ## Libs we ship -- add lib path for
 ## shared objects
@@ -507,6 +513,7 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
         self.resultstitle = conf['resultstitle']
         self.base_path = os.path.dirname(conf['path'])
         self.links_cache = links_cache
+        self._xo_color = conf['xocolor']
 
         if 'editdir' in conf:
             self.editdir = conf['editdir']
@@ -881,6 +888,31 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
             self.send_header("Location", redirect_url.encode('utf8'))
             self.end_headers()
 
+    def send_svg_icon(self, path):
+        logging.error('SVG ICON %s', path)
+
+        icon_buffer = _IconBuffer()
+        icon_buffer.file_name = path[1:]
+        icon_buffer.stroke_color = self._xo_color.get_stroke_color()
+        icon_buffer.fill_color = self._xo_color.get_fill_color()
+        icon_buffer.width = 90
+        icon_buffer.height = 90
+        icon_surface = icon_buffer.get_surface()
+        surface = cairo.ImageSurface(cairo.FORMAT_RGB24, icon_buffer.width,
+            icon_buffer.height)
+        context = cairo.Context(surface)
+        context.set_source_rgba(1, 1, 1, 1)
+        context.rectangle(0, 0, icon_buffer.width, icon_buffer.height)
+        context.fill()
+        context.set_source_surface(icon_surface, 0, 0)
+        context.paint()
+        out = StringIO.StringIO()
+        surface.write_to_png(out)
+        self.send_response(200)
+        self.send_header("Content-Type", "image/png;")
+        self.end_headers()
+        self.wfile.write(out.getvalue())
+
     def handle_feedback(self, feedtype, article):
         with codecs.open("feedback.log", "a", "utf-8") as f:
             f.write(feedtype + "\t" + article + "\t" +
@@ -926,6 +958,12 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
         m = re.match(r'^/\w*/images/(.+)$', real_path)
         if m:
             self.send_image(real_path)
+            return
+
+        # Svg icons in the home are a special case to apply user colors
+        m = re.match(r'^/static/svg/(.*)$', real_path)
+        if m:
+            self.send_svg_icon(real_path)
             return
 
         # Static requests handed off to SimpleHTTPServer.
@@ -983,6 +1021,8 @@ def run_server(confvars):
             confvars['templateprefix'], confvars['templateblacklist'])
 
     links_cache = pylru.lrucache(10)
+
+    confvars['xocolor'] = profile.get_color()
 
     httpd = MyHTTPServer(('', confvars['port']),
         lambda *args: WikiRequestHandler(wikidb, confvars, links_cache, *args))
