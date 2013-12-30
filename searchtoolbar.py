@@ -45,10 +45,14 @@ class SearchToolbar(Gtk.Toolbar):
         self.insert(separator, -1)
         separator.show()
 
-        self._entry = iconentry.IconEntry()
-        self._entry.add_clear_button()
-        self._entry.set_icon_from_name(iconentry.ICON_ENTRY_PRIMARY,
-                                       'entry-search')
+        try:
+            self._entry = iconentry.IconEntry()
+            self._entry.add_clear_button()
+            self._entry.set_icon_from_name(iconentry.ICON_ENTRY_PRIMARY,
+                                           'entry-search')
+        except:
+            # Make it compatible with 12.1.0
+            self._entry = Gtk.Entry()
         self._entry.connect('activate', self._entry_activate_cb)
 
         entry_item = Gtk.ToolItem()
