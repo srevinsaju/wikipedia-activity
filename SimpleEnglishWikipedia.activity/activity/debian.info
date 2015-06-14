@@ -1,0 +1,13 @@
+[Package]
+name = sugar-simple-en-wikipedia-activity
+version = 0~godiard1
+vcs-git = https://github.com/godiard/wikipedia-activity.git
+vcs-browser = https://github.com/godiard/wikipedia-activity.git
+primary_branch = 0.104
+dependencies = gir1.2-webkit-3.0, gir1.2-soup-2.4
+
+[Maintainer]
+name = Debian Sugar Team
+email = pkg-sugar-devel@lists.alioth.debian.org
+uploaders = Jonas Smedegaard <dr@jones.dk>,
+ Gonzalo Odiard <godiard@gmail.com>
