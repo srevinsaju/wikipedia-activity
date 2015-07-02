@@ -8,10 +8,7 @@ import re
 import tempfile
 import threading
 import zipfile
-try:
-    import json
-except ImportError:
-    import simplejson as json
+import json
 
 from mwlib import expander, jobsched, metabook, mwapidb, parser, uparser, utils
 from mwlib.recorddb import RecordDB

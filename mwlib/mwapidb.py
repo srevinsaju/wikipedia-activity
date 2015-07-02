@@ -14,11 +14,7 @@ import time
 import urllib
 import urllib2
 import urlparse
-
-try:
-    import json
-except ImportError:
-    import simplejson as json
+import json
 
 from mwlib import utils, metabook, wikidbbase, uparser, parser
 from mwlib.log import Log

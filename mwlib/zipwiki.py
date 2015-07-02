@@ -8,10 +8,7 @@ import shutil
 import tempfile
 from zipfile import ZipFile
 import urlparse
-try:
-    import json
-except ImportError:
-    import simplejson as json
+import json
 
 from mwlib import uparser, wikidbbase
 

@@ -1,8 +1,5 @@
 import optparse
-try:
-    import json
-except ImportError:
-    import simplejson as json
+import json
 
 from mwlib.utils import start_logging
 from mwlib import wiki, metabook, log

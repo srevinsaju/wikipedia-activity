@@ -45,7 +45,7 @@ except ImportError:
 
 import dataretriever
 import pylru
-import simplejson
+import json
 
 # to render the svg icons
 import StringIO
@@ -760,7 +760,7 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-Type", "text/html; charset=utf-8")
         self.end_headers()
-        self.wfile.write(simplejson.dumps(external_links))
+        self.wfile.write(json.dumps(external_links))
 
     def do_POST(self):
 
