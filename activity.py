@@ -24,9 +24,9 @@ import logging
 
 USE_GTK2 = False
 try:
-    from sugar3.graphics.toolbarbox import ToolbarBox, ToolbarButton
+    from sugar3.graphics.toolbarbox import ToolbarButton
 except ImportError:
-    from sugar.graphics.toolbarbox import ToolbarBox, ToolbarButton
+    from sugar.graphics.toolbarbox import ToolbarButton
     USE_GTK2 = True
 
 browse_path = None
@@ -56,7 +56,7 @@ class WikipediaActivity(webactivity.WebActivity):
     def __init__(self, handle):
 
         logging.error("Starting server database: %s port: %s" %
-                (self.confvars['path'], self.confvars['port']))
+                      (self.confvars['path'], self.confvars['port']))
 
         os.chdir(os.environ['SUGAR_BUNDLE_PATH'])
 
@@ -64,8 +64,9 @@ class WikipediaActivity(webactivity.WebActivity):
 
         server.run_server(self.confvars)
 
-        handle.uri = 'http://%s:%s%s' % (self.confvars['ip'],
-                self.confvars['port'], self.confvars['home_page'])
+        handle.uri = 'http://%s:%s%s' % (
+            self.confvars['ip'], self.confvars['port'],
+            self.confvars['home_page'])
 
         webactivity.WebActivity.__init__(self, handle)
 
@@ -105,7 +106,8 @@ class WikipediaActivity(webactivity.WebActivity):
             return self._tabbed_view.props.current_browser
 
     def _go_home_button_cb(self, button):
-        home_url = 'http://%s:%s%s' % (self.confvars['ip'],
-                self.confvars['port'], self.confvars['home_page'])
+        home_url = 'http://%s:%s%s' % (
+            self.confvars['ip'], self.confvars['port'],
+            self.confvars['home_page'])
         browser = self._get_browser()
         browser.load_uri(home_url)
