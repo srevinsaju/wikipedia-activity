@@ -29,16 +29,22 @@ except ImportError:
     from sugar.graphics.toolbarbox import ToolbarBox, ToolbarButton
     USE_GTK2 = True
 
-#from sugar.activity import registry
-#activity_info = registry.get_registry().get_activity('org.laptop.WebActivity')
+browse_path = None
+try:
+    from sugar3.activity.activity import get_bundle
+    browse_bundle = get_bundle('org.laptop.WebActivity')
+    browse_path = browse_bundle.get_path()
+except:
+    if os.path.exists('../Browse.activity'):
+        browse_path = '../Browse.activity'
+    elif os.path.exists('/usr/share/sugar/activities/Browse.activity'):
+        browse_path = '/usr/share/sugar/activities/Browse.activity'
 
-#sys.path.append(activity_info.path)
-if os.path.exists('../Browse.activity'):
-    sys.path.append('../Browse.activity')
-elif os.path.exists('/usr/share/sugar/activities/Browse.activity'):
-    sys.path.append('/usr/share/sugar/activities/Browse.activity')
-else:
+if browse_path is None:
     print 'This activity need a Browser activity installed to run'
+
+sys.path.append(browse_path)
+
 
 import webactivity
 
