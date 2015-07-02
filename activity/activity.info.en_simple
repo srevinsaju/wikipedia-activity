@@ -7,3 +7,6 @@ icon = SIMPLE_WIKI_ICON
 exec = sugar-activity activity_en_simple.WikipediaActivitySimpleEN
 single_instance = yes
 summary = A good place to start your research. Get information on Wikipedia for your homework and personal research as well as other sources.
+license = GPLv2+
+max_paticipants = 10
+repository = https://github.com/godiard/wikipedia-activity.git
