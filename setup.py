@@ -24,6 +24,8 @@ import tarfile
 from fnmatch import fnmatch
 from sugar3.activity import bundlebuilder
 
+import utils
+
 INCLUDE_DIRS = ['activity', 'binarylibs', 'icons', 'locale', 'bin',
                 'mwlib', 'po', 'seek-bzip2', 'static', 'tools2']
 IGNORE_FILES = ['.gitignore', 'MANIFEST', '*.pyc', '*~', '*.bak', 'pseudo.po']
@@ -116,27 +118,35 @@ class WikiSourcePackager(bundlebuilder.Packager):
 
 
 if len(sys.argv) < 3:
-    data_file = None
-    lang = 'base'
+    config = utils.read_conf_from_info('./')
+    data_file = config['path']
+    lang = data_file[:data_file.find('/')]
+    print "data_file parameter not set, taking config from activity.info file"
+    print "using %s" % data_file
 else:
     data_file = sys.argv[2]
     lang = data_file[:data_file.find('/')]
     sys.argv.pop()
 
+    # copy activty/activity.info.lang as activty/activity.info
+    f = 'activity/activity.info.' + lang
+    if os.path.exists(f):
+        shutil.copyfile(f, 'activity/activity.info')
+
+print
 print "Lang:", lang
+print
+
 if lang == 'base':
     print 'Without a data file will create a .xo/tar.bz2 file with ' \
         'sources only'
-    print 'To create a wikipedia activity for a specific language'
-    print 'add a parameter with the xml data file, like:'
-    print
-    print './setup.py dist_xo fr/frwiki-20111231-pages-articles.xml'
     print
 
-# copy activty/activity.info.lang as activty/activity.info
-f = 'activity/activity.info.' + lang
-if os.path.exists(f):
-    shutil.copyfile(f, 'activity/activity.info')
+print 'To create a wikipedia activity for a specific language'
+print 'add a parameter with the xml data file, like:'
+print
+print './setup.py dist_xo fr/frwiki-20111231-pages-articles.xml'
+print
 
 bundlebuilder.XOPackager = WikiXOPackager
 bundlebuilder.SourcePackager = WikiSourcePackager
