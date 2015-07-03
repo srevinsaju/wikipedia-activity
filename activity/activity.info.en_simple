@@ -1,6 +1,6 @@
 [Activity]
 name = Simple English Wikipedia
-activity_version = 37.1
+activity_version = 38
 bundle_id = org.laptop.WikipediaActivitySimpleEN
 #icon = activity-wikipedia-en-simple
 icon = SIMPLE_WIKI_ICON
