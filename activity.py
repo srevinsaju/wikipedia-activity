@@ -25,9 +25,13 @@ import logging
 USE_GTK2 = False
 try:
     from sugar3.graphics.toolbarbox import ToolbarButton
+    from sugar3.activity.activity import get_bundle_path
 except ImportError:
     from sugar.graphics.toolbarbox import ToolbarButton
+    from sugar.activity.activity import get_bundle_path
     USE_GTK2 = True
+
+from utils import read_conf_from_info
 
 browse_path = None
 try:
@@ -54,6 +58,9 @@ from searchtoolbar import SearchToolbar
 # Activity class, extends WebActivity.
 class WikipediaActivity(webactivity.WebActivity):
     def __init__(self, handle):
+
+        if not hasattr(self, 'confvars'):
+            self.confvars = read_conf_from_info(get_bundle_path())
 
         logging.error("Starting server database: %s port: %s" %
                       (self.confvars['path'], self.confvars['port']))
