@@ -1,8 +1,7 @@
 [Activity]
 name = Simple English Wikipedia
-activity_version = 38
+activity_version = 38.1
 bundle_id = org.laptop.WikipediaActivitySimpleEN
-#icon = activity-wikipedia-en-simple
 icon = SIMPLE_WIKI_ICON
 exec = sugar-activity activity.WikipediaActivity
 single_instance = yes
