@@ -19,6 +19,7 @@ class DataRetriever():
 
     def __init__(self, system_id, data_files_base):
         self.system_id = system_id
+        self._seek_bunzip_cmnd = self._check_seek_bunzip_cmnd()
         self._bzip_file_name = '%s.processed.bz2' % data_files_base
         self._bzip_table_file_name = '%s.processed.bz2t' % data_files_base
         self.template_re = re.compile('({{.*?}})')
@@ -26,6 +27,17 @@ class DataRetriever():
         self._db_path = os.path.join(base_path, "search.db")
         # TODO: I need control cache size
         self.templates_cache = {}
+
+    def _check_seek_bunzip_cmnd(self):
+        # check if seek-bunzip is installed in the system
+        installed_path = '/usr/bin/seek-bunzip'
+        if os.path.exists(installed_path) and \
+                os.access(installed_path, os.X_OK):
+            return installed_path
+
+        # if not installed use the binary for the platform
+        # included with the activity
+        return './bin/%s/seek-bunzip' % self.system_id
 
     def check_existence(self, article_title):
         article_title = normalize_title(article_title)
@@ -163,7 +175,7 @@ class DataRetriever():
 
         # extract the block
         bzip_file = open(self._bzip_file_name, mode='r')
-        cmd = ['./bin/%s/seek-bunzip' % self.system_id, str(block_start)]
+        cmd = [self._seek_bunzip_cmnd, str(block_start)]
         p = Popen(cmd, stdin=bzip_file, stdout=PIPE, stderr=STDOUT,
                 close_fds=True)
 
