@@ -4,7 +4,7 @@ version = 0~godiard1
 vcs-git = https://github.com/godiard/wikipedia-activity.git
 vcs-browser = https://github.com/godiard/wikipedia-activity.git
 primary_branch = 0.104
-dependencies = gir1.2-webkit-3.0, gir1.2-soup-2.4
+dependencies = seek-bzip2, mwlib, sugar-browse-activity
 
 [Maintainer]
 name = Debian Sugar Team
