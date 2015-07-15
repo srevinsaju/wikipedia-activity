@@ -32,6 +32,10 @@ DEB_UPSTREAM_PACKAGE = Simple English Wikipedia
 DEB_UPSTREAM_URL = http://download.sugarlabs.org/sources/honey/SimpleEnglishWikipedia/$(DEB_UPSTREAM_PACKAGE)
 DEB_UPSTREAM_TARBALL_EXTENSION = tar.bz2
 
+export DH_ALWAYS_EXCLUDE=mwlib:bin:binarylibs
+DEB_STRIP_EXCLUDE=mwlib:bin:binarylibs:*.so
+DEB_DH_SHLIBDEPS_ARGS_ALL=--exclude=mwlib:bin:binarylibs:*.so
+
 # Suppress unneeded auto-resolved build-dependency on python-dev
 CDBS_BUILD_DEPENDS_class_python-sugar_python = python
 
