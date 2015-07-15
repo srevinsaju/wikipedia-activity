@@ -1,5 +1,5 @@
 [Package]
-name = sugar-simple-en-wikipedia-activity
+name = sugar-simple-en-wiki-activity
 version = 0~godiard1
 vcs-git = https://github.com/godiard/wikipedia-activity.git
 vcs-browser = https://github.com/godiard/wikipedia-activity.git
