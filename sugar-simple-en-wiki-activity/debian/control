@@ -42,3 +42,27 @@ Description: Sugar Learning Platform - calculate activity
  .
  SimpleEnglishWikipedia provides offline content to the Simple English
  Wikipedia site.
+
+Package: sugar-simple-en-wiki-activity-data
+Architecture: all
+Depends: ${misc:Depends}
+Recommends: ${cdbs:Recommends}
+Provides: ${cdbs:Provides}
+Conflicts: ${cdbs:Conflicts}
+Replaces: ${cdbs:Replaces}
+Description: Sugar Learning Platform - simple english wikipedia data
+ Sugar Learning Platform promotes collaborative learning through Sugar
+ Activities that encourage critical thinking, the heart of a quality
+ education.  Designed from the ground up especially for children, Sugar
+ offers an alternative to traditional “office-desktop” software.
+ .
+ Learner applications in Sugar are called Activities.  They are software
+ packages that automatically save your work - producing specific
+ instances of the Activity that can be resumed at a later time.  Many
+ Activities support learner collaboration, where multiple learners may
+ be invited to join a collective Activity session.
+ .
+ SimpleEnglishWikipedia provides offline content to the Simple English
+ Wikipedia site.
+ .
+ This package contains the data files
