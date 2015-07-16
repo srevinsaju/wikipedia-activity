@@ -22,7 +22,7 @@ Architecture: all
 Depends: ${shlibs:Depends},
  ${python:Depends},
  ${cdbs:Depends},
- ${misc:Depends}
+ ${misc:Depends}, sugar-simple-en-wiki-activity-data
 Recommends: ${cdbs:Recommends}
 Provides: ${python:Provides},
  ${cdbs:Provides}
