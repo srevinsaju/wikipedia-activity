@@ -117,21 +117,33 @@ class WikiSourcePackager(bundlebuilder.Packager):
         tar.close()
 
 
-if len(sys.argv) < 3:
-    config = utils.read_conf_from_info('./')
-    data_file = config['path']
-    lang = data_file[:data_file.find('/')]
-    print "data_file parameter not set, taking config from activity.info file"
-    print "using %s" % data_file
-else:
+valid_data_param = False
+if len(sys.argv) >= 3 and not sys.argv[2].startswith('--'):
+    valid_data_param = True
     data_file = sys.argv[2]
+    if not data_file.endswith(".xml"):
+        print "Data file should be a .xml file"
+        exit()
+
     lang = data_file[:data_file.find('/')]
+
+    if not os.path.exists(lang):
+        print "Lang directory '%s' does not exist" % lang
+        exit()
+
     sys.argv.pop()
 
     # copy activty/activity.info.lang as activty/activity.info
     f = 'activity/activity.info.' + lang
     if os.path.exists(f):
         shutil.copyfile(f, 'activity/activity.info')
+
+if not valid_data_param:
+    config = utils.read_conf_from_info('./')
+    data_file = config['path']
+    lang = data_file[:data_file.find('/')]
+    print "data_file parameter not set, taking config from activity.info file"
+    print "using %s" % data_file
 
 print
 print "Lang:", lang
