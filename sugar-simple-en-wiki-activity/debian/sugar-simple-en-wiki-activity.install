@@ -68,6 +68,7 @@ static/cricket_icon.jpg usr/share/sugar/activities/SimpleEnglishWikipedia.activi
 static/common.css usr/share/sugar/activities/SimpleEnglishWikipedia.activity/static
 static/index_es.html usr/share/sugar/activities/SimpleEnglishWikipedia.activity/static
 static/index_en.html usr/share/sugar/activities/SimpleEnglishWikipedia.activity/static
+static/index_en_simple.html usr/share/sugar/activities/SimpleEnglishWikipedia.activity/static
 static/styles.css usr/share/sugar/activities/SimpleEnglishWikipedia.activity/static
 static/index_qu.html usr/share/sugar/activities/SimpleEnglishWikipedia.activity/static
 static/audio.png usr/share/sugar/activities/SimpleEnglishWikipedia.activity/static
