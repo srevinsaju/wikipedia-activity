@@ -27,7 +27,7 @@ include /usr/share/cdbs/1/rules/utils.mk
 include /usr/share/cdbs/1/class/python-sugar.mk
 include /usr/share/cdbs/1/rules/debhelper.mk
 
-DEB_SUGAR_PRIMARY_BRANCH = 0.104
+DEB_SUGAR_PRIMARY_BRANCH = debian_packaging2
 DEB_UPSTREAM_PACKAGE = Simple English Wikipedia
 DEB_UPSTREAM_URL = http://download.sugarlabs.org/sources/honey/SimpleEnglishWikipedia/$(DEB_UPSTREAM_PACKAGE)
 DEB_UPSTREAM_TARBALL_EXTENSION = tar.bz2
@@ -48,4 +48,3 @@ CDBS_DEPENDS_$(pkg) +=, gir1.2-glib-2.0, gir1.2-gtk-3.0, gir1.2-pango-1.0, gir1.
 CDBS_DEPENDS_$(pkg) +=, seek-bzip2
 CDBS_DEPENDS_$(pkg) +=, mwlib
 CDBS_DEPENDS_$(pkg) +=, sugar-browse-activity
-CDBS_RECOMMENDS_$(pkg) +=, sugar-0.104-icon-theme | sugar-icon-theme

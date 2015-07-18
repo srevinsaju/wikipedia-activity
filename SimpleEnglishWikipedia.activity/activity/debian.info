@@ -3,8 +3,8 @@ name = sugar-simple-en-wiki-activity
 version = 0~godiard1
 vcs-git = https://github.com/godiard/wikipedia-activity.git
 vcs-browser = https://github.com/godiard/wikipedia-activity.git
-primary_branch = 0.104
-dependencies = seek-bzip2, mwlib, sugar-browse-activity
+primary_branch =  debian_packaging2
+dependencies = seek-bzip2, mwlib, sugar-browse-activity, sugar-simple-en-wiki-activity-data
 
 [Maintainer]
 name = Debian Sugar Team

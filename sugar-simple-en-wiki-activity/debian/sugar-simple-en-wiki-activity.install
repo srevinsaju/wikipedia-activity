@@ -7,6 +7,7 @@ README.md usr/share/sugar/activities/SimpleEnglishWikipedia.activity
 utils.py usr/share/sugar/activities/SimpleEnglishWikipedia.activity
 activity_rw.py usr/share/sugar/activities/SimpleEnglishWikipedia.activity
 AUTHORS usr/share/sugar/activities/SimpleEnglishWikipedia.activity
+cert8.db usr/share/sugar/activities/SimpleEnglishWikipedia.activity
 activity.py usr/share/sugar/activities/SimpleEnglishWikipedia.activity
 test_server.py usr/share/sugar/activities/SimpleEnglishWikipedia.activity
 NEWS usr/share/sugar/activities/SimpleEnglishWikipedia.activity
