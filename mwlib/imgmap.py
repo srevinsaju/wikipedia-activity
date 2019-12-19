@@ -40,7 +40,7 @@ def _makedesc(tokens):
 def _makeimagemap(tokens):
     image = None
     for x in tokens:
-        if isinstance(x, basestring):
+        if isinstance(x, str):
             image = x
             break
     return ImageMap(entries=list(tokens), image=image)
@@ -96,7 +96,7 @@ def ImageMapFromString(s):
 
     try:
         return imagemap.parseString(s)[0]
-    except ParseException, err:
+    except ParseException as err:
         return ImageMap(entries=[], image=None)
 
 def main():
@@ -116,7 +116,7 @@ blubb
 """
     res = ImageMapFromString(ex)
     for x in res.entries:
-        print x
+        print(x)
 
 if __name__=='__main__':
     main()

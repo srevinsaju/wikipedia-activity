@@ -54,7 +54,7 @@ class DataRetriever():
         sql = 'SELECT * from articles where title=?'
         results = conn.execute(sql, (article_title,))
         try:
-            row = results.next()
+            row = next(results)
             num_block = row[1]
             position = row[2]
             redirect_to = row[3]
@@ -90,12 +90,12 @@ class DataRetriever():
         sql = 'SELECT * from articles where title in %s' % search_list
         #logging.error(sql)
         results = conn.execute(sql)
-        row = results.next()
+        row = next(results)
         articles = []
         try:
             while row:
                 articles.append(row[0])
-                row = results.next()
+                row = next(results)
         except:
             pass
         conn.close()
@@ -106,12 +106,12 @@ class DataRetriever():
         search_word = '%' + article_title + '%'
         sql = "SELECT * from articles where title like ?"
         results = conn.execute(sql, (search_word,))
-        row = results.next()
+        row = next(results)
         articles = []
         try:
             while row:
                 articles.append(row[0])
-                row = results.next()
+                row = next(results)
         except:
             pass
         conn.close()

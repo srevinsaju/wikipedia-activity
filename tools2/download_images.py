@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # Create a list of pages with a nuber of how many links are directed to them.
 
-from urllib import FancyURLopener
+from urllib.request import FancyURLopener
 import os
 import time
 import sys
@@ -43,7 +43,7 @@ class ImagesDownloader:
             words = line.split()
             page = words[0]
             if pages_selected is None or (page in pages_selected):
-                print "Processing page %s \r" % page,
+                print("Processing page %s \r" % page, end=' ')
                 for n in range(1, len(words)):
                     image_url = words[n]
                     self.download_image(image_url, lang)
@@ -76,14 +76,14 @@ class ImagesDownloader:
                 if os.path.exists(cache_file):
                     shutil.copyfile(cache_file, dest)
                     return
-            print "Downloading %s" % url
+            print("Downloading %s" % url)
             for intent in range(3):
                 try:
                     opener = CustomUrlOpener()
                     opener.retrieve(url, dest)
                     break
                 except:
-                    print "Trying again, waiting 10 seconds"
+                    print("Trying again, waiting 10 seconds")
                     time.sleep(10)
 
         # Verify the mime type
@@ -96,7 +96,7 @@ class ImagesDownloader:
                 url_ori = url
                 url = url[0:url.rfind('/')]
                 url = url.replace('thumb/', '')
-                print 'Wrong mime type, redownloading %s to %s' % (url, dest)
+                print('Wrong mime type, redownloading %s to %s' % (url, dest))
                 self.download_image(url, lang, dest)
                 mime_type = str(self.mime_checker.file(dest))
                 if mime_type.find('text') > -1:
@@ -119,13 +119,13 @@ if len(sys.argv) > 1:
         arg = sys.argv[argn]
         if arg == '--all':
             downlad_all = True
-            print "Downloading all images"
+            print("Downloading all images")
         if arg.startswith('--cache_dir='):
             cache_dir = arg[arg.find('=') + 1:]
-            print "Using cache directory", cache_dir
+            print("Using cache directory", cache_dir)
         if arg.startswith('--max_level='):
             max_level = int(arg[arg.find('=') + 1:])
-            print "Using max_level ", max_level
+            print("Using max_level ", max_level)
 
 input_xml_file_name = config.input_xml_file_name
 
@@ -140,27 +140,27 @@ lang = lang[:2]
 if input_xml_file_name.find('simplewiki') > -1:
     lang = 'en'
 
-print 'Lang: %s' % lang
+print('Lang: %s' % lang)
 
 selected_pages = None
 if not downlad_all:
-    print "Loading selected pages"
+    print("Loading selected pages")
     favorites_reader = FileListReader(config.favorites_file_name)
     selected_pages = favorites_reader.list
 
-    print "Init redirects checker"
+    print("Init redirects checker")
     redirect_checker = RedirectParser(input_xml_file_name)
 
     level = 1
     while level <= max_level:
-        print "Processing links level %d" % level
+        print("Processing links level %d" % level)
         links_filter = LinksFilter(input_xml_file_name,
                 redirect_checker, selected_pages)
         selected_pages.extend(links_filter.links)
         level += 1
 
-print "Downloading images from %d pages" % len(selected_pages)
+print("Downloading images from %d pages" % len(selected_pages))
 
-print "Downloading images"
+print("Downloading images")
 templates_counter = ImagesDownloader(input_xml_file_name,
         selected_pages, "./images", cache_dir, lang)

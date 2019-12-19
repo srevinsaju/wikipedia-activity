@@ -5,15 +5,15 @@
 # See README.txt for additional licensing information.
 
 import cgi
-import cookielib
+import http.cookiejar
 import os
 import re
 import shutil
 import tempfile
 import time
-import urllib
-import urllib2
-import urlparse
+import urllib.request, urllib.parse, urllib.error
+import urllib.request, urllib.error, urllib.parse
+import urllib.parse
 import json
 
 from mwlib import utils, metabook, wikidbbase, uparser, parser
@@ -42,7 +42,7 @@ def get_api_helper(url):
     """
     
     try:
-        scheme, netloc, path, params, query, fragment = urlparse.urlparse(url)
+        scheme, netloc, path, params, query, fragment = urllib.parse.urlparse(url)
     except ValueError:
         return None
     if not (scheme and netloc):
@@ -87,7 +87,7 @@ def parse_article_url(url, title_encoding='utf-8'):
     @rtype: {str: object} or NoneType
     """
     
-    scheme, netloc, path, params, query, fragment = urlparse.urlparse(url)
+    scheme, netloc, path, params, query, fragment = urllib.parse.urlparse(url)
     if scheme is None or netloc is None or path is None:
         return None
     args = cgi.parse_qs(query)
@@ -97,7 +97,7 @@ def parse_article_url(url, title_encoding='utf-8'):
         if 'title' not in args or not args['title']:
             return None
         base_url = url[:url.find('index.php')]
-        title = unicode(args['title'][0], title_encoding, 'ignore').replace('_', ' ')
+        title = str(args['title'][0], title_encoding, 'ignore').replace('_', ' ')
         revision = None
         try:
             revision = int(args['oldid'][0])
@@ -120,7 +120,7 @@ def parse_article_url(url, title_encoding='utf-8'):
         if part in path:
             return {
                 'api_helper': api_helper,
-                'title': unicode(
+                'title': str(
                     path[path.find(part) + len(part):],
                     title_encoding,
                     'ignore'
@@ -130,7 +130,7 @@ def parse_article_url(url, title_encoding='utf-8'):
     
     return {
         'api_helper': api_helper,
-        'title': unicode(path.rsplit('/', 1)[-1], title_encoding, 'ignore').replace('_', ' '),
+        'title': str(path.rsplit('/', 1)[-1], title_encoding, 'ignore').replace('_', ' '),
         'revision': None,
     }
 
@@ -156,7 +156,7 @@ class APIHelper(object):
         @type script_extension: basestring
         """
         
-        if isinstance(base_url, unicode):
+        if isinstance(base_url, str):
             self.base_url = base_url.encode('utf-8')
         else:
             self.base_url = base_url
@@ -166,12 +166,12 @@ class APIHelper(object):
             self.script_extension = '.php'
         else:
             self.script_extension = script_extension        
-        if isinstance(self.script_extension, unicode):
+        if isinstance(self.script_extension, str):
             self.script_extension = self.script_extension.encode('utf-8')
         if self.script_extension[0] != '.':
             self.script_extension = '.' + self.script_extension
         self.query_cache = {}
-        self.opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cookielib.CookieJar()))
+        self.opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
         self.opener.addheaders = [('User-agent', 'mwlib')]
     
     def is_usable(self):
@@ -220,10 +220,10 @@ class APIHelper(object):
             'format': 'json',
         }
         args.update(**kwargs)
-        for k, v in args.items():
-            if isinstance(v, unicode):
+        for k, v in list(args.items()):
+            if isinstance(v, str):
                 args[k] = v.encode('utf-8')
-        q = urllib.urlencode(args)
+        q = urllib.parse.urlencode(args)
         q = q.replace('%3A', ':') # fix for wrong quoting of url for images
         q = q.replace('%7C', '|') # fix for wrong quoting of API queries (relevant for redirects)
         
@@ -249,8 +249,8 @@ class APIHelper(object):
             log.error('Got no data from api%s' % self.script_extension)
             return None
         try:
-            data = unicode(data, 'utf-8')
-            if data and data[0] == u'\ufeff': # strip off BOM
+            data = str(data, 'utf-8')
+            if data and data[0] == '\ufeff': # strip off BOM
                 # Note that a BOM is actually *not allowed* at the beginning of a JSON string
                 # see http://www.ietf.org/rfc/rfc4627.txt, section "3. Encoding"
                 data = data[1:]
@@ -258,7 +258,7 @@ class APIHelper(object):
         except KeyError:
             log.error('Response from api%s did not contain a query result' % self.script_extension)
             return None
-        except Exception, e:
+        except Exception as e:
             log.error('Got exception: %r' % e)
             if ignore_errors:
                 return None
@@ -268,7 +268,7 @@ class APIHelper(object):
         q = self.query(**kwargs)
         if q is not None:
             try:
-                return q['pages'].values()[0]
+                return list(q['pages'].values())[0]
             except (KeyError, IndexError):
                 return None
         return None
@@ -338,7 +338,7 @@ class ImageDB(object):
         @rtype: str
         """
     
-        assert isinstance(name, unicode), 'name must be of type unicode'
+        assert isinstance(name, str), 'name must be of type unicode'
         
         result = self.api_helper.page_query(titles='Image:%s' % name, prop='imageinfo', iiprop='url')
         if result is None:
@@ -349,7 +349,7 @@ class ImageDB(object):
             url = imageinfo.get('descriptionurl')
             if url: # url can be False (!) or non-existant
                 if url.startswith('/'):
-                    url = urlparse.urljoin(self.api_helper.base_url, url)
+                    url = urllib.parse.urljoin(self.api_helper.base_url, url)
                 return url
             else:
                 if self.wikidb is None:
@@ -372,7 +372,7 @@ class ImageDB(object):
         @rtype: str
         """
         
-        assert isinstance(name, unicode), 'name must be of type unicode'
+        assert isinstance(name, str), 'name must be of type unicode'
         
         if size is None:
             result = self.api_helper.page_query(titles='Image:%s' % name, prop='imageinfo', iiprop='url')
@@ -389,7 +389,7 @@ class ImageDB(object):
                 url = imageinfo['url']
             if url: # url can be False
                 if url.startswith('/'):
-                    url = urlparse.urljoin(self.api_helper.base_url, url)
+                    url = urllib.parse.urljoin(self.api_helper.base_url, url)
                 return url
             return None
         except (KeyError, IndexError):
@@ -399,7 +399,7 @@ class ImageDB(object):
         url = self.getURL(name, size=size)
         if url is None:
             return
-        path = urlparse.urlparse(url)[2]
+        path = urllib.parse.urlparse(url)[2]
         pos = path.find('/thumb/')
         if pos >= 0:
             return path[pos + 1:]
@@ -421,7 +421,7 @@ class ImageDB(object):
         @rtype: basestring
         """
         
-        assert isinstance(name, unicode), 'name must be of type unicode'
+        assert isinstance(name, str), 'name must be of type unicode'
         
         url = self.getURL(name, size=size)
         if url is None:
@@ -448,13 +448,13 @@ class ImageDB(object):
         @rtype: [unicode]
         """
         
-        assert isinstance(name, unicode), 'name must be of type unicode'
+        assert isinstance(name, str), 'name must be of type unicode'
         
         desc_url = self.getDescriptionURL(name)
         if desc_url is None:
             return []
         
-        print desc_url
+        print(desc_url)
         api_helper = get_api_helper(desc_url)
         if api_helper is None:
             if wikidb is not None:
@@ -476,7 +476,7 @@ class ImageDB(object):
 
     
 class WikiDB(wikidbbase.WikiDBBase):
-    print_template = u'Template:Print%s' # set this to none to deacticate # FIXME
+    print_template = 'Template:Print%s' # set this to none to deacticate # FIXME
     
     ip_rex = re.compile(r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$')
     bot_rex = re.compile(r'bot\b', re.IGNORECASE)
@@ -559,7 +559,7 @@ class WikiDB(wikidbbase.WikiDBBase):
         return self.api_helper.login(username, password, domain=domain)
     
     def getURL(self, title, revision=None):
-        name = urllib.quote(title.replace(" ", "_").encode('utf-8'), safe=':/@')
+        name = urllib.parse.quote(title.replace(" ", "_").encode('utf-8'), safe=':/@')
         if revision is None:
             return '%sindex%s?title=%s' % (
                 self.api_helper.base_url,
@@ -617,7 +617,7 @@ class WikiDB(wikidbbase.WikiDBBase):
                 author2count[a] += 1
             except KeyError:
                 author2count[a] = 1
-        author2count = author2count.items()
+        author2count = list(author2count.items())
         author2count.sort(key=lambda a: -a[1])
         return [a[0] for a in author2count[:max_num_authors]]
     
@@ -703,7 +703,7 @@ class WikiDB(wikidbbase.WikiDBBase):
         else:
             # MediaWiki 1.10
             try:
-                return revisions.values()[0]['*']
+                return list(revisions.values())[0]['*']
             except (AttributeError, IndexError, KeyError):
                 return None
     

@@ -7,7 +7,7 @@
 import os
 from mwlib import parser, rendermath, timeline
 
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import cgi
 
 #from PIL import Image
@@ -44,7 +44,7 @@ class HTMLWriter(object):
         try:
             m(obj)
         except:
-            print "Error trying to write %s" % obj
+            print("Error trying to write %s" % obj)
 
     def ignore(self, obj):
         pass
@@ -54,15 +54,15 @@ class HTMLWriter(object):
         styleArgs = []
         gotClass = 0
         gotExtraClass = 0
-        for (key,value) in vlist.items():
-            if isinstance(value, (basestring, int)):
+        for (key,value) in list(vlist.items()):
+            if isinstance(value, (str, int)):
                 if key=="class":
                     args.append('%s="%s"' % (key, value))
                     gotClass = 1
                 else:
                     args.append('%s="%s"' % (key, value))
             if isinstance(value, dict) and key=="style":
-                for (_key,_value) in value.items():
+                for (_key,_value) in list(value.items()):
                     styleArgs.append("%s:%s" % (_key, _value))
                 args.append(' style="%s"' % ';'.join(styleArgs))
                 gotExtraClass = 1
@@ -140,7 +140,7 @@ class HTMLWriter(object):
             return
         elif t.caption=='imagemap':
             # FIXME. this is not complete. t.imagemap.entries should also be handled.
-            print "WRITEIMAGEMAP:", t.imagemap
+            print("WRITEIMAGEMAP:", t.imagemap)
             if t.imagemap.imagelink:
                 self.write(t.imagemap.imagelink)
             return
@@ -216,7 +216,7 @@ class HTMLWriter(object):
         parts[0] = parts[0].replace(" ", "_")
         
 
-        return '../%s/' % ("#".join([urllib.quote(x) for x in parts]))
+        return '../%s/' % ("#".join([urllib.parse.quote(x) for x in parts]))
 
     writeLangLink = ignore
 
@@ -295,7 +295,7 @@ class HTMLWriter(object):
             return
 
         if isinstance(path, str):
-            path = unicode(path, 'utf8')
+            path = str(path, 'utf8')
 
         if self.imglevel==0:
             self.imglevel += 1
@@ -319,7 +319,7 @@ class HTMLWriter(object):
                         img = getimg()
                     size = img.size
                     height = size[1]*width/size[0]
-            except IOError, err:
+            except IOError as err:
                 log.warn("Image.open failed:", err, "path=", repr(path))
                 # WTB: Removed following return as images will not always be found locally.
                 #self.imglevel -= 1

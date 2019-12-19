@@ -12,11 +12,11 @@ class OverlayDB(object):
     def getRawArticle(self, title, revision=None):
         p = os.path.join(self.basedir, title)
         if os.path.isfile(p):
-            return unicode(open(p, 'rb').read(), 'utf-8')
+            return str(open(p, 'rb').read(), 'utf-8')
         return self.db.getRawArticle(title)
 
     def getTemplate(self, title, followRedirects=False):
         p = os.path.join(self.basedir, title)
         if os.path.isfile(p):
-            return unicode(open(p, 'rb').read(), 'utf-8')
+            return str(open(p, 'rb').read(), 'utf-8')
         return self.db.getTemplate(title, followRedirects=followRedirects)

@@ -171,7 +171,7 @@ class ZipCreator(object):
         if path is None:
             log.warn('Could not get image %r' % name)
             return
-        zipname = u"images/%s" % name.replace("'", '-')
+        zipname = "images/%s" % name.replace("'", '-')
         self.zf.write(path, zipname.encode("utf-8"))
         self.images[name]['url'] = imagedb.getURL(name, size=self.imagesize)
         descriptionurl = imagedb.getDescriptionURL(name)
@@ -278,7 +278,7 @@ class ThreadedZipCreator(ZipCreator):
     def join(self):
         """Finish ZIP file by writing the actual content"""
         
-        self.status(status=u'fetching articles')
+        self.status(status='fetching articles')
         for info in self.article_jobs:
             self.fetchArticle(
                 title=info['title'],
@@ -288,7 +288,7 @@ class ThreadedZipCreator(ZipCreator):
         self.jobsched.join()
         self.status(progress=33)
         
-        self.status(status=u'fetching templates')
+        self.status(status='fetching templates')
         templates = set()
         for info in self.article_jobs:
             try:
@@ -308,7 +308,7 @@ class ThreadedZipCreator(ZipCreator):
         self.jobsched.join()
         self.status(progress=50)
         
-        self.status(status=u'fetching images')
+        self.status(status='fetching images')
         for info in self.article_jobs:
             try:
                 raw = self.articles[info['title']]['content']
@@ -375,7 +375,7 @@ class ThreadedZipCreator(ZipCreator):
                 return
             self.zf_lock.acquire()
             try:
-                zipname = u"images/%s" % name.replace("'", '-')
+                zipname = "images/%s" % name.replace("'", '-')
                 self.zf.write(path, zipname.encode("utf-8"))
             finally:
                 self.zf_lock.release()

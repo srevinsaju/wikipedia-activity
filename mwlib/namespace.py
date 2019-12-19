@@ -29,7 +29,7 @@ def add_namespace_map(key, lang, project_name, extras={}):
     def insertstring(k, v):
         res[k.replace(" ", "_")] = v
     def insert(k, v):
-        if isinstance(k, basestring):
+        if isinstance(k, str):
             insertstring(k,v)
         else:
             for x in k:
@@ -53,15 +53,15 @@ _lang_ns_data_keys = [
     NS_HELP, NS_HELP_TALK, NS_CATEGORY, NS_CATEGORY_TALK, NS_SPECIAL, NS_MEDIA
 ]
 
-add_namespace_map('enwiki', 'en', u'Wikipedia',
-        {u'Portal': 100, u'Portal_Talk': 101})
-add_namespace_map('dewiki', 'de', u'Wikipedia',
-        {u'Portal': 100, u'Portal_Diskussion': 101})
+add_namespace_map('enwiki', 'en', 'Wikipedia',
+        {'Portal': 100, 'Portal_Talk': 101})
+add_namespace_map('dewiki', 'de', 'Wikipedia',
+        {'Portal': 100, 'Portal_Diskussion': 101})
 for lang in _lang_ns_data:
-    add_namespace_map('%s+en_mw' % lang, lang, u'MediaWiki', namespace_maps['enwiki'])
+    add_namespace_map('%s+en_mw' % lang, lang, 'MediaWiki', namespace_maps['enwiki'])
 del lang
 
-namespace_maps['default'] = dict(namespace_maps['enwiki'].items() + namespace_maps['dewiki'].items())
+namespace_maps['default'] = dict(list(namespace_maps['enwiki'].items()) + list(namespace_maps['dewiki'].items()))
 
 # external wikis:
 

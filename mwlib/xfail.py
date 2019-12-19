@@ -10,8 +10,8 @@ stats.warnings = []
 
 def report():
     if stats.xfail:
-        print stats.xfail, "expected failures"
-    print "\n".join(stats.warnings)
+        print(stats.xfail, "expected failures")
+    print("\n".join(stats.warnings))
         
 import atexit
 atexit.register(report)

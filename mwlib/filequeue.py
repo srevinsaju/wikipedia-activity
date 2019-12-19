@@ -69,7 +69,7 @@ class FileJobPoller(object):
         path = os.path.join(self.processing_dir, filename)
         try:
             os.rename(src, path)
-        except Exception, exc:
+        except Exception as exc:
             self.log.warn('Could not rename %r to %r: %s' % (src, path, exc))
             traceback.print_exc()
             return
@@ -82,13 +82,13 @@ class FileJobPoller(object):
                 try:
                     rc = subprocess.call(args)
                     assert rc == 0, 'non-zero return code'
-                except Exception, exc:
+                except Exception as exc:
                     self.log.warn('Error executing %r: %s' % (args, exc))
                     traceback.print_exc()
             finally:
                 try:
                     os.unlink(path)
-                except Exception, exc:
+                except Exception as exc:
                     self.log.warn('Could not remove file %r: %s' % (path, exc))
                     traceback.print_exc()
                 os._exit(0)

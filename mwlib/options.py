@@ -104,7 +104,7 @@ class OptionParser(optparse.OptionParser):
                 self.metabook = metabook.make_metabook()
             for title in self.args:
                 self.metabook['items'].append(metabook.make_article(
-                    title=unicode(title, 'utf-8'),
+                    title=str(title, 'utf-8'),
                 ))
         
         return self.options, self.args

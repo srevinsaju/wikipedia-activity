@@ -6,7 +6,7 @@
 
 import math
 
-from advtree import Cell, ImageLink, Link, Math, NamedURL, Reference, Text, URL
+from .advtree import Cell, ImageLink, Link, Math, NamedURL, Reference, Text, URL
 
 def getNodeHeight(node, params):
     lineHeight = params['lineHeight']

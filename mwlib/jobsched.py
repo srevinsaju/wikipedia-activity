@@ -1,6 +1,6 @@
 """Simplistic threaded job scheduler"""
 
-import Queue
+import queue
 import threading
 import traceback
 
@@ -21,7 +21,7 @@ class JobScheduler(object):
         """
         
         self.num_threads = num_threads
-        self.job_queue = Queue.Queue()
+        self.job_queue = queue.Queue()
         self.semaphore = None
     
     def add_job(self, job_id, do_job, **kwargs):
@@ -47,7 +47,7 @@ class JobScheduler(object):
                         break
                     try:                
                         do_job(job_id, **kwargs)
-                    except Exception, exc:
+                    except Exception as exc:
                         log.ERROR('Error executing job: %s' % exc)
                         traceback.print_exc()
             finally:

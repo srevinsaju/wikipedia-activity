@@ -17,7 +17,7 @@ if __name__ == '__main__':
         if sys.argv[1] == '--min_cant_links':
             min_cant_links = int(sys.argv[2])
 
-    print "Adding articles with less than %d links" % min_cant_links
+    print("Adding articles with less than %d links" % min_cant_links)
 
     # Read favorites list
     favorites_reader = FileListReader(config.favorites_file_name)
@@ -25,7 +25,7 @@ if __name__ == '__main__':
     ranking_file = codecs.open('%s.links_counted' % input_xml_file_name,
                             encoding='utf-8', mode='r')
 
-    print "Writing low_rank_pages file"
+    print("Writing low_rank_pages file")
     output_file = codecs.open('%s.low_rank_pages' % input_xml_file_name,
                     encoding='utf-8', mode='w')
 

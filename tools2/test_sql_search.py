@@ -8,19 +8,19 @@ search_word = ''
 if len(sys.argv) > 1:
     search_word = sys.argv[1]
 else:
-    print "Use ../tools2/test_sql_search.py topic"
+    print("Use ../tools2/test_sql_search.py topic")
     exit()
 
-print "Opening index"
+print("Opening index")
 dbpath = './search.db'
 conn = sqlite3.connect(dbpath)
 
-print "Searching %s" % search_word
+print("Searching %s" % search_word)
 search_word = '%' + search_word + '%'
 results = conn.execute("SELECT * from articles where title like'%s'" %
             search_word)
-print "arraysize", results.arraysize
-row = results.next()
+print("arraysize", results.arraysize)
+row = next(results)
 while row:
-    print row
-    row = results.next()
+    print(row)
+    row = next(results)

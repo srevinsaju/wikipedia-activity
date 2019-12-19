@@ -122,13 +122,13 @@ if len(sys.argv) >= 3 and not sys.argv[2].startswith('--'):
     valid_data_param = True
     data_file = sys.argv[2]
     if not data_file.endswith(".xml"):
-        print "Data file should be a .xml file"
+        print("Data file should be a .xml file")
         exit()
 
     lang = data_file[:data_file.find('/')]
 
     if not os.path.exists(lang):
-        print "Lang directory '%s' does not exist" % lang
+        print("Lang directory '%s' does not exist" % lang)
         exit()
 
     sys.argv.pop()
@@ -142,23 +142,23 @@ if not valid_data_param:
     config = utils.read_conf_from_info('./')
     data_file = config['path']
     lang = data_file[:data_file.find('/')]
-    print "data_file parameter not set, taking config from activity.info file"
-    print "using %s" % data_file
+    print("data_file parameter not set, taking config from activity.info file")
+    print("using %s" % data_file)
 
-print
-print "Lang:", lang
-print
+print()
+print("Lang:", lang)
+print()
 
 if lang == 'base':
-    print 'Without a data file will create a .xo/tar.bz2 file with ' \
-        'sources only'
-    print
+    print('Without a data file will create a .xo/tar.bz2 file with ' \
+        'sources only')
+    print()
 
-print 'To create a wikipedia activity for a specific language'
-print 'add a parameter with the xml data file, like:'
-print
-print './setup.py dist_xo fr/frwiki-20111231-pages-articles.xml'
-print
+print('To create a wikipedia activity for a specific language')
+print('add a parameter with the xml data file, like:')
+print()
+print('./setup.py dist_xo fr/frwiki-20111231-pages-articles.xml')
+print()
 
 bundlebuilder.XOPackager = WikiXOPackager
 bundlebuilder.SourcePackager = WikiSourcePackager

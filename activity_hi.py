@@ -7,7 +7,7 @@ def configure():
     confvars['path'] = 'hi/hiwiki-20121225-pages-articles.xml'
     confvars['port'] = 8006
     confvars['home_page'] = '/static/index_hi.html'
-    confvars['templateprefix'] = u'साँचा:' 
+    confvars['templateprefix'] = 'साँचा:' 
     confvars['wpheader'] = 'From Wikipedia, The Free Encyclopedia'
     confvars['wpfooter'] = 'Content available under the ' + \
     '<a href="/static/es-gfdl.html">GNU Free Documentation License</a>.' + \

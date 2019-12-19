@@ -25,7 +25,7 @@ def _get_global_basedir():
     return _basedir
 
 def drawTimeline(script, basedir=None):
-    if isinstance(script, unicode):
+    if isinstance(script, str):
         script = script.encode('utf8')
     if basedir is None:
         basedir = _get_global_basedir()

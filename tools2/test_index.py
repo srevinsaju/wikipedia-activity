@@ -29,14 +29,14 @@ class RedirectParser:
         self.redirects = {}
         count = 0
         while line:
-            links = self.link_re.findall(unicode(line))
+            links = self.link_re.findall(str(line))
             if len(links) == 2:
                 origin = normalize_title(links[0][2:-2])
                 destination = normalize_title(links[1][2:-2])
                 self.redirects[origin] = destination
             line = input_redirects.readline()
             count += 1
-            print "Processing %d\r" % count,
+            print("Processing %d\r" % count, end=' ')
         input_redirects.close()
 
     def get_redirected(self, article_title):
@@ -78,12 +78,12 @@ class DataRetriever():
         if num_block == -1:
             # look at redirects
             redirect = self.redirects_checker.get_redirected(article_title)
-            print "Searching redirect from %s to %s" % (article_title,
-                    redirect)
+            print("Searching redirect from %s to %s" % (article_title,
+                    redirect))
             if redirect is not None:
                 return self._get_article_position(redirect)
 
-        print "Numblock %d, position %d" % (num_block, position)
+        print("Numblock %d, position %d" % (num_block, position))
         return num_block, position
 
     def _get_block_start(self, num_block):
@@ -132,12 +132,12 @@ class DataRetriever():
 
     def get_text_article(self, article_title):
         output = ''
-        print "Looking for article %s" % article_title
+        print("Looking for article %s" % article_title)
         num_block, position = self._get_article_position(article_title)
         if num_block == -1:
-            print "Article not found"
+            print("Article not found")
         else:
-            print "Found at block %d position %d" % (num_block, position)
+            print("Found at block %d position %d" % (num_block, position))
 
         block_start = self._get_block_start(num_block)
         #print "Block %d starts at %d" % (num_block, block_start)
@@ -171,9 +171,9 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         page_title = sys.argv[1]
     else:
-        print "Use ../tools2/test_index.py page_title"
+        print("Use ../tools2/test_index.py page_title")
         exit()
 
     redirects_checker = RedirectParser(input_xml_file_name)
     data_retriever = DataRetriever(input_xml_file_name, redirects_checker)
-    print data_retriever.get_expanded_article(page_title)
+    print(data_retriever.get_expanded_article(page_title))

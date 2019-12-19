@@ -4,17 +4,17 @@
 
 import sys
 import time
-import mwscan
+from . import mwscan
 
-d=unicode(open(sys.argv[1]).read(), 'utf-8')
+d=str(open(sys.argv[1]).read(), 'utf-8')
 
 stime=time.time()
 r=mwscan.scan(d)
 needed = time.time()-stime
 for x in r:
-    print r.repr(x)
+    print(r.repr(x))
 
-print needed, len(d), len(r)
+print(needed, len(d), len(r))
 
 
 

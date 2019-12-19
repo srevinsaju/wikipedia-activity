@@ -22,20 +22,20 @@
 # Usage: server.py <dbfile> <port>
 #
 ## Standard libs
-from __future__ import with_statement
+
 import logging
 import sys
 import os
 import platform
 import select
 import codecs
-import BaseHTTPServer
-from SimpleHTTPServer import SimpleHTTPRequestHandler
-import SocketServer
+import http.server
+from http.server import SimpleHTTPRequestHandler
+import socketserver
 
 import cgi
 import errno
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import tempfile
 import re
 try:
@@ -48,7 +48,7 @@ import pylru
 import json
 
 # to render the svg icons
-import StringIO
+import io
 import cairo
 from sugar3.graphics.icon import _IconBuffer
 from sugar3 import profile
@@ -77,7 +77,7 @@ from mwlib import parser, scanner, expander
 #os.environ['DEBUG_EXPANDER'] = '1'
 
 
-class MyHTTPServer(BaseHTTPServer.HTTPServer):
+class MyHTTPServer(http.server.HTTPServer):
     def serve_forever(self, poll_interval=0.5):
         """Overridden version of BaseServer.serve_forever that does not fail
         to work when EINTR is received.
@@ -92,7 +92,7 @@ class MyHTTPServer(BaseHTTPServer.HTTPServer):
             # shutdown request and wastes cpu at all other times.
             try:
                 r, w, e = select.select([self], [], [], poll_interval)
-            except select.error, e:
+            except select.error as e:
                 if e[0] == errno.EINTR:
                     logging.debug("got eintr")
                     continue
@@ -104,7 +104,7 @@ class MyHTTPServer(BaseHTTPServer.HTTPServer):
     def server_bind(self):
         """Override server_bind in HTTPServer to not use
         getfqdn to get the server name because is very slow."""
-        SocketServer.TCPServer.server_bind(self)
+        socketserver.TCPServer.server_bind(self)
         host, port = self.socket.getsockname()[:2]
         self.server_name = 'localhost'
         self.server_port = port
@@ -118,7 +118,7 @@ class WPWikiDB:
         self.templateprefix = templateprefix
         self.templateblacklist = templateblacklist
         self.dataretriever = dataretriever.DataRetriever(system_id, path)
-        self.templates_cache = {'!': '|', u'!': '|'}  # a special case
+        self.templates_cache = {'!': '|', '!': '|'}  # a special case
 
     def getRawArticle(self, title, followRedirects=True):
 
@@ -243,7 +243,7 @@ class HTMLOutputBuffer:
         self.buffer = ''
 
     def write(self, obj):
-        if isinstance(obj, unicode):
+        if isinstance(obj, str):
             self.buffer += obj.encode('utf8')
         else:
             self.buffer += obj
@@ -754,7 +754,7 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
                 article = article.replace(" ", "_").encode('utf8')
                 # needed to have the same format than url in the page
                 # when is compared in javascript
-                quoted = urllib.quote(article, safe='~@#$&()*!+=:;,.?/\'')
+                quoted = urllib.parse.quote(article, safe='~@#$&()*!+=:;,.?/\'')
                 external_links.append(quoted)
 
         self.send_response(200)
@@ -764,8 +764,8 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
 
     def do_POST(self):
 
-        real_path = urllib.unquote(self.path)
-        real_path = unicode(real_path, 'utf8')
+        real_path = urllib.parse.unquote(self.path)
+        real_path = str(real_path, 'utf8')
 
         (real_path, sep, param_text) = real_path.partition('?')
 
@@ -859,7 +859,7 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
                          + "</h1>")
         self.wfile.write("<ul>")
 
-        articles = self.search(unicode(title))
+        articles = self.search(str(title))
         for article in articles:
             #if not result.startswith(self.templateprefix):
             self.wfile.write('<li><a href="/wiki/%s">%s</a></li>' %
@@ -903,7 +903,7 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
         context.fill()
         context.set_source_surface(icon_surface, 0, 0)
         context.paint()
-        out = StringIO.StringIO()
+        out = io.StringIO()
         surface.write_to_png(out)
         self.send_response(200)
         self.send_header("Content-Type", "image/png;")
@@ -930,8 +930,8 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
             (strtype, article.encode('utf8')))
 
     def do_GET(self):
-        real_path = urllib.unquote(self.path)
-        real_path = unicode(real_path, 'utf8')
+        real_path = urllib.parse.unquote(self.path)
+        real_path = str(real_path, 'utf8')
 
         (real_path, sep, param_text) = real_path.partition('?')
         self.params = {}

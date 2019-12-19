@@ -7,7 +7,7 @@ input_xml_file_name = './hiwiki-20121225-pages-articles.xml'
 favorites_file_name = './favorites_hi.txt'
 blacklist_file_name = './blacklist_hi.txt'
 
-REDIRECT_TAGS = [u'#REDIRECT']
+REDIRECT_TAGS = ['#REDIRECT']
 
 BLACKLISTED_NAMESPACES = ['WIKIPEDIA:', 'MEDIAWIKI:']
 

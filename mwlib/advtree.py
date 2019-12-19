@@ -250,7 +250,7 @@ class AdvancedNode:
                 text.append( getattr(n, access) )
         alltext = [t for t in text if t]
         if alltext:
-            return u''.join(alltext)
+            return ''.join(alltext)
         else:
             return ''
     
@@ -270,15 +270,15 @@ class AdvancedNode:
                 return min_val
 
         def ensureUnicode(val):
-            if isinstance(val, unicode):
+            if isinstance(val, str):
                 return val
             elif isinstance(val, str):
-                return unicode(val, 'utf-8')
+                return str(val, 'utf-8')
             else:
                 try:
-                    return unicode(val)
+                    return str(val)
                 except:
-                    return u''
+                    return ''
 
         def ensureDict(val):
             if isinstance(val, dict):
@@ -286,7 +286,7 @@ class AdvancedNode:
             else:
                 return {}
 
-        for (key, value) in attrs.items():
+        for (key, value) in list(attrs.items()):
             if key in ['colspan', 'rowspan']:
                 attrs[key] = ensureInt(value, min_val=1)
             elif key == 'style':
@@ -563,7 +563,7 @@ def extendClasses(node):
 _advancedNodesMap = {Section: AdvancedSection, ImageLink:AdvancedImageLink, 
                      Math:AdvancedMath, Cell:AdvancedCell, Row:AdvancedRow, Table:AdvancedTable}
 mixIn(Node, AdvancedNode)
-for k, v in _advancedNodesMap.items():
+for k, v in list(_advancedNodesMap.items()):
     mixIn(k,v)
     
 # --------------------------------------------------------------------------
@@ -653,9 +653,9 @@ def removeNewlines(node):
     remove newlines, tabs, spaces if we are next to a blockNode
     """
     if node.__class__ == Text and not node.getParentNodesByClass(PreFormatted) and not node.getParentNodesByClass(Source) and node.caption:
-        if node.caption.strip() == u"":
+        if node.caption.strip() == "":
             prev = node.previous or node.parent # previous sibling node or parentnode 
-            next = node.next or node.parent.next
+            next = node.__next__ or node.parent.__next__
             if not next or next.isblocknode or not prev or prev.isblocknode: 
                 assert not node.children
                 np = node.parent
@@ -709,7 +709,7 @@ def getAdvTree(fn):
     from mwlib.dummydb import DummyDB
     from mwlib.uparser import parseString
     db = DummyDB()
-    input = unicode(open(fn).read(), 'utf8')
+    input = str(open(fn).read(), 'utf8')
     r = parseString(title=fn, raw=input, wikidb=db)
     buildAdvancedTree(r)
     return r

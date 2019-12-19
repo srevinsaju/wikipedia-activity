@@ -1,7 +1,7 @@
 """Client to a Print-on-Demand partner service (e.g. pediapress.com)"""
 
-import urllib
-import urllib2
+import urllib.request, urllib.parse, urllib.error
+import urllib.request, urllib.error, urllib.parse
 
 import json
 
@@ -20,7 +20,7 @@ class PODClient(object):
             headers = {'Content-Type': content_type}
         else:
             headers = {}
-        return urllib2.urlopen(urllib2.Request(self.posturl, data, headers=headers)).read()
+        return urllib.request.urlopen(urllib.request.Request(self.posturl, data, headers=headers)).read()
     
     def post_status(self, status=None, progress=None, article=None):
         post_data = {}
@@ -34,7 +34,7 @@ class PODClient(object):
             if not isinstance(article, str):
                 article = article.encode('utf-8')
             post_data['article'] = article
-        self._post(urllib.urlencode(post_data))
+        self._post(urllib.parse.urlencode(post_data))
     
     def post_zipfile(self, filename):
         f = open(filename, "rb")
@@ -44,5 +44,5 @@ class PODClient(object):
         self._post(data, content_type=content_type)
 
 def podclient_from_serviceurl(serviceurl):
-    result = json.loads(urllib2.urlopen(serviceurl, data="any").read())
+    result = json.loads(urllib.request.urlopen(serviceurl, data="any").read())
     return PODClient(result["post_url"], redirecturl=result["redirect_url"])

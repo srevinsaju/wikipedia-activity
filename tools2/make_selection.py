@@ -40,7 +40,7 @@ class PagesLinksFilter():
             words = line.split()
             if len(words) > 0:
                 page = words[0]
-                print "Adding page %s" % page
+                print("Adding page %s" % page)
                 redirected = redirects_checker.get_redirected(page)
                 if redirected is not None:
                     page = redirected
@@ -113,7 +113,7 @@ class PagesProcessor(handler.ContentHandler):
                 except:
                     pass
 
-        hashed_name = unicode(self._hashpath(name))  # .encode('utf8')
+        hashed_name = str(self._hashpath(name))  # .encode('utf8')
         url = 'http://upload.wikimedia.org/wikipedia/commons/thumb/' \
             + hashed_name + ('/%dpx-' % image_size) + name.replace(' ', '_')
         # the svg files are requested as png
@@ -123,7 +123,7 @@ class PagesProcessor(handler.ContentHandler):
 
     def get_images(self, title):
         # find images used in the pages
-        images = self.image_re.findall(unicode(self._page))
+        images = self.image_re.findall(str(self._page))
         images_list = []
         for image in images:
             url = self._get_url_image(image)
@@ -145,25 +145,25 @@ class PagesProcessor(handler.ContentHandler):
         elif name == "page":
 
             for namespace in config.BLACKLISTED_NAMESPACES:
-                if unicode(self._title).startswith(namespace):
+                if str(self._title).startswith(namespace):
                     return
 
             title = normalize_title(self._title)
 
             for namespace in config.TEMPLATE_NAMESPACES:
-                if unicode(self._title).startswith(namespace):
+                if str(self._title).startswith(namespace):
                     self.get_images(title)
                     return
 
             for tag in config.REDIRECT_TAGS:
-                if unicode(self._page).startswith(tag):
+                if str(self._page).startswith(tag):
                     return
 
             if (title not in self._pages_blacklist) and \
                 (title in self._selected_pages_list):
-                print "%d Page '%s', length %d                   \r" % \
+                print("%d Page '%s', length %d                   \r" % \
                         (self._page_counter,
-                         title.encode('ascii', 'replace'), len(self._page)),
+                         title.encode('ascii', 'replace'), len(self._page)), end=' ')
                 # processed
                 self._register_page(self._output, title, self._page)
                 self.get_images(title)
@@ -171,7 +171,7 @@ class PagesProcessor(handler.ContentHandler):
         elif name == "mediawiki":
             self._output.close()
             self._output_page_images.close()
-            print "Processed %d pages." % self._page_counter
+            print("Processed %d pages." % self._page_counter)
 
 
 class TemplatesLoader():
@@ -203,7 +203,7 @@ class TemplatesLoader():
                     template_name = normalize_title(template_name)
                     #print "checking", template_name,
 
-                    if select_all or template_name in templates_used.keys():
+                    if select_all or template_name in list(templates_used.keys()):
                         #print "Adding Template", template_name.encode('ascii', 'replace'), '\r',
                         title = template_namespace + ":" + template_name
                         self._register_page(title, template_content.strip())
@@ -227,24 +227,24 @@ if __name__ == '__main__':
             arg = sys.argv[argn]
             if arg == '--all':
                 select_all = True
-                print "Selecting all the pages"
+                print("Selecting all the pages")
 
     MAX_LEVELS = 1
 
     if not select_all:
         fav_reader = FileListReader(config.favorites_file_name)
-        print "Loaded %d favorite pages" % len(fav_reader.list)
+        print("Loaded %d favorite pages" % len(fav_reader.list))
 
     if os.path.exists(config.blacklist_file_name):
         pages_blacklisted_reader = FileListReader(config.blacklist_file_name)
         pages_blacklist = pages_blacklisted_reader.list
-        print "Loaded %d blacklisted pages" % len(pages_blacklist)
+        print("Loaded %d blacklisted pages" % len(pages_blacklist))
     else:
         pages_blacklist = []
 
     input_xml_file_name = config.input_xml_file_name
 
-    print "Init redirects checker"
+    print("Init redirects checker")
     redirect_checker = RedirectParser(input_xml_file_name)
 
     level = 1
@@ -258,13 +258,13 @@ if __name__ == '__main__':
     if not os.path.exists(selected_pages_file_name):
         if not select_all:
             while level <= MAX_LEVELS:
-                print "Processing links level %d" % level
+                print("Processing links level %d" % level)
                 links_filter = LinksFilter(input_xml_file_name,
                         redirect_checker, fav_reader.list)
                 fav_reader.list.extend(links_filter.links)
                 level += 1
 
-            print "Writing pages_selected-level-%d file" % MAX_LEVELS
+            print("Writing pages_selected-level-%d file" % MAX_LEVELS)
             output_file = codecs.open(selected_pages_file_name,
                             encoding='utf-8', mode='w')
             for page  in fav_reader.list:
@@ -272,12 +272,12 @@ if __name__ == '__main__':
             output_file.close()
             selected_pages_list = fav_reader.list
         else:
-            print "Processing links"
+            print("Processing links")
             links_filter = PagesLinksFilter(input_xml_file_name,
                 redirect_checker)
 
-            print "Writing pages_selected file %d pages" % \
-                    len(links_filter.pages)
+            print("Writing pages_selected file %d pages" % \
+                    len(links_filter.pages))
             output_file = codecs.open(selected_pages_file_name,
                          encoding='utf-8', mode='w')
             for page  in links_filter.pages:
@@ -286,12 +286,12 @@ if __name__ == '__main__':
             selected_pages_list = links_filter.pages
 
     else:
-        print "Loading selected pages"
+        print("Loading selected pages")
         pages_selected_reader = FileListReader(selected_pages_file_name)
         selected_pages_list = pages_selected_reader.list
 
     if not os.path.exists('%s.processed' % input_xml_file_name):
-        print "Writing .processed file"
+        print("Writing .processed file")
         parser = make_parser()
         parser.setContentHandler(PagesProcessor(input_xml_file_name,
                 selected_pages_list, pages_blacklist))
@@ -307,23 +307,23 @@ if __name__ == '__main__':
         if select_all:
             templates_loader = TemplatesLoader(input_xml_file_name, [], True)
         else:
-            print "Processing templates"
+            print("Processing templates")
             templates_counter = TemplatesCounter(input_xml_file_name,
                     selected_pages_list, redirect_checker)
 
-            print "Sorting counted templates"
-            items = templates_counter.templates_to_counter.items()
+            print("Sorting counted templates")
+            items = list(templates_counter.templates_to_counter.items())
             items.sort(key=itemgetter(1), reverse=True)
 
-            print "Writing templates_counted file"
+            print("Writing templates_counted file")
             _writer = TemplatesCounterWriter(input_xml_file_name, items)
 
-            print "Loading templates used"
+            print("Loading templates used")
             templates_used_reader = CountedTemplatesReader(input_xml_file_name)
-            print "Readed %d templates used" % len(
-                    templates_used_reader.templates)
+            print("Readed %d templates used" % len(
+                    templates_used_reader.templates))
 
-            print "Adding used templates to .processed file"
+            print("Adding used templates to .processed file")
             templates_loader = TemplatesLoader(input_xml_file_name,
                     templates_used_reader.templates)
 
@@ -333,11 +333,11 @@ if __name__ == '__main__':
                     '%s.redirects_used' % input_xml_file_name)
         else:
             if templates_used_reader is None:
-                print "Loading templates used"
+                print("Loading templates used")
                 templates_used_reader = \
                         CountedTemplatesReader(input_xml_file_name)
-                print "Readed %d templates used" % \
-                        len(templates_used_reader.templates)
+                print("Readed %d templates used" % \
+                        len(templates_used_reader.templates))
 
             redirects_used_writer = RedirectsUsedWriter(input_xml_file_name,
                     selected_pages_list, templates_used_reader.templates,

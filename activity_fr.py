@@ -7,7 +7,7 @@ def configure():
     confvars['path'] = 'fr/frwiki-20111231-pages-articles.xml'
     confvars['port'] = 8005
     confvars['home_page'] = '/static/index_fr.html'
-    confvars['templateprefix'] = u'Modèle:'
+    confvars['templateprefix'] = 'Modèle:'
     confvars['wpheader'] = 'Un article de Wikipédia, l\'encyclopédie libre'
     confvars['wpfooter'] = 'Contenu disponible sous '+ \
     'Conditions de l\'<a licence href="/static/es-gfdl.html"> '+ \

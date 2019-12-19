@@ -4,8 +4,8 @@
 # See README.txt for additional licensing information.
 
 import os
-from ConfigParser import ConfigParser
-import StringIO
+from configparser import ConfigParser
+import io
 
 from mwlib import utils, metabook
 from mwlib.log import Log
@@ -127,7 +127,7 @@ class Environment(object):
         self.images = None
         self.wiki = None
         self.configparser = ConfigParser()
-        defaults=StringIO.StringIO("""
+        defaults=io.StringIO("""
 [wiki]
 name=
 url=
@@ -172,7 +172,7 @@ url=
                 )
                 if wikitext:
                     try:
-                        wikitext = unicode(wikitext, 'utf-8')
+                        wikitext = str(wikitext, 'utf-8')
                     except UnicodeError:
                         wikitext = None
             else:
@@ -188,7 +188,7 @@ url=
                 continue
             
             licenses.append({
-                'title': license.get('name', u'License'),
+                'title': license.get('name', 'License'),
                 'wikitext': wikitext,
             })
         

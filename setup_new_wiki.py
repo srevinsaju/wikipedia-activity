@@ -48,7 +48,7 @@ class WikiXOPackager(bundlebuilder.XOPackager):
             needed_sufix = ['.processed.bz2', '.processed.bz2t']
             for sufix in needed_sufix:
                 data_file = self.data_file + sufix
-                print "Add %s" % data_file
+                print("Add %s" % data_file)
                 bundle_zip.write(data_file,
                                  os.path.join(self.config.bundle_root_dir,
                                               data_file))
@@ -56,14 +56,14 @@ class WikiXOPackager(bundlebuilder.XOPackager):
             data_path = os.path.dirname(self.data_file)
 
             index_file = os.path.join(data_path, 'search.db')
-            print "Add %s" % index_file
+            print("Add %s" % index_file)
             bundle_zip.write(index_file,
                          os.path.join(self.config.bundle_root_dir, index_file))
 
             # add images
             images_path = os.path.join(data_path, 'images')
             if os.path.exists(images_path):
-                print "Adding images"
+                print("Adding images")
                 for f in self.list_files(images_path):
                     bundle_zip.write(os.path.join(images_path, f),
                         os.path.join(self.config.bundle_root_dir,
@@ -98,7 +98,7 @@ class WikiXOPackager(bundlebuilder.XOPackager):
                     directory = dirs[n]
                     if include_dirs is not None and \
                         not directory in include_dirs:
-                        print "** Ignoring directory", directory
+                        print("** Ignoring directory", directory)
                         dirs.remove(directory)
                     else:
                         n = n + 1
@@ -115,7 +115,7 @@ if __name__ == '__main__':
 
         lang = data_file[:data_file.find('/')]
 
-    print "Lang:", lang
+    print("Lang:", lang)
     # copy activty/activity.info.lang as activty/activity.info
     f = 'activity/activity.info.' + lang
     if os.path.exists(f):

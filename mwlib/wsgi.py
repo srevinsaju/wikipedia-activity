@@ -4,7 +4,7 @@
 
 import cgi
 import os
-import StringIO
+import io
 import time
 import traceback
 
@@ -30,7 +30,7 @@ class Request(object):
             self.post_data = {}
     
     def multi2single(self, d):
-        for key, values in d.items():
+        for key, values in list(d.items()):
             if values:
                 d[key] = values[0]
         return d
@@ -56,7 +56,7 @@ class Request(object):
         
         content_type, pdict = cgi.parse_header(self.env.get('CONTENT_TYPE', ''))
         if content_type == 'multipart/form-data':
-            post_data = cgi.parse_multipart(StringIO.StringIO(content), pdict)
+            post_data = cgi.parse_multipart(io.StringIO(content), pdict)
         else:
             post_data = cgi.parse_qs(content)
         return self.multi2single(post_data)
@@ -70,7 +70,7 @@ class Response(object):
         self.status_text = status_text
     
     def finish(self):
-        if isinstance(self.content, unicode):
+        if isinstance(self.content, str):
             self.content = self.content.encode('utf-8')
         if isinstance(self.content, str):
             content_length = len(self.content)
@@ -95,7 +95,7 @@ class Application(object):
         start_time = time.time()
         try:
             request = Request(env)
-        except Exception, exc:
+        except Exception as exc:
             log.ERROR('invalid request: %s' % exc)
             traceback.print_exc()
             response = self.http500()
@@ -105,13 +105,13 @@ class Application(object):
                 if not isinstance(response, Response):
                     log.ERROR('invalid result from dispatch(): %r' % response)
                     response = self.http500()
-            except Exception, exc:
+            except Exception as exc:
                 response = self.http500(exc)
     
         response.finish()
         start_response(
             '%d %s' % (response.status_code, response.status_text),
-            response.headers.items()
+            list(response.headers.items())
         )
         if isinstance(response.content, str):
             yield response.content

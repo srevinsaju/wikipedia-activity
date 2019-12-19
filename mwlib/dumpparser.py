@@ -155,7 +155,7 @@ class DumpParser(object):
         for el in pageElem:
             tag = self.getTag(el)
             if tag == 'title':
-                title = unicode(el.text)
+                title = str(el.text)
                 if ':' in title:
                     ns, rest = title.split(':', 1)
                     res.namespace = self.namespaces.get(ns.lower(), NS_MAIN)
@@ -193,9 +193,9 @@ class DumpParser(object):
             elif tag == 'minor':
                 res.minor = True
             elif tag == 'comment':
-                res.comment = unicode(el.text)
+                res.comment = str(el.text)
             elif tag == 'text':
-                res.text = unicode(el.text)
+                res.text = str(el.text)
                 el.clear()
 
         return res
@@ -205,7 +205,7 @@ class DumpParser(object):
         userid = None
         for el in conElem:
             if self.getTag(el) == 'username':
-                username = unicode(el.text)
+                username = str(el.text)
             elif self.getTag(el) == 'id':
                 userid = int(el.text)
         return (username, userid)

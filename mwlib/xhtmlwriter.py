@@ -28,7 +28,7 @@ ToDo:
 
 import sys
 import cgi
-import StringIO
+import io
 try:
     import xml.etree.ElementTree as ET
 except:
@@ -46,7 +46,7 @@ version = "0.2"
 log = Log("xmlwriter")
 
 def showNode(obj):
-    attrs = obj.__dict__.keys()
+    attrs = list(obj.__dict__.keys())
     log(obj.__class__.__name__ ) 
     stuff =  ["%s => %r" %(k,getattr(obj,k)) for k in attrs if 
               (not k in ("_parentref", "children")) and getattr(obj,k)
@@ -56,10 +56,10 @@ def showNode(obj):
 
 
 def indent(elem, level=0):
-    i = u"\n" + level*u"  "
+    i = "\n" + level*"  "
     if len(elem):
         if not elem.text or not elem.text.strip():
-            elem.text = i + u"  "
+            elem.text = i + "  "
         for elem in elem:
             indent(elem, level+1)
         if not elem.tail or not elem.tail.strip():
@@ -90,17 +90,17 @@ def xserializeVList(vlist):
     styleArgs = []
     gotClass = 0
     gotExtraClass = 0
-    for (key,value) in vlist.items():
-        if isinstance(value, (basestring, int)):
-            args.append((key, unicode(value)))
+    for (key,value) in list(vlist.items()):
+        if isinstance(value, (str, int)):
+            args.append((key, str(value)))
         if isinstance(value, dict) and key=="style":
-            for (_key,_value) in value.items():
+            for (_key,_value) in list(value.items()):
                 styleArgs.append("%s:%s" % (_key, _value))
             args.append(("style", '%s' % '; '.join(styleArgs)))
     return args
 
 def escapeattr(val):
-    return cgi.escape(unicode(val).encode("utf8"), quote=True)
+    return cgi.escape(str(val).encode("utf8"), quote=True)
 
    
 
@@ -123,7 +123,7 @@ class MWXMLWriter(object):
         return self.header + ET.tostring(self.getTree())
     
     def writeparsetree(self, tree):
-        out = StringIO.StringIO()
+        out = io.StringIO()
         parser.show(out, tree)
         self.root.append(ET.Comment(out.getvalue().replace("--", " - - ")))
 
@@ -155,12 +155,12 @@ class MWXMLWriter(object):
             self.writeText(obj, parent)
         else:
             e = ET.SubElement(parent, obj.__class__.__name__.lower())
-            attrs = obj.__dict__.keys()
+            attrs = list(obj.__dict__.keys())
             for k in attrs:
                 val = getattr(obj,k)
                 if k not in ("_parentref", "children") and val:
                     if isinstance(val, dict):
-                        for kk, vv in val.items():
+                        for kk, vv in list(val.items()):
                             e.set(kk, escapeattr(vv))
                     else:
                         e.set(k, escapeattr(val))
@@ -232,9 +232,9 @@ class MWXHTMLWriter(object):
         def _r(obj, p=None):
             for c in obj:
                 assert c is not None
-                for k,v in c.items():
+                for k,v in list(c.items()):
                     if v is None:
-                        print k,v
+                        print(k,v)
                         assert v is not None
                 _r(c,obj)
         _r(self.root)
@@ -258,7 +258,7 @@ class MWXHTMLWriter(object):
     def writedebug(self, obj, parent, comment=""):
         if not self.debug or parent is None:
             return 
-        attrs = obj.__dict__.keys()
+        attrs = list(obj.__dict__.keys())
         stuff =  ["%s : %r" %(k,getattr(obj,k)) for k in attrs if 
                   (not k in ("_parentref", "children")) and getattr(obj,k)
                   ]
@@ -269,7 +269,7 @@ class MWXHTMLWriter(object):
 
 
     def writeparsetree(self, tree):
-        out = StringIO.StringIO()
+        out = io.StringIO()
         parser.show(out, tree)
         self.root.append(ET.Comment(out.getvalue().replace("--", " - - ")))
         
@@ -326,7 +326,7 @@ class MWXHTMLWriter(object):
 
     def xwriteArticle(self, a):
         # add article name as first section heading
-        print "in write Article", a
+        print("in write Article", a)
         e = ET.Element("div")
         e.set("class", "mwx.article")
         h = ET.SubElement(e, "h1")
@@ -389,7 +389,7 @@ class MWXHTMLWriter(object):
         s.set("src", "data:text/plain;charset=utf-8,%s" % obj.caption)
         em = ET.SubElement(s, "em")
         em.set("class", "mwx.timeline.alternate")
-        em.text = u"Timeline"
+        em.text = "Timeline"
         return s
 
     def xwriteHiero(self, obj): # FIXME parser support
@@ -399,7 +399,7 @@ class MWXHTMLWriter(object):
         s.set("src", "data:text/plain;charset=utf-8,%s" % obj.caption)
         em = ET.SubElement(s, "em")
         em.set("class", "mwx.hiero.alternate")
-        em.text = u"Hiero"
+        em.text = "Hiero"
         return s
 
 
@@ -502,9 +502,9 @@ class MWXHTMLWriter(object):
 
         img = ET.SubElement(e, "img", src=imgsrc, alt="") 
         if obj.width:
-            img.set("width", unicode(obj.width))
+            img.set("width", str(obj.width))
         if obj.height:
-            img.set("height", unicode(obj.height))
+            img.set("height", str(obj.height))
         return e 
 
     def xwriteImageMap(self, obj): # FIXME!
@@ -575,7 +575,7 @@ class MWXHTMLWriter(object):
         self.references.append(t)
         t =  ET.Element("sup")
         t.set("class", "mwx.reference")
-        t.text = unicode( len(self.references))
+        t.text = str( len(self.references))
         return SkipChildren(t)
 
         
@@ -609,7 +609,7 @@ class MWXHTMLWriter(object):
                 if not t.endtext and not "/" in t.starttext:
                     stuff = t.starttext[:-1] + "/>"
                 p =  ET.fromstring(stuff)
-            except Exception, e:
+            except Exception as e:
                 log("failed to parse %r \n" % t)
                 parser.show(sys.stdout, t)
                 #raise e
@@ -776,7 +776,7 @@ def main():
         from mwlib.dummydb import DummyDB
         from mwlib.uparser import parseString
         db = DummyDB()
-        input = unicode(open(fn).read(), 'utf8')
+        input = str(open(fn).read(), 'utf8')
         r = parseString(title=fn, raw=input, wikidb=db)
         parser.show(sys.stdout, r)
         preprocess(r)

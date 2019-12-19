@@ -31,7 +31,7 @@ class ExtensionRegistry(object):
         return k
         
     def names(self):
-        return self.name2ext.keys()
+        return list(self.name2ext.keys())
 
     def __getitem__(self, n):
         return self.name2ext[n]
@@ -116,22 +116,22 @@ register(RDFExtension)
 class ListingExtension(TagExtension):
     " http://wikitravel.org/en/Wikitravel:Listings "
     name = "listing"
-    attrs = [(u"name",u"'''%s'''"),
-             ("alt",u"(''%s'')"),
-             ("address",u", %s"),
-             ("directions",u" (''%s'')"),
-             ("phone", u", Phone:%s"),
-             ("fax", u", Fax:%s"),
-             ("url", u" [%s]"),
-             ("hours", u", %s"),
-             ("price", u", %s"),
-             ("lat", u", Latitude:%s"),
-             ("long", u", Longitude: %s"),
-             ("tags", u", Tags: %s")]
+    attrs = [("name","'''%s'''"),
+             ("alt","(''%s'')"),
+             ("address",", %s"),
+             ("directions"," (''%s'')"),
+             ("phone", ", Phone:%s"),
+             ("fax", ", Fax:%s"),
+             ("url", " [%s]"),
+             ("hours", ", %s"),
+             ("price", ", %s"),
+             ("lat", ", Latitude:%s"),
+             ("long", ", Longitude: %s"),
+             ("tags", ", Tags: %s")]
     def __call__(self, source, attributes):
-        t = u"".join(v%attributes[k] for k,v in self.attrs if attributes.get(k,None))
+        t = "".join(v%attributes[k] for k,v in self.attrs if attributes.get(k,None))
         if source:
-            t += u", %s" % source
+            t += ", %s" % source
         return self.parse(t)
 
 register(ListingExtension)

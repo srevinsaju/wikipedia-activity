@@ -36,7 +36,7 @@ def make_messages(locale, domain, version, inputdir,
         languages.append(locale)
     
     for locale in languages:
-        print "processing language", locale
+        print("processing language", locale)
         basedir = os.path.join(localedir, locale, 'LC_MESSAGES')
         if not os.path.isdir(basedir):
             os.makedirs(basedir)
@@ -87,6 +87,6 @@ def compile_messages(localedir='locale'):
         for f in filenames:
             if f.endswith('.po'):
                 path = os.path.join(dirpath, f)
-                print 'processing file %r' % (path,)
+                print('processing file %r' % (path,))
                 mo_filename = os.path.splitext(path)[0] + '.mo'
                 execute('msgfmt', '--check-format', '--output-file', mo_filename, path)

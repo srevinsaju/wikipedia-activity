@@ -149,7 +149,7 @@ def fixBlockElements(root):
     def _check(c, p=None):
         if p and p.__class__ in blockelements:
             if c.__class__ in blockelements and not isinstance(p, advtree.Section):
-                print "p:", p, "c:", c
+                print("p:", p, "c:", c)
                 assert (not c.__class__ in blockelements) or (not p.__class__ in blockelements)
 
         for cc in c.children:

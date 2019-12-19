@@ -13,13 +13,13 @@ More Info:
 * http://testsuite.opendocumentfellowship.com/ sample documents
 """
 
-from __future__ import division
+
 import sys
 try:
     import odf
-except ImportError, e:
-    print "you need to install odfpy: http://opendocumentfellowship.com/projects/odfpy"
-    print "currently only version 0.7 is supported"
+except ImportError as e:
+    print("you need to install odfpy: http://opendocumentfellowship.com/projects/odfpy")
+    print("currently only version 0.7 is supported")
     raise
 
 from odf.opendocument import OpenDocumentText
@@ -49,7 +49,7 @@ else:
     # assume the odfpy-08 api is stable
     # but we don't support this now, as they changed their API
     # easy_install odfpy==0.7.0  might help
-    raise Exception, "only version 0.7 of odfpy is supported"
+    raise Exception("only version 0.7 of odfpy is supported")
     assert hasattr(e, "appendChild")
     assert hasattr(e, "lastChild")
     assert hasattr(e, "setAttribute")
@@ -59,7 +59,7 @@ else:
 
 
 def showNode(obj):
-    attrs = obj.__dict__.keys()
+    attrs = list(obj.__dict__.keys())
     log(obj.__class__.__name__ ) 
     stuff =  ["%s => %r" %(k,getattr(obj,k)) for k in attrs if 
               (not k == "children") and getattr(obj,k)
@@ -182,7 +182,7 @@ class ODFWriter(object):
             def __init__(self):
                 self.res = []
             def write(self, txt):
-                if isinstance(txt, unicode):
+                if isinstance(txt, str):
                     self.res.append(str(txt))
                 else:
                     self.res.append(txt)
@@ -282,7 +282,7 @@ class ODFWriter(object):
         hXstyles = (style.h0,style.h1,style.h2,style.h3,style.h4,style.h5)
 
         # skip empty sections (as for eg References)
-        hasDisplayContent = u"".join(x.getAllDisplayText().strip() for x in obj.children [1:]) \
+        hasDisplayContent = "".join(x.getAllDisplayText().strip() for x in obj.children [1:]) \
             or obj.getChildNodesByClass(advtree.ImageLink) # FIXME, add AdvancedNode.hasContent property
         enabled = False 
         if enabled and not hasDisplayContent:  # FIXME
@@ -306,7 +306,7 @@ class ODFWriter(object):
         if obj.children:
             imgAsOnlyChild = bool(len(obj.children) == 1 and isinstance(obj.getFirstChild(), advtree.ImageLink))
             # handle special case nothing but an image in a paragraph
-            if imgAsOnlyChild and isinstance(obj.next, advtree.Paragraph): 
+            if imgAsOnlyChild and isinstance(obj.__next__, advtree.Paragraph): 
                 img = obj.getFirstChild()
                 img.moveto(obj.next.getFirstChild(), prefix=True)
                 return SkipChildren()
@@ -491,12 +491,12 @@ class ODFWriter(object):
         col = []
         for c in n.getAllDisplayText().replace("\t", " "*4):
             if c in rmap:
-                p.addText(u"".join(col))
+                p.addText("".join(col))
                 col = []
                 p.addElement(rmap[c]())
             else:
                 col.append(c)
-        p.addText(u"".join(col)) # add remaining
+        p.addText("".join(col)) # add remaining
         n.children = []  # remove the children
         return p
 
@@ -798,7 +798,7 @@ def main():
         from mwlib.dummydb import DummyDB
         from mwlib.uparser import parseString
         db = DummyDB()
-        input = unicode(open(fn).read(), 'utf8')
+        input = str(open(fn).read(), 'utf8')
         r = parseString(title=fn, raw=input, wikidb=db)
         parser.show(sys.stdout, r)
         #advtree.buildAdvancedTree(r)

@@ -7,7 +7,7 @@ import os
 import shutil
 import tempfile
 from zipfile import ZipFile
-import urlparse
+import urllib.parse
 import json
 
 from mwlib import uparser, wikidbbase
@@ -115,14 +115,14 @@ class ImageDB(object):
     @property
     def tmpdir(self):
         if self._tmpdir is None:
-            self._tmpdir = unicode(tempfile.mkdtemp())
+            self._tmpdir = str(tempfile.mkdtemp())
         return self._tmpdir
 
     def getPath(self, name, size=None):
         url = self.getURL(name, size=size)
         if url is None:
             return
-        path = urlparse.urlparse(url)[2]
+        path = urllib.parse.urlparse(url)[2]
         pos = path.find('/thumb/')
         if pos >= 0:
             return path[pos + 1:]
