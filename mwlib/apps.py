@@ -49,7 +49,7 @@ def show():
     if not args and not options.f:
         parser.error("missing ARTICLE argument")
         
-    articles = [unicode(x, 'utf-8') for x in args]
+    articles = [str(x, 'utf-8') for x in args]
 
     conf = options.config
     if not conf:
@@ -70,12 +70,12 @@ def show():
                 te = expander.Expander(raw, pagename=a, wikidb=db)
                 raw = te.expandTemplates()
 
-            print raw.encode("utf-8")
+            print(raw.encode("utf-8"))
     if options.f:
-        raw = unicode(open(options.f).read(), 'utf-8')
+        raw = str(open(options.f).read(), 'utf-8')
         te = expander.Expander(raw, pagename='test', wikidb=db)
         raw = te.expandTemplates()
-        print raw.encode("utf-8")
+        print(raw.encode("utf-8"))
 
 def buildzip():
     from mwlib.options import OptionParser
@@ -138,13 +138,13 @@ def buildzip():
                 podclient.post_zipfile(filename)
             
             status(status='finished', progress=100)
-        except Exception, e:
+        except Exception as e:
             if status:
                 status(status='error')
             raise
     finally:
         if options.output is None and filename is not None:
-            print 'removing %r' % filename
+            print('removing %r' % filename)
             utils.safe_unlink(filename)
         if options.pid_file:
             utils.safe_unlink(options.pid_file)
@@ -201,7 +201,7 @@ def post():
             status(status='uploading', progress=0)
             podclient.post_zipfile(options.input)
             status(status='finished', progress=100)
-        except Exception, e:
+        except Exception as e:
             status(status='error')
             raise
     finally:
@@ -254,12 +254,12 @@ def render():
     
     def load_writer(name):
         try:
-            entry_point = pkg_resources.iter_entry_points('mwlib.writers', name).next()
+            entry_point = next(pkg_resources.iter_entry_points('mwlib.writers', name))
         except StopIteration:
             sys.exit('No such writer: %r (use --list-writers to list available writers)' % name)
         try:
             return entry_point.load()
-        except Exception, e:
+        except Exception as e:
             sys.exit('Could not load writer %r: %s' % (name, e))
     
     if options.list_writers:
@@ -270,27 +270,27 @@ def render():
                     description = writer.description
                 else:
                     description = '<no description>'
-            except Exception, e:
+            except Exception as e:
                 description = '<NOT LOADABLE: %s>' % e
-            print '%s\t%s' % (entry_point.name, description)
+            print('%s\t%s' % (entry_point.name, description))
         return
     
     if options.writer_info:
         writer = load_writer(options.writer_info)
         if hasattr(writer, 'description'):
-            print 'Description:\t%s' % writer.description
+            print('Description:\t%s' % writer.description)
         if hasattr(writer, 'content_type'):
-            print 'Content-Type:\t%s' % writer.content_type
+            print('Content-Type:\t%s' % writer.content_type)
         if hasattr(writer, 'file_extension'):
-            print 'File extension:\t%s' % writer.file_extension
+            print('File extension:\t%s' % writer.file_extension)
         if hasattr(writer, 'options') and writer.options:
-            print 'Options (usable in a ";"-separated list for --writer-options):'
-            for name, info in writer.options.items():
+            print('Options (usable in a ";"-separated list for --writer-options):')
+            for name, info in list(writer.options.items()):
                 param = info.get('param')
                 if param:
-                    print ' %s=%s:\t%s' % (name, param, info['help'])
+                    print(' %s=%s:\t%s' % (name, param, info['help']))
                 else:
-                    print ' %s:\t%s' % (name, info['help'])
+                    print(' %s:\t%s' % (name, info['help']))
         return
     
     if options.config is None:
@@ -341,7 +341,7 @@ def render():
             else:
                 zip_filename = None
             
-            print 'START WITH PROGRESS'
+            print('START WITH PROGRESS')
             status = Status(options.status_file, progress_range=(71, 100))
             status(status='rendering', progress=0)
             
@@ -357,7 +357,7 @@ def render():
             status(status='finished', progress=100, **kwargs)
             if options.keep_zip is None and zip_filename is not None:
                 utils.safe_unlink(zip_filename)
-        except Exception, e:
+        except Exception as e:
             status(status='error')
             if options.error_file:
                 fd, tmpfile = tempfile.mkstemp(dir=os.path.dirname(options.error_file))
@@ -376,8 +376,8 @@ def render():
                     env.images.clear()
                 else:
                     pass
-            except Exception, e:
-                print 'ERROR: Could not remove temporary images: %s' % e
+            except Exception as e:
+                print('ERROR: Could not remove temporary images: %s' % e)
         if options.pid_file:
             utils.safe_unlink(options.pid_file)
 
@@ -396,7 +396,7 @@ def parse():
     if not options.config:
         parser.error("missing --config argument")
 
-    articles = [unicode(x, 'utf-8') for x in args]
+    articles = [str(x, 'utf-8') for x in args]
 
     conf = options.config
     
@@ -422,17 +422,17 @@ def parse():
                 continue
             stime=time.time()
             a=uparser.parseString(x, raw=raw, wikidb=db)
-        except Exception, err:
-            print "F", repr(x), err
+        except Exception as err:
+            print("F", repr(x), err)
             if options.tb:
                 traceback.print_exc()
         else:
-            print "G", time.time()-stime, repr(x)
+            print("G", time.time()-stime, repr(x))
 
 
 
 def serve():
-    from SocketServer import ForkingMixIn, ThreadingMixIn
+    from socketserver import ForkingMixIn, ThreadingMixIn
     from wsgiref.simple_server import make_server, WSGIServer
     from flup.server import fcgi, fcgi_fork, scgi, scgi_fork
     
@@ -463,7 +463,7 @@ def serve():
         help='write PID of daemonized process to this file',
     )
     parser.add_option('-P', '--protocol',
-        help='one of %s (default: http)' % ', '.join(proto2server.keys()),
+        help='one of %s (default: http)' % ', '.join(list(proto2server.keys())),
         default='http',
     )
     parser.add_option('-p', '--port',
@@ -554,7 +554,7 @@ def serve():
     
     if options.protocol not in proto2server:
         parser.error('unsupported protocol (must be one of %s)' % (
-            ', '.join(proto2server.keys()),
+            ', '.join(list(proto2server.keys())),
         ))
 
     def to_int(opt_name):
@@ -706,12 +706,12 @@ def testserve():
     images = res['images']
     from wsgiref.simple_server import make_server, WSGIServer
 
-    from SocketServer import  ForkingMixIn
+    from socketserver import  ForkingMixIn
     class MyServer(ForkingMixIn, WSGIServer):
         pass
 
     iface, port = '0.0.0.0', 8080
-    print "serving on %s:%s" % (iface, port)
+    print("serving on %s:%s" % (iface, port))
     http = make_server(iface, port, web.Serve(db, res['images']), server_class=MyServer)
     http.serve_forever()
     
@@ -726,13 +726,13 @@ def html():
     if not args:
         parser.error("missing ARTICLE argument")
         
-    articles = [unicode(x, 'utf-8') for x in args]
+    articles = [str(x, 'utf-8') for x in args]
 
     conf = options.config
     if not conf:
         parser.error("missing --config argument")
     
-    import StringIO
+    import io
     import tempfile
     import webbrowser
     from mwlib import wiki, uparser, htmlwriter
@@ -746,7 +746,7 @@ def html():
         if not raw:
             continue
 
-        out=StringIO.StringIO()
+        out=io.StringIO()
         out.write("""<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">

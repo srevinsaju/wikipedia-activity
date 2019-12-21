@@ -76,11 +76,11 @@ class WikimediaXmlPagesProcessor(handler.ContentHandler):
         elif name == "page":
 
             title = normalize_title(self._title)
-            print "Page %d '%s', length %d                   \r" % \
-                    (self._page_counter, title, len(self._page)),
+            print("Page %d '%s', length %d                   \r" % \
+                    (self._page_counter, title, len(self._page)), end=' ')
 
             for namespace in config.BLACKLISTED_NAMESPACES:
-                if unicode(self._title.upper()).startswith(namespace):
+                if str(self._title.upper()).startswith(namespace):
                     if self._debug:
                         self._register_page(self._output_blacklisted)
                     return
@@ -111,7 +111,7 @@ class WikimediaXmlPagesProcessor(handler.ContentHandler):
             else:
 
                 for namespace in config.TEMPLATE_NAMESPACES:
-                    if unicode(self._title).startswith(namespace):
+                    if str(self._title).startswith(namespace):
                         # templates
                         self._register_page(self._output_templates)
                         return
@@ -125,7 +125,7 @@ class WikimediaXmlPagesProcessor(handler.ContentHandler):
                     self._register_page(self._output)
 
                 # links
-                links = self.link_re.findall(unicode(self._page))
+                links = self.link_re.findall(str(self._page))
                 self._output_links.write('%s ' % title)
                 for link in links:
                     # remove '[[' and ']]'
@@ -146,7 +146,7 @@ class WikimediaXmlPagesProcessor(handler.ContentHandler):
                 self._output_links.write('\n')
 
                 # find templates used in the pages
-                templates = self.template_re.findall(unicode(self._page))
+                templates = self.template_re.findall(str(self._page))
                 templates_list = []
                 for template in templates:
                     # remove '{{' and '}}'
@@ -184,7 +184,7 @@ class WikimediaXmlPagesProcessor(handler.ContentHandler):
             self._output_templates.close()
             self._output_links.close()
             self._output_page_templates.close()
-            print "Processed %d pages." % self._page_counter
+            print("Processed %d pages." % self._page_counter)
 
 debug = False
 if len(sys.argv) > 1:

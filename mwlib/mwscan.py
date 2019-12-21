@@ -6,7 +6,7 @@
 import sys
 import time
 import _mwscan
-import htmlentitydefs
+import html.entities
 
 class token(object):
     t_end = 0
@@ -49,11 +49,11 @@ del d
     
 def dump_tokens(text, tokens):
     for type, start, len in tokens:
-        print type, repr(text[start:start+len])
+        print(type, repr(text[start:start+len]))
            
 def scan(text):
     stime=time.time()
-    text += u"\0"*32    
+    text += "\0"*32    
     tokens = _mwscan.scan(text)
     return scan_result(text, tokens)
 
@@ -61,14 +61,14 @@ def resolve_entity(e):
     if e[1]=='#':
         try:
             if e[2]=='x' or e[2]=='X':
-                return unichr(int(e[3:-1], 16))
+                return chr(int(e[3:-1], 16))
             else:
-                return unichr(int(e[2:-1]))
+                return chr(int(e[2:-1]))
         except ValueError:
             return e        
     else:
         try:
-            return unichr(htmlentitydefs.name2codepoint[e[1:-1]])
+            return chr(html.entities.name2codepoint[e[1:-1]])
         except KeyError:
             return e
                          
@@ -78,7 +78,8 @@ class scan_result(object):
         self.source = source
         self.toks = toks
         
-    def rawtext(self, (type, start, tlen)):
+    def rawtext(self, xxx_todo_changeme):
+        (type, start, tlen) = xxx_todo_changeme
         return self.source[start:start+tlen]
 
     def text(self, t):
@@ -279,7 +280,7 @@ class _compat_scanner(object):
 
     def tagtoken(self, text):
         selfClosing = False
-        if text.startswith(u"</"):
+        if text.startswith("</"):
             name = text[2:-1]
             klass = EndTagToken
             isEndToken = True
@@ -293,7 +294,7 @@ class _compat_scanner(object):
             klass = TagToken
             isEndToken = False
 
-        name, values = (name.split(None, 1)+[u''])[:2]
+        name, values = (name.split(None, 1)+[''])[:2]
         from mwlib.parser import paramrx
         values = dict(paramrx.findall(values))
         name = name.lower()
@@ -315,7 +316,7 @@ compat_scan = _compat_scanner()
 
 class _BaseTagToken(object):
     def __eq__(self, other):
-        if isinstance(other, basestring):
+        if isinstance(other, str):
             return self.t == other
         if isinstance(other, self.__class__):
             return self.t == other.t

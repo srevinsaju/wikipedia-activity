@@ -201,7 +201,7 @@ class TreeCleaner(object):
         """
         
         if node.__class__ == Text and node.parent:
-            if (node.previous and node.previous.isblocknode and node.next and node.next.isblocknode and not node.caption.strip()) or not node.caption:
+            if (node.previous and node.previous.isblocknode and node.__next__ and node.next.isblocknode and not node.caption.strip()) or not node.caption:
                 self.report('removed empty text node')
                 node.parent.removeChild(node)
                 return
@@ -318,7 +318,7 @@ class TreeCleaner(object):
 
     def removeBrokenChildren(self, node):
         """Remove Nodes (while keeping their children) which can't be nested with their parents."""
-        if node.__class__ in self.removeNodes.keys():
+        if node.__class__ in list(self.removeNodes.keys()):
             if _any([parent.__class__ in self.removeNodes[node.__class__] for parent in node.parents]):
                 if node.children:
                     children = node.children
@@ -376,15 +376,15 @@ class TreeCleaner(object):
 
         def flattenStyle(styleHash):
             res =  {}
-            for k,v in styleHash.items():
+            for k,v in list(styleHash.items()):
                 if isinstance(v,dict):
-                    for _k,_v in v.items():
-                        if isinstance(_v, basestring):
+                    for _k,_v in list(v.items()):
+                        if isinstance(_v, str):
                             res[_k.lower()] = _v.lower() 
                         else:
                             res[_k.lower()]= _v
                 else:
-                    if isinstance(v, basestring):
+                    if isinstance(v, str):
                         res[k.lower()] = v.lower() 
                     else:
                         res[k.lower()] = v
@@ -414,9 +414,9 @@ class TreeCleaner(object):
 
 
     def _getNext(self, node): #FIXME: name collides with advtree.getNext
-        if not (node.next or node.parent):
+        if not (node.__next__ or node.parent):
             return
-        next = node.next or node.parent.next
+        next = node.__next__ or node.parent.__next__
         if next and not next.isblocknode:
             if not next.getAllDisplayText().strip():
                 return self._getNext(next)
@@ -724,7 +724,7 @@ class TreeCleaner(object):
 
     def restrictChildren(self, node):
 
-        if node.__class__ in self.allowedChildren.keys():
+        if node.__class__ in list(self.allowedChildren.keys()):
             for c in node.children[:]:
                 if c.__class__ not in self.allowedChildren[node.__class__]:
                     node.removeChild(c)

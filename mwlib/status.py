@@ -20,7 +20,7 @@ class Status(object):
     def __call__(self, status=None, progress=None, article=None, auto_dump=True,
         **kwargs):
         if status is not None and status != self.status.get('status'):
-            print 'STATUS: %s' % status
+            print('STATUS: %s' % status)
             self.status['status'] = status
         
         if progress is not None:
@@ -30,11 +30,11 @@ class Status(object):
                 + progress*(self.progress_range[1] - self.progress_range[0])/100
             )
             if progress != self.status.get('progress'):
-                print 'PROGRESS: %d%%' % progress
+                print('PROGRESS: %d%%' % progress)
                 self.status['progress'] = progress
         
         if article is not None and article != self.status.get('article'):
-            print 'ARTICLE: %r' % article
+            print('ARTICLE: %r' % article)
             self.status['article'] = article
 
         if self.podclient is not None:
@@ -54,7 +54,7 @@ class Status(object):
             open(self.filename, 'wb').write(
                 json.dumps(self.status).encode('utf-8')
             )
-        except Exception, exc:
+        except Exception as exc:
             log.ERROR('Could not write status file %r: %s' % (
                 self.filename, exc
             ))

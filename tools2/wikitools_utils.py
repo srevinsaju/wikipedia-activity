@@ -29,7 +29,7 @@ class RedirectParser:
         self.reversed_index = {}
         count = 0
         for line in input_redirects.readlines():
-            links = self.link_re.findall(unicode(line))
+            links = self.link_re.findall(str(line))
             if len(links) == 2:
                 origin = normalize_title(links[0][2:-2])
                 destination = normalize_title(links[1][2:-2])
@@ -68,12 +68,12 @@ class RedirectsUsedWriter():
                     _output_redirects.write('[[%s]]\t[[%s]]\n' %
                             (origin, title))
                     counter += 1
-        print "Found %d redirected pages" % counter
+        print("Found %d redirected pages" % counter)
 
         templates_redirects = {}
         # check pages in redirects
         counter = 0
-        for title in templates_used.keys():
+        for title in list(templates_used.keys()):
             title = normalize_title(title)
             if title in redirect_checker.reversed_index:
                 for origin in redirect_checker.reversed_index[title]:
@@ -81,7 +81,7 @@ class RedirectsUsedWriter():
                             (origin, title))
                     counter += 1
 
-        print "Found %d redirected templates" % counter
+        print("Found %d redirected templates" % counter)
 
         _output_redirects.close()
 
@@ -113,7 +113,7 @@ class TemplatesCounter:
             words = line.split()
             page = words[0]
             if page in pages_selected:
-                print "Processing page %s \r" % page.encode('ascii', 'replace'),
+                print("Processing page %s \r" % page.encode('ascii', 'replace'), end=' ')
                 for n in range(1, len(words) - 1):
                     template = words[n]
                     try:
@@ -125,8 +125,8 @@ class TemplatesCounter:
         input_links.close()
 
         # Verify redirects
-        print "Verifying redirects"
-        for template in self.templates_to_counter.keys():
+        print("Verifying redirects")
+        for template in list(self.templates_to_counter.keys()):
             redirected = redirect_checker.get_redirected(template)
             if redirected is not None:
                 if redirected in self.templates_to_counter:
@@ -143,7 +143,7 @@ class TemplatesCounter:
 class TemplatesCounterWriter:
 
     def __init__(self, file_name, items):
-        print "Writing templates_counted file"
+        print("Writing templates_counted file")
         output_file = codecs.open('%s.templates_counted' % \
                 file_name, encoding='utf-8', mode='w')
         for n  in range(len(items)):
@@ -165,7 +165,7 @@ class LinksFilter():
                 page = words[0]
                 #print "Processing page %s \r" % page,
                 if page in favorites:
-                    print "Adding page %s" % page
+                    print("Adding page %s" % page)
                     for n in range(1, len(words) - 1):
                         link = words[n]
                         link = normalize_title(link)

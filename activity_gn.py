@@ -7,7 +7,7 @@ def configure():
     confvars['path'] = 'gn/gnwiki-20120220-pages-articles.xml'
     confvars['port'] = 8008
     confvars['home_page'] = '/static/index_gn.html'
-    confvars['templateprefix'] = u'Tembiecharã:'
+    confvars['templateprefix'] = 'Tembiecharã:'
     confvars['wpheader'] = 'From Wikipedia, The Free Encyclopedia'
     confvars['wpfooter'] = 'Content available under the ' + \
     '<a href="/static/es-gfdl.html">GNU Free Documentation License</a>.' + \

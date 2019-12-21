@@ -76,7 +76,7 @@ class lrucache(object):
         for i in range(self.listSize):
             node.key = None
             node.obj = None
-            node = node.next
+            node = node.__next__
             
     
     def __contains__(self, key):
@@ -174,7 +174,7 @@ class lrucache(object):
         # node. The 'head' is then adjusted. This adjustment ensures correctness
         # even for the case where the 'node' is the 'head' node.
         self.mtf(node)
-        self.head = node.next
+        self.head = node.__next__
 
       
     
@@ -246,11 +246,11 @@ class lrucache(object):
     # the order of the list is unchanged.
     def mtf(self, node):
     
-        node.prev.next = node.next
+        node.prev.next = node.__next__
         node.next.prev = node.prev
 
         node.prev = self.head.prev
-        node.next = self.head.prev.next
+        node.next = self.head.prev.__next__
     
         node.next.prev = node
         node.prev.next = node

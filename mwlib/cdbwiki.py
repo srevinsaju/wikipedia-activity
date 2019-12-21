@@ -51,7 +51,7 @@ class ZCdbReader(cdb.Cdb):
         return self._readz(data)
 
     def _readz(self, data):
-        pos, len = map(int, data.split())
+        pos, len = list(map(int, data.split()))
         
         f=open(self.datapath, "rb")
         f.seek(pos)
@@ -72,7 +72,7 @@ class ZCdbReader(cdb.Cdb):
 
 class BuildWiki(object):
     def __init__(self, dumpfile, outputdir, prefix='wiki'):
-        if type(dumpfile) in (type(''), type(u'')):
+        if type(dumpfile) in (type(''), type('')):
             self.dumpParser = dumpparser.DumpParser(dumpfile)
         else:
             self.dumpParser = dumpfile
@@ -109,23 +109,23 @@ class BuildWiki(object):
 
     def handleArticle(self, page):
         title, text, timestamp = page.title, page.text, page.timestamp
-        self.writer.add(u":"+title, text)
+        self.writer.add(":"+title, text)
 
     def handleTemplate(self, page):
         title, text, timestamp = page.title, page.text, page.timestamp
-        self.writer.add(u"Template:"+title, text)
+        self.writer.add("Template:"+title, text)
 
     def handleCategory(self, page):
         title, text, timestamp = page.title, page.text, page.timestamp
-        self.writer.add(u"Category:"+title, text)
+        self.writer.add("Category:"+title, text)
 
     def handlePortal(self, page):
         title, text, timestamp = page.title, page.text, page.timestamp
-        self.writer.add(u"Portal:"+title, text)
+        self.writer.add("Portal:"+title, text)
 
     def handleOther(self, page):
         title, text, timestamp = page.title, page.text, page.timestamp
-        title = u"NS%d:%s" % (page.namespace, title)
+        title = "NS%d:%s" % (page.namespace, title)
         self.writer.add(title, text)
         
 
@@ -159,7 +159,7 @@ class WikiDB(object):
     def getRawPage(self, title, isArticle=False):
         title = normname(title)
         if isArticle:
-            title = u":" + title
+            title = ":" + title
         try:
             return self.reader[title]
         except KeyError:
@@ -189,11 +189,11 @@ class WikiDB(object):
 
     def articles(self):
         return (k[1:]
-                for k in self.reader.iterkeys()
+                for k in self.reader.keys()
                 if k[0] == ':')
 
     def article_texts(self):
         return ((k[1:], v)
-                for k,v in self.reader.iteritems()
+                for k,v in self.reader.items()
                 if k[0] == ':')
         

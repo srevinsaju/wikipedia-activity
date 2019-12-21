@@ -7,13 +7,13 @@ input_xml_file_name = './frwiki-20111231-pages-articles.xml'
 favorites_file_name = './favorites_fr.txt'
 blacklist_file_name = './blacklist_fr.txt'
 
-REDIRECT_TAGS = [u'#REDIRECT']
+REDIRECT_TAGS = ['#REDIRECT']
 
-BLACKLISTED_NAMESPACES = [u'WIKIPÉDIA:', 'MEDIAWIKI:']
+BLACKLISTED_NAMESPACES = ['WIKIPÉDIA:', 'MEDIAWIKI:']
 
-TEMPLATE_NAMESPACES = [u'Modèle:']
+TEMPLATE_NAMESPACES = ['Modèle:']
 
-LINKS_NAMESPACES = [u'Catégorie']
+LINKS_NAMESPACES = ['Catégorie']
 
 FILE_TAG = 'Fichier:'
 

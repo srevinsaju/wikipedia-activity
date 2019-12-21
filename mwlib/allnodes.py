@@ -11,7 +11,7 @@ def allnodes():
             if x in names:
                 continue
             k = getattr(m, x)
-            if type(k) == types.TypeType:
+            if type(k) == type:
                 if issubclass(k, mwlib.parser.Node):
                     all.add(k)
                     names.add(x)

@@ -20,10 +20,10 @@ if __name__ == '__main__':
 
     if len(sys.argv) > 1:
         remove_pages_list_path = sys.argv[1]
-        print "Loading list of pages to remove from %s" % \
-            remove_pages_list_path
+        print("Loading list of pages to remove from %s" % \
+            remove_pages_list_path)
     else:
-        print "Need select the file with the list of pages to remove"
+        print("Need select the file with the list of pages to remove")
         exit()
 
     ignored_pages_reader = FileListReader(remove_pages_list_path)
@@ -63,18 +63,18 @@ if __name__ == '__main__':
                                 finish = True
                                 break
                 else:
-                    print "* Ignored %s " % title
+                    print("* Ignored %s " % title)
 
         data_line = processed_file.readline()
 
     output_file.close()
 
     # clean redirects used
-    print "Loading redirects used "
+    print("Loading redirects used ")
     redirect_checker = RedirectParser(input_xml_file_name,
             postfix='redirects_used')
 
-    print "Loading selected pages"
+    print("Loading selected pages")
     if os.path.exists('%s.pages_selected-level-1' % input_xml_file_name):
         selected_pages_reader = FileListReader('%s.pages_selected-level-1' %
                                                input_xml_file_name)
@@ -82,7 +82,7 @@ if __name__ == '__main__':
         selected_pages_reader = FileListReader('%s.pages_selected' %
                                                input_xml_file_name)
 
-    print "Cleaning selected pages list"
+    print("Cleaning selected pages list")
     # clean selected_pages_reader list
     filtered_list = []
     for article in selected_pages_reader.list:
@@ -92,21 +92,21 @@ if __name__ == '__main__':
     if not os.path.exists('%s.templates_counted' % input_xml_file_name):
         # if was processed with --select-all, the templates_counted file
         # was not created
-        print "Processing templates"
+        print("Processing templates")
         templates_counter = TemplatesCounter(input_xml_file_name,
                 selected_pages_reader.list, redirect_checker)
 
-        print "Sorting counted templates"
-        items = templates_counter.templates_to_counter.items()
+        print("Sorting counted templates")
+        items = list(templates_counter.templates_to_counter.items())
         items.sort(key=itemgetter(1), reverse=True)
 
-        print "Writing templates_counted file"
+        print("Writing templates_counted file")
         _writer = TemplatesCounterWriter(input_xml_file_name, items)
 
-    print "Loading templates used"
+    print("Loading templates used")
     templates_used_reader = CountedTemplatesReader(input_xml_file_name)
 
-    print "Writing redirects used filtered"
+    print("Writing redirects used filtered")
     redirect_writer = RedirectsUsedWriter(input_xml_file_name, filtered_list,
                                           templates_used_reader.templates,
                                           redirect_checker,

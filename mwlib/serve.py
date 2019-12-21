@@ -6,10 +6,10 @@ import os
 import re
 import shutil
 import signal
-import StringIO
+import io
 import subprocess
 import time
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 try:
     from hashlib import md5
 except ImportError:
@@ -35,7 +35,7 @@ def no_job_queue(job_type, collection_id, args):
     try:
         log.info('queueing %r' % args)
         subprocess.Popen(args, **kwargs)
-    except OSError, exc:
+    except OSError as exc:
         raise RuntimeError('Could not execute command %r: %s' % (
             args[0], exc,
         ))
@@ -46,7 +46,7 @@ def no_job_queue(job_type, collection_id, args):
 collection_id_rex = re.compile(r'^[a-z0-9]{16}$')
 
 def make_collection_id(data):
-    sio = StringIO.StringIO()
+    sio = io.StringIO()
     for key in (
         _version.version,
         'metabook',
@@ -122,7 +122,7 @@ class Application(wsgi.Application):
             return self.error_response('invalid command %r' % command)
         try:
             return method(request.post_data)
-        except Exception, exc:
+        except Exception as exc:
             return self.error_response('error executing command %r: %s' % (
                 command, exc,
             ))
@@ -130,9 +130,9 @@ class Application(wsgi.Application):
     @json_response
     def error_response(self, error):
         if isinstance(error, str):
-            error = unicode(error, 'utf-8', 'ignore')
-        elif not isinstance(error, unicode):
-            error = unicode(repr(error), 'ascii')
+            error = str(error, 'utf-8', 'ignore')
+        elif not isinstance(error, str):
+            error = str(repr(error), 'ascii')
         self.send_report_mail('error response', error=error)
         return {'error': error}
     
@@ -183,7 +183,7 @@ class Application(wsgi.Application):
         try:
             base_url = post_data['base_url']
             writer = post_data.get('writer', self.default_writer)
-        except KeyError, exc:
+        except KeyError as exc:
             return self.error_response('POST argument required: %s' % exc)
         writer_options = post_data.get('writer_options', '')
         template_blacklist = post_data.get('template_blacklist', '')
@@ -303,7 +303,7 @@ class Application(wsgi.Application):
         try:
             collection_id = post_data['collection_id']
             writer = post_data.get('writer', self.default_writer)
-        except KeyError, exc:
+        except KeyError as exc:
             return self.error_response('POST argument required: %s' % exc)
             
         self.check_collection_id(collection_id)
@@ -320,7 +320,7 @@ class Application(wsgi.Application):
         
         error_path = self.get_path(collection_id, self.error_filename, writer)
         if os.path.exists(error_path):
-            text = unicode(open(error_path, 'rb').read(), 'utf-8', 'ignore')
+            text = str(open(error_path, 'rb').read(), 'utf-8', 'ignore')
             self.send_report_mail('rendering failed',
                 collection_id=collection_id,
                 writer=writer,
@@ -345,7 +345,7 @@ class Application(wsgi.Application):
         try:
             collection_id = post_data['collection_id']
             writer = post_data.get('writer', self.default_writer)
-        except KeyError, exc:
+        except KeyError as exc:
             return self.error_response('POST argument required: %s' % exc)
         
         self.check_collection_id(collection_id)
@@ -370,7 +370,7 @@ class Application(wsgi.Application):
         try:
             collection_id = post_data['collection_id']
             writer = post_data.get('writer', self.default_writer)
-        except KeyError, exc:
+        except KeyError as exc:
             log.ERROR('POST argument required: %s' % exc)
             return self.http500()
         
@@ -394,7 +394,7 @@ class Application(wsgi.Application):
             else:
                 log.warn('no file extension in status file')
             return response
-        except Exception, exc:
+        except Exception as exc:
             log.ERROR('exception in do_download(): %r' % exc)
             return self.http500()
     
@@ -403,7 +403,7 @@ class Application(wsgi.Application):
         try:
             metabook_data = post_data['metabook']
             base_url = post_data['base_url']
-        except KeyError, exc:
+        except KeyError as exc:
             return self.error_response('POST argument required: %s' % exc)
         template_blacklist = post_data.get('template_blacklist', '')
         template_exclusion_category = post_data.get('template_exclusion_category', '')
@@ -412,7 +412,7 @@ class Application(wsgi.Application):
         
         pod_api_url = post_data.get('pod_api_url', '')
         if pod_api_url:
-            result = json.loads(urllib2.urlopen(pod_api_url, data="any").read())
+            result = json.loads(urllib.request.urlopen(pod_api_url, data="any").read())
             post_url = result['post_url']
             response = {
                 'state': 'ok',
@@ -504,5 +504,5 @@ def clean_cache(max_age, cache_dir):
         try:
             log.info('removing directory %r' % path)
             shutil.rmtree(path)
-        except Exception, exc:
+        except Exception as exc:
             log.ERROR('could not remove directory %r: %s' % (path, exc))

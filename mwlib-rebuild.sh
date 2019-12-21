@@ -9,6 +9,6 @@ platform=`python -c 'import sys, platform; \
                           sys.version_info.minor)' `
 
 
-python setup.py-mwlib build_ext --inplace build 
+python setup.py build_ext --inplace build 
 mkdir -p binarylibs/$platform/
 find build -type f -name '_*.so' | xargs -iFILE cp FILE binarylibs/$platform/

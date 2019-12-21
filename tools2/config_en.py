@@ -7,7 +7,7 @@ input_xml_file_name = './enwiki-20111201-pages-articles.xml'
 favorites_file_name = './favorites_en.txt'
 blacklist_file_name = './blacklist_en.txt'
 
-REDIRECT_TAGS = [u'#REDIRECT']
+REDIRECT_TAGS = ['#REDIRECT']
 
 BLACKLISTED_NAMESPACES = ['WIKIPEDIA:', 'MEDIAWIKI:']
 

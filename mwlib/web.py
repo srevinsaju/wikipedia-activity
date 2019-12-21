@@ -5,7 +5,7 @@
 
 import os
 import mimetypes
-import StringIO
+import io
 from mwlib import uparser, htmlwriter, rendermath
 
 class Pngmath(object):
@@ -49,8 +49,8 @@ class Files(object):
 
         try:
             f=open(os.path.join(self.basedir, path), 'rb')
-        except (IOError, OSError), err:
-            print "ERROR:", err
+        except (IOError, OSError) as err:
+            print("ERROR:", err)
             start_response('404 Not found', [('Content-Type', 'text/plain')])
             return ["404 not found"]
             
@@ -83,7 +83,7 @@ class Serve(object):
         self.timeline = Files(os.path.expanduser("~/timeline")) # FIXME
 
     def show(self, env, start_response):
-        article = unicode(env['PATH_INFO'], 'utf-8').strip('/').replace("_", " ")
+        article = str(env['PATH_INFO'], 'utf-8').strip('/').replace("_", " ")
         article = article[:1].upper()+article[1:] # FIXME: we should redirect instead.
         
         raw=self.db.getRawArticle(article)
@@ -94,7 +94,7 @@ class Serve(object):
         send = start_response('200 OK', [('Content-type', 'text/html; charset=utf-8')])
         send(self.head)
 
-        out=StringIO.StringIO(u"")
+        out=io.StringIO("")
 
         a=uparser.parseString(article, raw=raw, wikidb=self.db)
         w=htmlwriter.HTMLWriter(out, self.images)

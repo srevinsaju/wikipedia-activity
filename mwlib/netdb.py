@@ -10,8 +10,8 @@
 
 import os
 import sys
-import urllib
-import urllib2
+import urllib.request, urllib.parse, urllib.error
+import urllib.request, urllib.error, urllib.parse
 try:
     from hashlib import md5
 except ImportError:
@@ -66,12 +66,12 @@ class ImageDB(object):
         @type knownLicenses: [unicode]
         """
         
-        if isinstance(baseurl, unicode):
+        if isinstance(baseurl, str):
             self.baseurls = [baseurl.encode('ascii')]
         else:
             self.baseurls = []
             for bu in baseurl:
-                if isinstance(bu, unicode):
+                if isinstance(bu, str):
                     bu = bu.encode('ascii')
                 self.baseurls.append(bu)
         
@@ -110,7 +110,7 @@ class ImageDB(object):
         @rtype: str
         """
         
-        assert isinstance(name, unicode), 'name must be of type unicode'
+        assert isinstance(name, str), 'name must be of type unicode'
         
         # use getDiskPath() to fetch and cache (!) image
         path = self.getDiskPath(name, size=size)
@@ -153,7 +153,7 @@ class ImageDB(object):
         @rtype: basestring
         """
 
-        assert isinstance(name, unicode), 'name must be of type unicode'
+        assert isinstance(name, str), 'name must be of type unicode'
         
         path = self._getImageFromCache(name, size=size)
         if path:
@@ -200,7 +200,7 @@ class ImageDB(object):
         @rtype: [unicode]
         """
         
-        assert isinstance(name, unicode), 'name must be of type unicode'
+        assert isinstance(name, str), 'name must be of type unicode'
         return self.name2templates.get(name, [])
     
     def _getImageFromCache(self, name, size=None):
@@ -264,7 +264,7 @@ class ImageDB(object):
         """Construct a URL for the image with given name under given base URL"""
         
         hp = hashpath(name).encode('utf-8')
-        return urllib.basejoin(baseurl, urllib.quote(hp))
+        return urllib.basejoin(baseurl, urllib.parse.quote(hp))
     
     def _fetchImageFromBaseURL(self, baseurl, name):
         """Fetch image with given name under given baseurl and write it to a
@@ -276,7 +276,7 @@ class ImageDB(object):
         
         url = self._getImageURLForBaseURL(baseurl, name)
         log.info("fetching %r" % (url,))
-        opener = urllib2.build_opener()
+        opener = urllib.request.build_opener()
         opener.addheaders = [('User-agent', 'mwlib')]
         try:
             data = opener.open(url).read()
@@ -285,7 +285,7 @@ class ImageDB(object):
             os.write(fd, data)
             os.close(fd)
             return filename
-        except urllib2.URLError, err:
+        except urllib.error.URLError as err:
             log.error("%s - while fetching %r" % (err, url))
             return None
     
@@ -400,7 +400,7 @@ class NetDB(object):
             pass
         
         stime=time.time()
-        response = urllib.urlopen(url)
+        response = urllib.request.urlopen(url)
         data = response.read()
         log.info('fetched %r in %ss' % (url, time.time()-stime))
 
@@ -418,7 +418,7 @@ class NetDB(object):
         if not templateblacklist:
             return []
         try:
-            content = urllib.urlopen(templateblacklist).read()
+            content = urllib.request.urlopen(templateblacklist).read()
             return [template.lower().strip() for template in re.findall('\* *\[\[.*?:(.*?)\]\]', content)]
         except: # fixme: more sensible error handling...
             log.error('Error fetching template blacklist from url:', templateblacklist)
@@ -430,7 +430,7 @@ class NetDB(object):
     startCache = _dummy
 
     def getURL(self, title, revision=None):        
-        name = urllib.quote(title.replace(" ", "_").encode('utf8'))
+        name = urllib.parse.quote(title.replace(" ", "_").encode('utf8'))
         if revision is None:
             return self.pagename % dict(NAME=name, REVISION='0')
         else:
@@ -440,12 +440,12 @@ class NetDB(object):
         return list(self.defaultauthors)
     
     def title2db(self, title):
-        assert isinstance(title, unicode), 'title must be of type unicode'
+        assert isinstance(title, str), 'title must be of type unicode'
         return title.encode('utf-8')
 
     def db2title(self, dbtitle):
         assert isinstance(dbtitle, str), 'dbtitle must be of type str'
-        return unicode(dbtitle, 'utf-8')
+        return str(dbtitle, 'utf-8')
 
     def getImageDescription(self, title, urlIndex=0):
         """Fetch the image description page for the image with the given title.
@@ -466,12 +466,12 @@ class NetDB(object):
             return None
         
         raw = self._getpage(self.imagedescriptionurls[urlIndex] % {
-            'NAME': urllib.quote(title.replace(" ", "_").encode('utf8')),
+            'NAME': urllib.parse.quote(title.replace(" ", "_").encode('utf8')),
         })
         if raw is None:
             return None
         
-        return unicode(raw, 'utf-8')
+        return str(raw, 'utf-8')
     
     def getTemplate(self, name, followRedirects=False):
         if ":" in name:
@@ -481,14 +481,14 @@ class NetDB(object):
         if name.lower() in self.templateblacklist:
             log.info("ignoring blacklisted template:" , repr(name))
             return None
-        name = urllib.quote(name.replace(" ", "_").encode('utf8'))
+        name = urllib.parse.quote(name.replace(" ", "_").encode('utf8'))
         for u in self.templateurls:
             url = u % dict(NAME=name)
             log.info("Trying %r" %(url,))
             c=self._getpage(url)
             if c:
                 log.info("got content from", url)
-                res=unicode(c, 'utf8')
+                res=str(c, 'utf8')
                 mo = self.redirect_rex.search(res)
                 if mo:
                     redirect = mo.group('redirect')
@@ -505,10 +505,10 @@ class NetDB(object):
         r = self._getpage(self.getURL(title, revision=revision))
         if r is None:
             return None
-        return unicode(r, 'utf8')
+        return str(r, 'utf8')
     
     def getRedirect(self, title):
-        return u""
+        return ""
 
     def getParsedArticle(self, title, revision=None):
         raw = self.getRawArticle(title, revision=revision)

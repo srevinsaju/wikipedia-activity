@@ -3,12 +3,12 @@
 # Copyright (c) 2007-2008 PediaPress GmbH
 # See README.txt for additional licensing information.
 
-import urllib
+import urllib.request, urllib.parse, urllib.error
 
 from mwlib import parser, log, metabook
 
 # import functions needed by most writers that should be accessible through writerbase
-from mathutils import renderMath
+from .mathutils import renderMath
 
 log = log.Log('mwlib.writerbase')
 
@@ -45,7 +45,7 @@ def build_book(env, status_callback=None, progress_range=None):
                 if "displaytitle" in item:
                     a.caption = item['displaytitle']
                 url = env.wiki.getURL(item['title'], item.get('revision'))
-                a.url = unicode(urllib.unquote(url.encode('utf-8')), 'utf-8')
+                a.url = str(urllib.parse.unquote(url.encode('utf-8')), 'utf-8')
                 a.authors = env.wiki.getAuthors(item['title'], revision=item.get('revision'))
                 book.children.append(a)
             else:

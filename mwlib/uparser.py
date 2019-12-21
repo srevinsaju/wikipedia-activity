@@ -145,8 +145,8 @@ def main():
     db = DummyDB()
     
     for x in sys.argv[1:]:
-        input = unicode(open(x).read(), 'utf8')
-        title = unicode(os.path.basename(x))
+        input = str(open(x).read(), 'utf8')
+        title = str(os.path.basename(x))
         parseString(title, input, db)
 
 if __name__=="__main__":

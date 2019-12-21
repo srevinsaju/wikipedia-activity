@@ -12,14 +12,14 @@ import pprint
 import re
 import smtplib
 import socket
-import StringIO
+import io
 import sys
 import tempfile
 import time
 import traceback
-import urllib
-import urllib2
-import urlparse
+import urllib.request, urllib.parse, urllib.error
+import urllib.request, urllib.error, urllib.parse
+import urllib.parse
 import UserDict
 
 from mwlib.log import Log
@@ -31,7 +31,7 @@ except ImportError:
 
 # provide all() for python 2.4
 try:
-    from __builtin__ import all
+    from builtins import all
 except ImportError:
     def all(iterable):
         """all(iterable) -> bool
@@ -119,13 +119,13 @@ def daemonize(dev_null=False):
     pid = os.fork() # launch child and...
     if pid:
         os._exit(0) # ... kill off parent again.
-    os.umask(077)
+    os.umask(0o77)
     if dev_null:
         null = os.open(os.path.devnull, os.O_RDWR)
         for i in range(3):
             try:
                 os.dup2(null, i)
-            except OSError, e:
+            except OSError as e:
                 if e.errno != errno.EBADF:
                     raise
         os.close(null)
@@ -143,7 +143,7 @@ def shell_exec(cmd):
     @rtype: int
     """
     
-    if isinstance(cmd, unicode):
+    if isinstance(cmd, str):
         enc = sys.getfilesystemencoding()
         assert enc is not None, 'no filesystem encoding (set LANG)'
         cmd = cmd.encode(enc, 'ignore')
@@ -167,9 +167,9 @@ def get_multipart(filename, data, name):
     @rtype: (str, str)
     """
     
-    if isinstance(filename, unicode):
+    if isinstance(filename, str):
         filename = filename.encode('utf-8', 'ignore')
-    if isinstance(name, unicode):
+    if isinstance(name, str):
         name = name.encode('utf-8', 'ignore')
     
     boundary = "-"*20 + ("%f" % time.time()) + "-"*20
@@ -245,7 +245,7 @@ def safe_unlink(filename):
     
     try:
         os.unlink(filename)
-    except Exception, exc:
+    except Exception as exc:
         log.warn('Could not remove file %r: %s' % (filename, exc))
 
 # ==============================================================================
@@ -295,11 +295,11 @@ def fetch_url(url, ignore_errors=False, fetch_cache=fetch_cache,
     start_time = time.time()
     socket.setdefaulttimeout(timeout)
     if opener is None:
-        opener = urllib2.build_opener()
+        opener = urllib.request.build_opener()
         opener.addheaders = [('User-agent', 'mwlib')]
     try:
         if post_data:
-            post_data = urllib.urlencode(post_data)
+            post_data = urllib.parse.urlencode(post_data)
         result = opener.open(url, post_data)
         data = result.read()
         if expected_content_type:
@@ -314,7 +314,7 @@ def fetch_url(url, ignore_errors=False, fetch_cache=fetch_cache,
                 else:
                     raise RuntimeError(msg)
                 return None
-    except urllib2.URLError, err:
+    except urllib.error.URLError as err:
         if ignore_errors:
             log.error("%s - while fetching %r" % (err, url))
             return None
@@ -343,10 +343,10 @@ def uid(max_length=10):
     @rtype: str
     """
     
-    f = StringIO.StringIO()
-    print >>f, "%.20f" % time.time()
-    print >>f, os.times()
-    print >>f, os.getpid()
+    f = io.StringIO()
+    print("%.20f" % time.time(), file=f)
+    print(os.times(), file=f)
+    print(os.getpid(), file=f)
     m = md5(f.getvalue())
     return m.hexdigest()[:max_length]
 
@@ -434,7 +434,7 @@ def report(system='', subject='',
                 outfile.write(cgi.escape(repr(x)))
     f = Wrap()
     
-    print >>f, "SYSTEM:", repr(system)
+    print("SYSTEM:", repr(system), file=f)
     
     traceback.print_exc(file=f)
     
@@ -443,18 +443,18 @@ def report(system='', subject='',
     except:
         fqdn = 'not available'
 
-    print >>f, "FQDN:", repr(fqdn)
+    print("FQDN:", repr(fqdn), file=f)
     
-    print >>f, "CWD:", repr(os.getcwd())
-    print >>f
+    print("CWD:", repr(os.getcwd()), file=f)
+    print(file=f)
     
-    print >>f, "ENV:"
+    print("ENV:", file=f)
     pprint.pprint(os.environ, stream=f)
     
-    print >>f, "KEYWORDS:"    
+    print("KEYWORDS:", file=f)    
     pprint.pprint(kw, stream=f)
     
-    print >>f, "BREAK"
+    print("BREAK", file=f)
     
     outfile.write('\n</pre>')
     outfile.close()
@@ -470,7 +470,7 @@ def report(system='', subject='',
                 'REPORT [%s]: %s' % (fqdn, subject),
                 text,
             )
-        except Exception, e:
+        except Exception as e:
             log.ERROR('Could not send mail: %s' % e)
     
     if write_file:
@@ -489,9 +489,9 @@ def get_safe_url(url):
     
     nonwhitespace_rex = re.compile(r'^\S+$')
     try:
-        result = urlparse.urlsplit(url)
+        result = urllib.parse.urlsplit(url)
         scheme, netloc, path, query, fragment = result
-    except Exception, exc:
+    except Exception as exc:
         log.warn('urlparse(%r) failed: %s' % (url, exc))
         return None
     
@@ -505,12 +505,12 @@ def get_safe_url(url):
     
     try:
         # catches things like path='bla " target="_blank'
-        path = urllib.quote(urllib.unquote(path))
-    except Exception, exc:
+        path = urllib.parse.quote(urllib.parse.unquote(path))
+    except Exception as exc:
         log.warn('quote(unquote(%r)) failed: %s' % (path, exc))
         return None
     try:
-        return urlparse.urlunsplit((scheme, netloc, path, query, fragment))
-    except Exception, exc:
+        return urllib.parse.urlunsplit((scheme, netloc, path, query, fragment))
+    except Exception as exc:
         log.warn('urlunparse() failed: %s' % exc)
     

@@ -45,7 +45,7 @@ except:
         browse_path = '/usr/share/sugar/activities/Browse.activity'
 
 if browse_path is None:
-    print 'This activity need a Browser activity installed to run'
+    print('This activity need a Browser activity installed to run')
 
 sys.path.append(browse_path)
 

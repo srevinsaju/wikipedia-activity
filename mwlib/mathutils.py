@@ -112,7 +112,7 @@ def renderMath(latex, output_path=None, output_mode='png', render_engine='blahte
     """
     assert output_mode in ("png", "mathml")
     assert render_engine in ("texvc", "blahtexml")
-    assert isinstance(latex, unicode), 'latex must be of type unicode'
+    assert isinstance(latex, str), 'latex must be of type unicode'
     
     if output_mode == 'png' and not output_path:
         log.error('math rendering with output_mode png requires an output_path')
@@ -137,7 +137,7 @@ def renderMath(latex, output_path=None, output_mode='png', render_engine='blahte
 
 if __name__ == "__main__":
 
-    latex = u"\\sqrt{4}=2"
+    latex = "\\sqrt{4}=2"
 
 ##     latexlist = ["\\sqrt{4}=2",
 ##                  r"a^2 + b^2 = c^2\,",
@@ -154,6 +154,6 @@ if __name__ == "__main__":
 ##                  """,
 ##         ]
     
-    print renderMath(latex,  output_mode='mathml')
-    print renderMath(latex,  output_path="/tmp/", output_mode='png')
-    print renderMath(latex,  output_path="/tmp/", output_mode='png', render_engine='texvc')
+    print(renderMath(latex,  output_mode='mathml'))
+    print(renderMath(latex,  output_path="/tmp/", output_mode='png'))
+    print(renderMath(latex,  output_path="/tmp/", output_mode='png', render_engine='texvc'))

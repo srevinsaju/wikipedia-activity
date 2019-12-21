@@ -3,7 +3,7 @@
 """
 class for defining DTD-Like Rules for the tree
 """
-from advtree import Article
+from .advtree import Article
 
 from mwlib.log import Log
 log = Log("sanitychecker")
@@ -194,7 +194,7 @@ def demo(tree):
              ]
     
     def mycb(rule, node=None, parentnode=None):
-        print "failed", rule, node or parentnode
+        print("failed", rule, node or parentnode)
         modifiedtree = False
         return modifiedtree
 

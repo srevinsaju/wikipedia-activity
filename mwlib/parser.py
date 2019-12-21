@@ -42,9 +42,9 @@ FirstParagraph = TokenSet(['SPECIAL', 'URL', 'TEXT', 'TIMELINE', '[[', 'SINGLEQU
     
 def show(out, node, indent=0, verbose=False):
     if verbose:
-        print >>out, "    "*indent, node, repr(getattr(node, 'vlist', ''))
+        print("    "*indent, node, repr(getattr(node, 'vlist', '')), file=out)
     else:
-        print >>out, "    "*indent, node
+        print("    "*indent, node, file=out)
     for x in node:
         show(out, x, indent+1, verbose=verbose)
 
@@ -144,7 +144,7 @@ class Node(object):
             x._asText(out)
         
     def asText(self, ):
-        from StringIO import StringIO
+        from io import StringIO
         out = StringIO()
         self._asText(out)
         return out.getvalue()
@@ -337,14 +337,14 @@ class Link(Node):
             else:
                 res[name] = (NamespaceLink, num)
 
-        for name, num in namespaces.iteritems():
-            if isinstance(name, basestring):
+        for name, num in namespaces.items():
+            if isinstance(name, str):
                 reg(name, num)
             else:
                 for n in name:
                     reg(n, num)
 
-        for prefix, d in interwikimap.items():
+        for prefix, d in list(interwikimap.items()):
             if 'language' in interwikimap[prefix] or prefix in languages:
                 res[prefix] = (LangLink, prefix)
             else:
@@ -357,7 +357,7 @@ class Link(Node):
         if interwikimap is None:
             from mwlib.lang import languages
             interwikimap = {}
-            for prefix, renamed in namespace.dummy_interwikimap.items():
+            for prefix, renamed in list(namespace.dummy_interwikimap.items()):
                 interwikimap[prefix] = {'renamed': renamed}
             for lang in languages:
                 interwikimap[lang] = {'language': True}
@@ -627,7 +627,7 @@ def _parseAtomFromString(s, lang=None, interwikimap=None):
     p=Parser(tokens, lang=lang, interwikimap=interwikimap)
     try:
         return p.parseAtom()
-    except Exception, err:
+    except Exception as err:
         log.error("exception while parsing %r: %r" % (s, err))
         return None
 
@@ -636,7 +636,7 @@ def _parseAtomFromString(s, lang=None, interwikimap=None):
 def parse_fields_in_imagemap(imap, lang=None, interwikimap=None):
     
     if imap.image:
-        imap.imagelink = _parseAtomFromString(u'[['+imap.image+']]',
+        imap.imagelink = _parseAtomFromString('[['+imap.image+']]',
             lang=lang,
             interwikimap=interwikimap,
         )
@@ -698,29 +698,29 @@ class Parser(object):
     def left(self):
         return self.pos < len(self.tokens)
 
-    def next(self):
+    def __next__(self):
         self.pos += 1
 
     def parseAtom(self):
         token = self.token
         
         if token[0]=='TEXT':
-            self.next()
+            next(self)
             return Text(token[1])
         elif token[0]=='URL':
-            self.next()            
+            next(self)            
             return URL(token[1])
         elif token[0]=='URLLINK':
             return self.parseUrlLink()        
         elif token[0]=='SPECIAL':
-            self.next()
+            next(self)
             return Text(token[1])
         elif token[0]=='[[':
             return self.parseLink()
         elif token[0]=='MATH':
             return self.parseMath()
         elif token[0]=='\n':
-            self.next()            
+            next(self)            
             return Text(token[1])
         elif token[0]=='BEGINTABLE':
             return self.parseTable()
@@ -741,16 +741,16 @@ class Parser(object):
         n.append(Text("["))
         n.append(URL(u))
         
-        self.next()
+        next(self)
 
         while self.left:
-            if self.tokens[self.pos:self.pos+2] == [(']]', ']]'), ('SPECIAL', u']')]:                
+            if self.tokens[self.pos:self.pos+2] == [(']]', ']]'), ('SPECIAL', ']')]:                
                 self.tokens[self.pos:self.pos+2] = [('SPECIAL', ']'), (']]', ']]')]
                 
             token = self.token
 
             if token[0] == 'SPECIAL' and token[1]==']':
-                self.next()
+                next(self)
                 n.__class__ = NamedURL
                 n.caption = u
                 del n.children[:2]
@@ -771,12 +771,12 @@ class Parser(object):
             if token[0] == 'SECTION':
                 a.append(self.parseSection())
             elif token[0]=='BREAK':
-                self.next()
+                next(self)
             elif token[0] in FirstParagraph:
                 a.append(self.parseParagraph())
             else:
                 log.info("in parseArticle: skipping", token)
-                self.next()
+                next(self)
                 
         return a
             
@@ -784,21 +784,21 @@ class Parser(object):
         break_at = TokenSet(['BREAK', EndTagToken, 'SECTION'])
                              
         obj = Link()
-        self.next()
+        next(self)
         while self.left:
             token = self.token
             if token[0] == ']]':
-                self.next()
+                next(self)
                 break
             elif token[0]=='SPECIAL' and token[1]==']':
-                self.next()
+                next(self)
                 break
             elif token[1] == '|' or token[1]=="||":
                 obj.append(Control('|'))
-                self.next()
+                next(self)
             elif token[0]=='TEXT' or token[0]=='SPECIAL' or token[0]=='\n':
                 obj.append(Text(token[1]), merge=True)
-                self.next()
+                next(self)
             elif token[0] in break_at:
                 break
             elif token[0] in FirstAtom and token[0] != 'SINGLEQUOTE':
@@ -806,11 +806,11 @@ class Parser(object):
             elif token[1].startswith("|"):
                 obj.append(Control("|"))
                 obj.append(Text(token[1][1:]))
-                self.next()
+                next(self)
             else:
                 log.info("assuming text in parseLink", token)
                 obj.append(Text(token[1]), merge=True)
-                self.next()
+                next(self)
 
         obj._specialize()
 
@@ -840,8 +840,8 @@ class Parser(object):
         n.vlist = parseParams(self.token[1])
 
         n.starttext = token.text
-        n.endtext = u'</%s>' % token.t
-        self.next()
+        n.endtext = '</%s>' % token.t
+        next(self)
 
         if token.selfClosing:
             return n
@@ -853,10 +853,10 @@ class Parser(object):
             token = self.token
             if token[0]==end:
                 n.endtext = token[0].text
-                self.next()
+                next(self)
                 break
             elif token[0]=='BREAK':
-                self.next()
+                next(self)
             else:
                 if token[0] not in FirstParagraph:
                     log.warn("tag not closed", n, token)
@@ -877,16 +877,16 @@ class Parser(object):
         n.vlist = parseParams(self.token[1])
         
         end = EndTagToken(self.token[0].t)
-        self.next()
+        next(self)
         
         txt = []
         while self.left:
             token = self.token
             if token[0]==end:
-                self.next()
+                next(self)
                 break
             txt.append(token[1])
-            self.next()
+            next(self)
 
         n.append(Text("".join(txt)))
         return n
@@ -941,7 +941,7 @@ class Parser(object):
 
             # either image link or text inside
             # FIXME: Styles and links in text are ignored!
-            n=_parseAtomFromString(u'[['+x+']]',
+            n=_parseAtomFromString('[['+x+']]',
                 lang=self.lang,
                 interwikimap=self.interwikimap,
             )
@@ -989,7 +989,7 @@ class Parser(object):
         s.level = level
         closelevel = 0
 
-        self.next()
+        next(self)
 
         title = Node()
         while self.left:
@@ -997,14 +997,14 @@ class Parser(object):
             
             if token[0] == 'ENDSECTION':
                 closelevel = self.token[1].count('=')
-                self.next()
+                next(self)
                 break
             elif token[0] == '[[':
                 title.append(self.parseLink())
             elif token[0] == "SINGLEQUOTE":
                 title.append(self.parseSingleQuote())
             elif token[0] == 'TEXT':
-                self.next()
+                next(self)
                 title.append(Text(token[1]))
             elif isinstance(token[0], TagToken):
                 title.append(self.parseTagToken())
@@ -1013,7 +1013,7 @@ class Parser(object):
             elif token[0] == 'MATH':
                 title.append(self.parseMath())
             else:
-                self.next()
+                next(self)
                 title.append(Text(token[1]))
 
         s.level = min(level, closelevel)
@@ -1041,7 +1041,7 @@ class Parser(object):
                 s.append(self.parseParagraph())
             elif token[0]=='BREAK':
                 log.info("in parseSection: skipping", token)
-                self.next()
+                next(self)
             else:
                 log.info("ending section with token", token)
                 break
@@ -1056,7 +1056,7 @@ class Parser(object):
                 if token[0] != 'SINGLEQUOTE':
                     break
                 count += 1
-                self.next()
+                next(self)
             return count
         
         inner_style, outer_style = None, None
@@ -1131,7 +1131,7 @@ class Parser(object):
             else:
                 log.info("assuming text in parseStyle", token)
                 inner_style.append(Text(token[1]))
-                self.next()
+                next(self)
         
         return outer_style
     
@@ -1143,12 +1143,12 @@ class Parser(object):
         if "|" in token[1] or "!" in token[1]: # not a html cell
             # search for the first occurence of "||", "|", "\n" in the next tokens
             # if it's a "|" we have a parameter list
-            self.next()
+            next(self)
             savepos = self.pos
 
             while self.left:
                 token = self.token
-                self.next()
+                next(self)
                 if token[0] in ("\n", "BREAK", "[[", "ROW", "ENDTABLE"):
                     params = ''
                     self.pos = savepos
@@ -1164,7 +1164,7 @@ class Parser(object):
             #print "CELLTOKEN:", token
             #print "PARAMS:", params
             c.vlist = params
-            self.next()
+            next(self)
 
 
 
@@ -1176,18 +1176,18 @@ class Parser(object):
             if token[0] == 'BEGINTABLE':
                 c.append(self.parseTable())
             elif token[0]=='SPECIAL' and token[1] == '|':
-                self.next()
+                next(self)
             elif token[0] == 'SECTION':
                 c.append(self.parseSection())
             elif token[0] in FirstParagraph:
                 c.append(self.parseParagraph())
             elif isinstance(token[0], EndTagToken):
                 log.info("ignoring %r in parseColumn" % (token,))
-                self.next()
+                next(self)
             else:
                 log.info("assuming text in parseColumn", token)
                 c.append(Text(token[1]))
-                self.next()
+                next(self)
 
         return c
     
@@ -1199,7 +1199,7 @@ class Parser(object):
         token = self.token
         params = ''
         if token[0]=='ROW':
-            self.next()
+            next(self)
             if "|-" in token[1]:
                 # everything till the next newline/break is a parameter list
                 while self.left:
@@ -1208,7 +1208,7 @@ class Parser(object):
                         break
                     else:
                         params += token[1]
-                    self.next()
+                    next(self)
                 r.vlist = parseParams(params)
 
             else:
@@ -1225,17 +1225,17 @@ class Parser(object):
             elif token[0] == 'ROW':
                 return r
             elif token[0] == 'BREAK':
-                self.next()
+                next(self)
             elif token[0]=='\n':
-                self.next()
+                next(self)
             else:
                 log.warn("skipping in parseRow: %r" % (token,))
-                self.next()
+                next(self)
         return r
     
     def parseCaption(self):
         token = self.token
-        self.next()
+        next(self)
         n = Caption()
         params = ""
         if token[1].strip().startswith("|+"):
@@ -1244,7 +1244,7 @@ class Parser(object):
             savepos = self.pos
             while self.left:
                 token = self.token
-                self.next()
+                next(self)
                 if token[0] in ("\n", "BREAK", "[[", "ROW", "COLUMN", "ENDTABLE"):
                     params = ''
                     self.pos = savepos
@@ -1260,7 +1260,7 @@ class Parser(object):
             if token[0] in ('TEXT' , 'SPECIAL', '\n'):
                 if token[1]!='|':
                     n.append(Text(token[1]))
-                self.next()
+                next(self)
             elif token[0] == 'SINGLEQUOTE':
                 n.append(self.parseSingleQuote())
             elif isinstance(token[0], TagToken):
@@ -1274,7 +1274,7 @@ class Parser(object):
     def parseTable(self):
         token = self.token
                 
-        self.next()
+        next(self)
         t = Table()
         retval = t
         
@@ -1293,7 +1293,7 @@ class Parser(object):
                     break
                 else:
                     params += token[1]
-                self.next()
+                next(self)
             t.vlist = parseParams(params)
         else:
             t.vlist = parseParams(token[1])
@@ -1305,23 +1305,23 @@ class Parser(object):
             elif token[0]=='TABLECAPTION':
                 t.append(self.parseCaption())
             elif token[0]=='ENDTABLE':
-                self.next()
+                next(self)
                 break
             elif token[0]=='\n':
-                self.next()
+                next(self)
             else:
                 log.warn("skipping in parseTable", token)
-                self.next()
+                next(self)
                 #t.append(self.parseRow())
 
         return retval
 
     def parseMath(self):
-        self.next()
-        caption = u''
+        next(self)
+        caption = ''
         while self.left:
             token = self.token
-            self.next()            
+            next(self)            
             if token[0]=='ENDMATH':
                 break
             caption += token[1]
@@ -1329,11 +1329,11 @@ class Parser(object):
                 
     def parseTimeline(self):
         t=Timeline()
-        self.next()
+        next(self)
         snippets = []
         while self.left:
             token = self.token
-            self.next()
+            next(self)
             if token[0]=='TIMELINE':
                 break
             snippets.append(token[1])
@@ -1354,7 +1354,7 @@ class Parser(object):
         assert p
         retval = p
         
-        self.next()
+        next(self)
 
         last = None
         # search for the newline and replace it with ENDEOLSTYLE
@@ -1371,7 +1371,7 @@ class Parser(object):
             if token[0] in break_at:
                 break
             elif maybe_definition and token[1]==':':
-                self.next()
+                next(self)
                 maybe_definition = False
                 retval = Node()
                 retval.append(p)
@@ -1383,7 +1383,7 @@ class Parser(object):
             else:
                 log.info("in parseEOLStyle: assuming text", token)
                 p.append(Text(token[1]))
-                self.next()
+                next(self)
 
         if last:
             self.tokens[last[0]] = last[1]
@@ -1405,7 +1405,7 @@ class Parser(object):
                     break            
                 p.append(pre)
             elif token[0] == 'BREAK':
-                self.next()
+                next(self)
                 p.__class__ = Paragraph
                 break            
             elif token[0] == 'SECTION':
@@ -1413,7 +1413,7 @@ class Parser(object):
                 break
             elif token[0] == 'ENDSECTION':
                 p.append(Text(token[1]))
-                self.next()
+                next(self)
             elif token[0] in FirstAtom:
                 p.append(self.parseAtom())
             else:
@@ -1438,7 +1438,7 @@ class Parser(object):
             m=getattr(self, 'parse'+tag.upper()+'Tag')
         except (AttributeError, UnicodeEncodeError):
             t=Text(self.token[1])
-            self.next()
+            next(self)
             return t
         else:
             return m()
@@ -1468,7 +1468,7 @@ class Parser(object):
         b = style        
         end = EndTagToken(token.t)
         start = TagToken(token.t)
-        self.next()
+        next(self)
 
         
         if token.selfClosing:
@@ -1482,15 +1482,15 @@ class Parser(object):
                 break
             elif token[0]=='\n':
                 b.append(Text(token[1]))
-                self.next()
+                next(self)
             elif token[0]==end:
-                self.next()
+                next(self)
                 break
             elif isinstance(token[0], EndTagToken):
                 break
             elif isinstance(token[0], TagToken):
                 if token[0]==start:
-                    self.next()  # 'Nuclear fuel' looks strange otherwise
+                    next(self)  # 'Nuclear fuel' looks strange otherwise
                     break
                 b.append(self.parseTagToken())
             elif token[0] in FirstAtom:
@@ -1498,7 +1498,7 @@ class Parser(object):
             else:
                 log.info("_parseStyledTag: assuming text", token)
                 b.append(Text(token[1]))
-                self.next()
+                next(self)
 
         return b
 
@@ -1508,8 +1508,8 @@ class Parser(object):
         token = self.token[0]
         n = TagNode(token.t)
         n.starttext = token.text
-        n.endtext = u''
-        self.next()
+        n.endtext = ''
+        next(self)
         return n
     
     parseHRTag = parseBRTag
@@ -1528,7 +1528,7 @@ class Parser(object):
         token = self.token
         p.append(Text(token[1]))
         
-        self.next()
+        next(self)
 
         # find first '\n' not followed by a 'PRE' token
         last = None
@@ -1537,7 +1537,7 @@ class Parser(object):
             if nexttoken in ['ROW', 'COLUMN', 'BEGINTABLE', 'ENDTABLE', 'TIMELINE']:
                 return None
 
-            if isinstance(nexttoken, TagToken) and nexttoken.t in [u'blockquote']:
+            if isinstance(nexttoken, TagToken) and nexttoken.t in ['blockquote']:
                 return None
             
             if nexttoken=='BREAK':
@@ -1555,10 +1555,10 @@ class Parser(object):
                 break            
             if token[0]=='\n' or token[0]=='PRE' or token[0]=='TEXT':
                 p.append(Text(token[1]))
-                self.next()
+                next(self)
             elif token[0] == 'SPECIAL':
                 p.append(Text(token[1]))
-                self.next()
+                next(self)
             elif isinstance(token[0], EndTagToken):
                 break
             elif isinstance(token[0], TagToken):
@@ -1571,7 +1571,7 @@ class Parser(object):
             else:
                 log.info("in parsePre: assuming text", token)
                 p.append(Text(token[1]))
-                self.next()
+                next(self)
 
         if last:
             self.tokens[last[0]] = last[1]
@@ -1599,22 +1599,22 @@ class Parser(object):
 
         p.vlist = parseParams(self.token[1])
 
-        self.next()
+        next(self)
         break_at = TokenSet([EndTagToken, 'ENDTABLE', 'SECTION'])
         while self.left:
             token = self.token
             if token[0] == '\n':
                 p.append(Text(token[1]))
-                self.next()
+                next(self)
             elif token[0] == 'EOLSTYLE':
                 p.append(self.parseEOLStyle())
             elif token[0]=='BREAK':
                 append_br_tag(p)
-                self.next()
+                next(self)
             elif token[0]==tag_li:
                 break
             elif token[0]==EndTagToken("li"):
-                self.next()
+                next(self)
                 break
             elif token[0] in break_at:
                 break
@@ -1623,7 +1623,7 @@ class Parser(object):
             else:
                 log.info("in parseLITag: assuming text", token)
                 p.append(Text(token[1]))
-                self.next()
+                next(self)
 
         return item
         
@@ -1634,11 +1634,11 @@ class Parser(object):
         
         end = EndTagToken(self.token[0].t)
 
-        self.next()
+        next(self)
         while self.left:
             token = self.token            
             if token[0]==end:
-                self.next()
+                next(self)
                 break
             elif isinstance(token[0], TagToken):
                 lst.append(self.parseTagToken())
@@ -1649,7 +1649,7 @@ class Parser(object):
             else:
                 log.info("assuming text in _parseHTMLList", token)
                 lst.append(Text(token[1]))
-                self.next()
+                next(self)
 
         return lst
             
@@ -1667,7 +1667,7 @@ class Parser(object):
         # hack
         commonprefix = lambda x,y : os.path.commonprefix([x,y])
         
-        current_prefix = u''
+        current_prefix = ''
         stack = [Node()]
 
         def append_item(parent, node):
@@ -1704,12 +1704,12 @@ class Parser(object):
         self.token[1]
         break_at = TokenSet(["ENDTABLE", "COLUMN", "ROW"])
         
-        self.next()
+        next(self)
         while self.left:
             token = self.token
             
             if token[0] == '\n':
-                self.next()
+                next(self)
                 break
             elif token[0]=='BREAK':
                 break
@@ -1724,7 +1724,7 @@ class Parser(object):
             else:
                 log.info("in parseItem: assuming text", token)
                 p.append(Text(token[1]))
-                self.next()
+                next(self)
         return item
     
         
@@ -1732,7 +1732,7 @@ class Parser(object):
         log.info("Parsing", repr(self.name))
         try:
             return self.parseArticle()
-        except Exception, err:
+        except Exception as err:
             log.error("error while parsing article", repr(self.name), repr(err))
             raise
 
@@ -1742,7 +1742,7 @@ def main():
     db = DummyDB()
     
     for x in sys.argv[1:]:
-        input = unicode(open(x).read(), 'utf8')
+        input = str(open(x).read(), 'utf8')
         from mwlib import expander
         te = expander.Expander(input, pagename=x, wikidb=db)
         input = te.expandTemplates()

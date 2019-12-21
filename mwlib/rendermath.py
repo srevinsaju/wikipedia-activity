@@ -90,7 +90,7 @@ class Renderer(object):
                 p = os.path.join(self.basedir, name+x)
                 try:
                     os.unlink(p)
-                except OSError, err:
+                except OSError as err:
                     pass
 
             os.chdir(cwd)
@@ -105,7 +105,7 @@ class Renderer(object):
         if addMathEnv:
             latexsource = '$' + latexsource + '$'
         if format in ('pdf', 'eps'):
-            extra_header = '\usepackage{geometry}\n\geometry{textwidth=3.0in}\n'
+            extra_header = '\\usepackage{geometry}\n\geometry{textwidth=3.0in}\n'
             fontsize = 10
         else:
             fontsize = 12

@@ -17,7 +17,7 @@ docbook2pdf -l /usr/share/sgml/declaration/xml.dcl -e no-valid  t.xml
 """
 
 import sys
-import StringIO
+import io
 from lxml import etree
 ET = etree
 #DTD = etree.DTD(fn)
@@ -168,7 +168,7 @@ class DocBookWriter(object):
     def writedebug(self, obj, parent, comment=""):
         if not self.debug or parent is None:
             return 
-        attrs = obj.__dict__.keys()
+        attrs = list(obj.__dict__.keys())
         stuff =  ["%s : %r" %(k,getattr(obj,k)) for k in attrs if 
                   (not k in ("_parentref", "children")) and getattr(obj,k)
                   ]
@@ -179,7 +179,7 @@ class DocBookWriter(object):
 
 
     def writeparsetree(self, tree):
-        out = StringIO.StringIO()
+        out = io.StringIO()
         parser.show(out, tree)
         self.root.append(ET.Comment(out.getvalue().replace("--", " - - ")))
 
@@ -209,7 +209,7 @@ class DocBookWriter(object):
 
             # check for attributes
             vas = grammar[c.tag]["attributes"]
-            for k in c.keys():
+            for k in list(c.keys()):
                 if not k in vas and c.tag not in exceptions:
                     log("write: attrib",k, "not allowed in ", c.tag, " (%r)"%vas, ", failing")
                     return False
@@ -435,11 +435,11 @@ class DocBookWriter(object):
         for i,o in enumerate(obj.children):  # group every two children into a varlistentry
             if i%2 == 1:
                 return 
-            if isinstance(o, advtree.DefinitionTerm) and isinstance(o.next, advtree.DefinitionDescription):
+            if isinstance(o, advtree.DefinitionTerm) and isinstance(o.__next__, advtree.DefinitionDescription):
                 ve = Element("varlistentry")
                 e.append(ve)
                 self.write(o, ve)
-                self.write(o.next, ve)
+                self.write(o.__next__, ve)
             else:
                 log("broken %r %r" % (obj, obj.children))
         return SkipChildren(e)
@@ -629,7 +629,7 @@ class DocBookWriter(object):
     def dbwriteReference(self, t): # FIXME USE DOCBOOK FEATURES (needs parser support)
         self.references.append(t)
         t =  Element("superscript")
-        t.text = u"[%d]" %  len(self.references)
+        t.text = "[%d]" %  len(self.references)
 #        self.references.append(t)
 #       t =  Element("citation")
 #        SubElement("xref", linked="ref-%d" % len(self.references), endterm="%d" % len(self.references))
@@ -666,7 +666,7 @@ class DocBookWriter(object):
         s.set("src", "data:text/plain;charset=utf-8,%s" % obj.caption)
         em = SubElement(s, "em")
         em.set("class", "mwx.timeline.alternate")
-        em.text = u"Timeline"
+        em.text = "Timeline"
         return s
 
     def xwriteHiero(self, obj): # FIXME parser support
@@ -676,7 +676,7 @@ class DocBookWriter(object):
         s.set("src", "data:text/plain;charset=utf-8,%s" % obj.caption)
         em = SubElement(s, "em")
         em.set("class", "mwx.hiero.alternate")
-        em.text = u"Hiero"
+        em.text = "Hiero"
         return s
 
 
@@ -743,7 +743,7 @@ def main():
         from mwlib.dummydb import DummyDB
         from mwlib.uparser import parseString
         db = DummyDB()
-        input = unicode(open(fn).read(), 'utf8')
+        input = str(open(fn).read(), 'utf8')
         r = parseString(title=fn, raw=input, wikidb=db)
         parser.show(sys.stdout, r)
         preprocess(r)

@@ -1,4 +1,4 @@
-import urllib
+import urllib.request, urllib.parse, urllib.error
 
 from mwlib import parser, uparser, utils
 from mwlib.log import Log
@@ -45,8 +45,8 @@ class WikiDBBase(object):
             my_url = self.getURL(title, revision=revision)
             if my_url is None:
                 return None
-            my_title = urllib.quote(title.replace(" ", "_").encode('utf-8'), safe=':/@')
-            link_title = urllib.quote(link.full_target.replace(" ", "_").encode('utf-8'), safe=':/@')
+            my_title = urllib.parse.quote(title.replace(" ", "_").encode('utf-8'), safe=':/@')
+            link_title = urllib.parse.quote(link.full_target.replace(" ", "_").encode('utf-8'), safe=':/@')
             pos = my_url.find(my_title)
             if pos == -1:
                 return None
@@ -61,7 +61,7 @@ class WikiDBBase(object):
             if interwikimap and prefix in interwikimap:
                 url = utils.get_safe_url(interwikimap[prefix]['url'].replace(
                     '$1',
-                    urllib.quote(target.encode('utf-8'), safe='/:@'),
+                    urllib.parse.quote(target.encode('utf-8'), safe='/:@'),
                 ))
                 return url
         

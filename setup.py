@@ -1,166 +1,71 @@
-#!/usr/bin/env python
-#
-# Copyright (C) 2011, One Laptop Per Child
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 2 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-#
+#! /usr/bin/env python
+
+# Copyright (c) 2007-2008 PediaPress GmbH
+# See README.txt for additional licensing information.
+
 import sys
 import os
-import shutil
-import zipfile
-import tarfile
-from fnmatch import fnmatch
-from sugar3.activity import bundlebuilder
 
-import utils
+try:
+    from setuptools import setup
+except ImportError:
+    import ez_setup
+    ez_setup.use_setuptools(version="0.6c1")
 
-INCLUDE_DIRS = ['activity', 'binarylibs', 'icons', 'locale', 'bin',
-                'mwlib', 'po', 'seek-bzip2', 'static', 'tools2']
-IGNORE_FILES = ['.gitignore', 'MANIFEST', '*.pyc', '*~', '*.bak', 'pseudo.po']
+from setuptools import setup, Extension
+import distutils.util
 
 
-def list_files(base_dir, filter_directories=False, data_file=None):
-    if filter_directories:
-        include_dirs = INCLUDE_DIRS
-    else:
-        include_dirs = None
+install_requires=["simplejson>=1.3", "pyparsing>=1.4.11"]
+#if sys.version_info[:2] < (2,5):
+#    install_requires.append("wsgiref>=0.1.2")
 
-    ignore_files = IGNORE_FILES
-    result = []
+exec(compile(open(distutils.util.convert_path('mwlib/_version.py'), "rb").read(), distutils.util.convert_path('mwlib/_version.py'), 'exec')) 
+# adds 'version' to local namespace
 
-    base_dir = os.path.abspath(base_dir)
+# we will *not* add support for automatic generation of those files as that
+# might break with source distributions from pypi
 
-    for root, dirs, files in os.walk(base_dir):
+if not os.path.exists(distutils.util.convert_path('mwlib/_mwscan.cc')):
+    print("Error: please install re2c from http://re2c.org/ and run make")
+    sys.exit(10)
 
-        if ignore_files:
-            for pattern in ignore_files:
-                files = [f for f in files if not fnmatch(f, pattern)]
+def mtime(fn):
+    return os.stat(distutils.util.convert_path(fn)).st_mtime
 
-        rel_path = root[len(base_dir) + 1:]
-        for f in files:
-            result.append(os.path.join(rel_path, f))
+if mtime("mwlib/_mwscan.cc") < mtime("mwlib/_mwscan.re"):
+    print("Warning: _mwscan.cc is older than _mwscan.re. please run make.\n")
+    import time
+    time.sleep(2)
+    
+    
+def read_long_description():
+    fn = os.path.join(os.path.dirname(os.path.abspath(__file__)), "README.txt")
+    return open(fn).read()
 
-        if root == base_dir:
-            n = 0
-            while n < len(dirs):
-                directory = dirs[n]
-                if include_dirs is not None and directory not in include_dirs:
-                    dirs.remove(directory)
-                else:
-                    n = n + 1
-
-    if data_file is not None:
-        # Add the data files
-        needed_sufix = ['.processed.bz2', '.processed.bz2t']
-        for sufix in needed_sufix:
-            file_name = data_file + sufix
-            result.append(file_name)
-
-        data_dir = os.path.dirname(data_file)
-
-        # add index
-        result.append(os.path.join(data_dir, 'search.db'))
-
-        # add images
-        images_path = os.path.join(base_dir, data_dir, 'images')
-        if os.path.exists(images_path):
-            for file_name in list_files(images_path):
-                result.append(os.path.join(data_dir, 'images', file_name))
-
-    return result
-
-
-class WikiXOPackager(bundlebuilder.XOPackager):
-
-    def __init__(self, builder):
-        bundlebuilder.Packager.__init__(self, builder.config)
-        self.builder = builder
-        self.builder.build_locale()
-        self.package_path = os.path.join(self.config.dist_dir,
-                                         self.config.xo_name)
-
-    def package(self):
-        bundle_zip = zipfile.ZipFile(self.package_path, 'w',
-                                     zipfile.ZIP_DEFLATED)
-
-        for f in list_files(self.config.source_dir, True, data_file):
-            if os.path.exists(os.path.join(self.config.source_dir, f)):
-                bundle_zip.write(os.path.join(self.config.source_dir, f),
-                                 os.path.join(self.config.bundle_root_dir, f))
-        bundle_zip.close()
-
-
-class WikiSourcePackager(bundlebuilder.Packager):
-
-    def __init__(self, config):
-        bundlebuilder.Packager.__init__(self, config)
-        self.package_path = os.path.join(self.config.dist_dir,
-                                         self.config.tar_name)
-
-    def package(self):
-        tar = tarfile.open(self.package_path, 'w:bz2')
-        for f in list_files('./', True, data_file):
-            tar.add(os.path.join(self.config.source_dir, f),
-                    os.path.join(self.config.tar_root_dir, f))
-        tar.close()
-
-
-valid_data_param = False
-if len(sys.argv) >= 3 and not sys.argv[2].startswith('--'):
-    valid_data_param = True
-    data_file = sys.argv[2]
-    if not data_file.endswith(".xml"):
-        print "Data file should be a .xml file"
-        exit()
-
-    lang = data_file[:data_file.find('/')]
-
-    if not os.path.exists(lang):
-        print "Lang directory '%s' does not exist" % lang
-        exit()
-
-    sys.argv.pop()
-
-    # copy activty/activity.info.lang as activty/activity.info
-    f = 'activity/activity.info.' + lang
-    if os.path.exists(f):
-        shutil.copyfile(f, 'activity/activity.info')
-
-if not valid_data_param:
-    config = utils.read_conf_from_info('./')
-    data_file = config['path']
-    lang = data_file[:data_file.find('/')]
-    print "data_file parameter not set, taking config from activity.info file"
-    print "using %s" % data_file
-
-print
-print "Lang:", lang
-print
-
-if lang == 'base':
-    print 'Without a data file will create a .xo/tar.bz2 file with ' \
-        'sources only'
-    print
-
-print 'To create a wikipedia activity for a specific language'
-print 'add a parameter with the xml data file, like:'
-print
-print './setup.py dist_xo fr/frwiki-20111231-pages-articles.xml'
-print
-
-bundlebuilder.XOPackager = WikiXOPackager
-bundlebuilder.SourcePackager = WikiSourcePackager
-
-bundlebuilder.start()
+setup(
+    name="mwlib",
+    version=str(version),
+    entry_points = dict(console_scripts=['mw-buildcdb = mwlib.apps:buildcdb',
+                                         'mw-zip = mwlib.apps:buildzip',
+                                         'mw-parse = mwlib.apps:parse',
+                                         'mw-show = mwlib.apps:show',
+                                         'mw-html = mwlib.apps:html',
+                                         'mw-serve = mwlib.apps:serve',
+                                         ]),
+    install_requires=install_requires,
+    ext_modules = [Extension("mwlib._mwscan", ["mwlib/_mwscan.cc"]),
+                   Extension("mwlib._expander", ["mwlib/_expander.cc"]),
+                   ],
+    
+    packages=["mwlib", "mwlib.resources"],
+    namespace_packages=['mwlib'],
+    include_package_data = True,
+    zip_safe = False,
+    url = "http://code.pediapress.com/",
+    description="mediawiki parser and utility library",
+    license="BSD License",
+    maintainer="pediapress.com",
+    maintainer_email="info@pediapress.com",
+    #long_description = read_long_description()
+)

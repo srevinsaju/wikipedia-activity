@@ -7,13 +7,13 @@ input_xml_file_name = './quwiki-20111228-pages-articles.xml'
 favorites_file_name = 'favorites_qu.txt'
 blacklist_file_name = './blacklist_qu.txt'
 
-REDIRECT_TAGS = [u'#REDIRECT', u'#REDIRECCIÓN']
+REDIRECT_TAGS = ['#REDIRECT', '#REDIRECCIÓN']
 
 BLACKLISTED_NAMESPACES = ['WIKIPEDIA:', 'MEDIAWIKI:']
 
 TEMPLATE_NAMESPACES = ['Plantilla:']
 
-LINKS_NAMESPACES = [u'Categoría']
+LINKS_NAMESPACES = ['Categoría']
 
 FILE_TAG = 'Rikcha:'
 

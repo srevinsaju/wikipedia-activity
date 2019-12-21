@@ -7,13 +7,13 @@ input_xml_file_name = './gnwiki-20120220-pages-articles.xml'
 favorites_file_name = './favorites_en.txt'
 blacklist_file_name = './blacklist_en.txt'
 
-REDIRECT_TAGS = [u'#REDIRECT', u'#REDIRECCIÓN']
+REDIRECT_TAGS = ['#REDIRECT', '#REDIRECCIÓN']
 
 BLACKLISTED_NAMESPACES = ['WIKIPEDIA:', 'MEDIAWIKI:']
 
-TEMPLATE_NAMESPACES = [u'Tembiecharã:', u'Puruhára:']
+TEMPLATE_NAMESPACES = ['Tembiecharã:', 'Puruhára:']
 
-LINKS_NAMESPACES = [u'Ñemohenda']
+LINKS_NAMESPACES = ['Ñemohenda']
 
 FILE_TAG = 'File:'
 

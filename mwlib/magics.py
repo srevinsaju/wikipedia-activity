@@ -10,8 +10,8 @@ http://meta.wikimedia.org/wiki/ParserFunctions
 """
 
 import datetime
-import urllib
-import urlparse
+import urllib.request, urllib.parse, urllib.error
+import urllib.parse
 from mwlib.log import Log
 from mwlib import expr
 
@@ -21,7 +21,7 @@ def singlearg(fun):
     def wrap(self, args):
         rl=args
         if not rl:
-            a=u''
+            a=''
         else:
             a=rl[0]
 
@@ -60,15 +60,15 @@ def maybe_numeric_compare(a,b):
     return a==b
 
 def urlquote(u):
-    if isinstance(u, unicode):
+    if isinstance(u, str):
         u = u.encode('utf-8')
-    return urllib.quote(u)
+    return urllib.parse.quote(u)
 
 
 class OtherMagic(object):
     def DEFAULTSORT(self, args):
         """see http://en.wikipedia.org/wiki/Template:DEFAULTSORT"""
-        return u""
+        return ""
 
 
 class TimeMagic(object):
@@ -136,7 +136,7 @@ class PageMagic(object):
         self.server = server
         self.revisionid = revisionid
         
-        self.niceurl = urlparse.urljoin(self.server, 'wiki')
+        self.niceurl = urllib.parse.urljoin(self.server, 'wiki')
         
     def PAGENAME(self, args):
         """Returns the name of the current page, including all levels (Title/Subtitle/Sub-subtitle)"""
@@ -175,11 +175,11 @@ class PageMagic(object):
 
     def NAMESPACE(self, args):
         """Returns the name of the namespace the current page resides in."""
-        return u""   # we currently only have articles living in the main/empty namespace
+        return ""   # we currently only have articles living in the main/empty namespace
 
     def NAMESPACEE(self, args):
         """Returns the name of the namespace the current page resides in. (quoted)"""        
-        return urllib.quote(self.NAMESPACE(args))
+        return urllib.parse.quote(self.NAMESPACE(args))
 
     def REVISIONID(self, args):
         """[MW1.5+] The unique identifying number of a page, see Help:Diff."""
@@ -204,11 +204,11 @@ class PageMagic(object):
 
     def LOCALURLE(self, args):
         """Returns the local URL of a given page. The page might not exist."""        
-        return urllib.quote(self.LOCALURL(args))
+        return urllib.parse.quote(self.LOCALURL(args))
     
     def URLENCODE(self, args):
         """[MW1.7+] To use a variable (parameter in a template) with spaces in an external link."""
-        url = urllib.quote_plus(args[0].encode('utf-8'))
+        url = urllib.parse.quote_plus(args[0].encode('utf-8'))
         return url
 
     @noarg
@@ -218,7 +218,7 @@ class PageMagic(object):
 
     def FULLURL(self, args):
         a=args[0].capitalize().replace(' ', '_')
-        a=urllib.quote_plus(a.encode('utf-8'))
+        a=urllib.parse.quote_plus(a.encode('utf-8'))
         return '%s/%s' % (self.niceurl, a)
     
     @noarg        
@@ -281,7 +281,7 @@ class StringMagic(object):
         except ValueError:
             return s
         
-        fillchar = args[2] or u'0'
+        fillchar = args[2] or '0'
         return s.rjust(width, fillchar[0])
     
     def PADRIGHT(self, args):
@@ -291,7 +291,7 @@ class StringMagic(object):
         except ValueError:
             return s
         
-        fillchar = args[2] or u'0'
+        fillchar = args[2] or '0'
         return s.ljust(width, fillchar[0])
         
     
@@ -302,7 +302,7 @@ class ParserFunctions(object):
     
     def TAG(self, args):
         name = args[0].strip()
-        r= u"<%s>%s</%s>" % (name, args[1], name)
+        r= "<%s>%s</%s>" % (name, args[1], name)
         return r
     
 
@@ -347,7 +347,7 @@ class ParserFunctions(object):
         if rl:
             try:
                 r=str(expr.expr(rl[0]))
-            except Exception, err:
+            except Exception as err:
                 return self._error(err)
 
             if "e" in r:
@@ -360,13 +360,13 @@ class ParserFunctions(object):
                 fixed=str(float(f))+"E"+sign+str(int(i))
                 return fixed
             return r
-        return u"0"
+        return "0"
     
 
     def IFEXPR(self, rl):
         try:
             r = expr.expr(rl[0])
-        except Exception, err:
+        except Exception as err:
             return self._error(err)
 
         if r:
@@ -398,7 +398,7 @@ class ParserFunctions(object):
 
         if '=' not in last:
             return last
-        return u''
+        return ''
     
     def TITLEPARTS(self, args):
         title = args[0]
@@ -453,11 +453,11 @@ class MagicResolver(TimeMagic, PageMagic, NumberMagic, StringMagic, ParserFuncti
         if m is None:
             return None
         
-        if isinstance(m, basestring):
+        if isinstance(m, str):
             return m
 
         res = m(args) or ''  # FIXME: catch TypeErros
-        assert isinstance(res, basestring), "MAGIC %r returned %r" % (name, res)
+        assert isinstance(res, str), "MAGIC %r returned %r" % (name, res)
         return res
 
     def has_magic(self, name):
@@ -480,7 +480,7 @@ def _populate_dummy():
     def get_dummy(name):
         def resolve(*args):
             log.warn("using dummy resolver for %s" % (name,))
-            return u""
+            return ""
         return resolve
 
     missing = set()

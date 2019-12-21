@@ -1,7 +1,7 @@
 import os
 import sys
-from urllib import urlopen
-from urllib import FancyURLopener
+from urllib.request import urlopen
+from urllib.request import FancyURLopener
 import codecs
 from BeautifulSoup import BeautifulSoup, Tag, NavigableString
 # NOTE: this script use BeutifulSoup 3. Is deprecated and the api 
@@ -37,11 +37,11 @@ class CustomUrlOpener(FancyURLopener):
             'Firefox/9.0'
 
 if len(sys.argv) < 2:
-    print "Use as ../translate_index.py lang"
+    print("Use as ../translate_index.py lang")
     exit()
 else:
     translate_to = sys.argv[1]
-    print "Translating to", translate_to
+    print("Translating to", translate_to)
 
 favorites_reader = FileListReader('../en/favorites_en.txt')
 
@@ -56,7 +56,7 @@ if not os.path.exists(new_favorites_name):
 
     for article in favorites_reader.list:
         url_article = "http://en.wikipedia.org/wiki/%s" % article
-        print article,
+        print(article, end=' ')
         opener = CustomUrlOpener()
         html = opener.open(url_article)
         #print html
@@ -67,23 +67,23 @@ if not os.path.exists(new_favorites_name):
                 if attr[0] == 'title':
                     translation = attr[1]
                     trans_dict[article] = translation
-                    print '=', translation.encode('utf8')
+                    print('=', translation.encode('utf8'))
                     new_favorites.write('%s\n' % translation)
         else:
-            print
+            print()
     new_favorites.close()
 
     # save the translation dictionary
     # the dictionary is saved to be able to process the index.html
     # at a later stage without need do the slow download from wikipedia
     # every time
-    print "saving translations as dictionary"
+    print("saving translations as dictionary")
     dictionary_file = codecs.open(dictionary_file_name,
                                     encoding='utf-8', mode='w')
     json.dump(trans_dict, dictionary_file)
     dictionary_file.close()
 
-print "Opening index_en.html"
+print("Opening index_en.html")
 
 if not trans_dict:
     # read the translation dictionary
@@ -93,7 +93,7 @@ if not trans_dict:
         trans_dict = json.load(dictionary_file)
         dictionary_file.close()
     except:
-        print "Can't read the dictionary file", dictionary_file_name
+        print("Can't read the dictionary file", dictionary_file_name)
         exit()
 
 html_index_data = open('../static/index_en.html').read()
@@ -101,7 +101,7 @@ html_index_data = open('../static/index_en.html').read()
 
 index_soup = BeautifulSoup(html_index_data)
 for link in index_soup.findAll('a'):
-    article_link = unicode(normalize_title(link['href'][6:]))
+    article_link = str(normalize_title(link['href'][6:]))
 
     if article_link in trans_dict:
         #try:

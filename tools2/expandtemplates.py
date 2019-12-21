@@ -11,7 +11,8 @@
 # ./tools2/expandtemplates.py es_lat
 
 import sys
-reload(sys)
+import importlib
+importlib.reload(sys)
 # Important! We'll be using stdout and stderr with
 # UTF-8 chars. Without this, errors galore.
 sys.setdefaultencoding('utf-8')
@@ -43,16 +44,16 @@ if len(sys.argv) > 1:
         arg = sys.argv[argn]
         if arg.startswith('--only='):
             only_page = arg[len('--only='):]
-            print "Processing only article '%s'" % only_page
+            print("Processing only article '%s'" % only_page)
         if arg.startswith('--start_at='):
             start_at = arg[len('--start_at='):]
-            print "Starting to process at article '%s'" % start_at
+            print("Starting to process at article '%s'" % start_at)
         if arg == '--stdout':
             stdout = True
-            print "Writing output to stdout"
+            print("Writing output to stdout")
 
 else:
-    print "Use expandtemplates.py directory"
+    print("Use expandtemplates.py directory")
     exit()
 
 
@@ -63,7 +64,7 @@ path = os.path.join(directory, xml_file_name)
 
 articles_list = []
 if only_page is not None:
-    articles_list = [unicode(only_page)]
+    articles_list = [str(only_page)]
 else:
     if os.path.exists('%s.pages_selected-level-1' % path):
         articles_reader = FileListReader('%s.pages_selected-level-1' % path)

@@ -4,7 +4,7 @@
 # Copyright (c) 2007-2008 PediaPress GmbH
 # See README.txt for additional licensing information.
 
-from __future__ import with_statement
+
 import sys
 import re
 import os
@@ -87,7 +87,7 @@ def tokenize(txt):
 
 def flatten(node, expander, variables, res):
     t=type(node)
-    if t is unicode or t is str:
+    if t is str or t is str:
         res.append(node)
     elif t is list:
         for x in node:
@@ -113,7 +113,7 @@ class Node(object):
         
     def flatten(self, expander, variables, res):
         for x in self.children:
-            if isinstance(x, basestring):
+            if isinstance(x, str):
                 res.append(x)
             else:
                 flatten(x, expander, variables, res)
@@ -139,7 +139,7 @@ class Variable(Node):
     def flatten(self, expander, variables, res):
         name = []
         flatten(self.children[0], expander, variables, name)
-        name = u"".join(name).strip()
+        name = "".join(name).strip()
         if len(name)>256*1024:
             raise MemoryLimitError("template name too long: %s bytes" % (len(name),))
 
@@ -156,14 +156,14 @@ class Variable(Node):
             res.append(v)
 
 def _switch_split_node(node):
-    if isinstance(node, basestring):
+    if isinstance(node, str):
         if '=' in node:
             return node.split("=", 1) #FIXME
         
         return None, node
 
     try:
-        idx = node.children.index(u"=")
+        idx = node.children.index("=")
     except ValueError:
         #FIXME
         return None, node
@@ -179,7 +179,7 @@ class Template(Node):
     def flatten(self, expander, variables, res):
         try:
             return self._flatten(expander, variables, res)
-        except RuntimeError, err:
+        except RuntimeError as err:
             # we expect a "RuntimeError: maximum recursion depth exceeded" here.
             # logging this error is rather hard...
             try:
@@ -191,7 +191,7 @@ class Template(Node):
     def _flatten(self, expander, variables, res):
         name = []
         flatten(self.children[0], expander, variables, name)
-        name = u"".join(name).strip()
+        name = "".join(name).strip()
         if len(name)>256*1024:
             raise MemoryLimitError("template name too long: %s bytes" % (len(name),))
 
@@ -212,7 +212,7 @@ class Template(Node):
                 else:
                     if len(self.children)>=3:
                         flatten(self.children[2], expander, variables, tmp)
-                res.append(u"".join(tmp).strip())
+                res.append("".join(tmp).strip())
                 res.append(dummy_mark)
                 return
             elif name=='#ifeq':
@@ -220,18 +220,18 @@ class Template(Node):
                 tmp=[]
                 if len(self.children)>=2:
                     flatten(self.children[1], expander, variables, tmp)
-                other = u"".join(tmp).strip()
+                other = "".join(tmp).strip()
                 remainder = remainder.strip()
                 tmp = []
                 from mwlib.magics import maybe_numeric_compare
                 if maybe_numeric_compare(remainder, other):
                     if len(self.children)>=3:
                         flatten(self.children[2], expander, variables, tmp)
-                        res.append(u"".join(tmp).strip())
+                        res.append("".join(tmp).strip())
                 else:
                     if len(self.children)>=4:
                         flatten(self.children[3], expander, variables, tmp)
-                        res.append(u"".join(tmp).strip())
+                        res.append("".join(tmp).strip())
                 res.append(dummy_mark)
                 return
             elif name=='#switch':
@@ -239,13 +239,13 @@ class Template(Node):
                 
                 remainder = remainder.strip()
                 default = None
-                for i in xrange(1, len(self.children)):
+                for i in range(1, len(self.children)):
                     c = self.children[i]
                     k, v = _switch_split_node(c)
                     if k is not None:
                         tmp = []
                         flatten(k, expander, variables, tmp)
-                        k=u"".join(tmp).strip()
+                        k="".join(tmp).strip()
 
                     if k=='#default':
                         default = v
@@ -254,7 +254,7 @@ class Template(Node):
                     if (k is None and i==len(self.children)-1) or (k is not None and magics.maybe_numeric_compare(k, remainder)):
                         tmp = []
                         flatten(v, expander, variables, tmp)
-                        v = u"".join(tmp).strip()
+                        v = "".join(tmp).strip()
                         
                         res.append(v)
                         res.append(dummy_mark)
@@ -263,7 +263,7 @@ class Template(Node):
                 if default is not None:
                     tmp=[]
                     flatten(default, expander, variables, tmp)
-                    tmp = u"".join(tmp).strip()
+                    tmp = "".join(tmp).strip()
                     res.append(tmp)
                     
                         
@@ -302,20 +302,20 @@ class Template(Node):
 
                 if DEBUG:
                     msg += repr("".join(res[oldidx:]))
-                    print msg
+                    print(msg)
 
 def show(node, indent=0, out=None):
     if out is None:
         out=sys.stdout
 
     out.write("%s%r\n" % ("  "*indent, node))
-    if isinstance(node, basestring):
+    if isinstance(node, str):
         return
     for x in node.children:
         show(x, indent+1, out)
 
 def optimize(node):
-    if isinstance(node, basestring):
+    if isinstance(node, str):
         return node
 
     if type(node) is Node and len(node.children)==1:
@@ -330,7 +330,7 @@ class Parser(object):
 
     def __init__(self, txt):
         if isinstance(txt, str):
-            txt = unicode(txt)
+            txt = str(txt)
             
         self.txt = txt
         self.tokens = tokenize(txt)
@@ -349,7 +349,7 @@ class Parser(object):
         v.children.append(name)
 
         try:
-            idx = children.index(u"|")
+            idx = children.index("|")
         except ValueError:
             name.children = children
         else:
@@ -385,7 +385,7 @@ class Parser(object):
         
         idx = 0
         for idx, c in enumerate(children):
-            if c==u'|':
+            if c=='|':
                 break
             name.children.append(c)
 
@@ -397,11 +397,11 @@ class Parser(object):
 
         linkcount = 0
         for c in children[idx+1:]:
-            if c==u'[[':
+            if c=='[[':
                 linkcount += 1
             elif c==']]':
                 linkcount -= 1
-            elif c==u'|' and linkcount==0:
+            elif c=='|' and linkcount==0:
                 t.children.append(arg)
                 arg = Node()
                 continue
@@ -488,7 +488,7 @@ class LazyArgument(object):
         arg=[]
         flatten(n, self.expander, self.variables, arg)
         _insert_implicit_newlines(arg)
-        arg = u"".join(arg)
+        arg = "".join(arg)
 
         if len(arg)>256*1024:
             raise MemoryLimitError("template argument too long: %s bytes" % (len(arg),))
@@ -497,7 +497,7 @@ class LazyArgument(object):
     def splitflatten(self):
         if self._splitflatten is None:
             try:
-                idx = self.node.children.index(u'=')
+                idx = self.node.children.index('=')
             except (ValueError, AttributeError):
                 name = None
                 val = self.node
@@ -524,7 +524,7 @@ class LazyArgument(object):
             arg=[]
             flatten(self.node, self.expander, self.variables, arg)
             _insert_implicit_newlines(arg)
-            arg = u"".join(arg).strip()
+            arg = "".join(arg).strip()
             if len(arg)>256*1024:
                 raise MemoryLimitError("template argument too long: %s bytes" % (len(arg),))
             
@@ -552,17 +552,17 @@ class ArgumentList(object):
         return len(self.args)
 
     def __getitem__(self, n):
-        return self.get(n, None) or u''
+        return self.get(n, None) or ''
         
     def get(self, n, default):
-        if isinstance(n, (int, long)):
+        if isinstance(n, int):
             try:
                 a=self.args[n]
             except IndexError:
                 return default
             return a.flatten()
 
-        assert isinstance(n, basestring), "expected int or string"
+        assert isinstance(n, str), "expected int or string"
 
         varcount=1
         if n not in self.namedargs:
@@ -600,9 +600,9 @@ def is_implicit_newline(raw):
             return True
     return False 
 
-class mark(unicode):
+class mark(str):
     def __new__(klass, msg):
-        r=unicode.__new__(klass)
+        r=str.__new__(klass)
         r.msg = msg
         return r
     
@@ -678,7 +678,7 @@ class Expander(object):
             log.info("parsing template", repr(name))
             res = parse(raw)
             if DEBUG:
-                print "TEMPLATE:", name, repr(raw)
+                print("TEMPLATE:", name, repr(raw))
                 res.show()
                 
         return res
@@ -688,7 +688,7 @@ class Expander(object):
         res = []
         flatten(self.parsed, self, ArgumentList(), res)
         _insert_implicit_newlines(res)
-        return u"".join(res)
+        return "".join(res)
 
 
 class DictDB(object):
@@ -702,7 +702,7 @@ class DictDB(object):
         self.d.update(kw)
 
         normd = {}
-        for k, v in self.d.items():
+        for k, v in list(self.d.items()):
             normd[k.lower()] = v
         self.d = normd
         
@@ -710,7 +710,7 @@ class DictDB(object):
         return self.d[title.lower()]
 
     def getTemplate(self, title, dummy):
-        return self.d.get(title.lower(), u"")
+        return self.d.get(title.lower(), "")
     
 def expandstr(s, expected=None, wikidb=None, pagename='thispage'):
     """debug function. expand templates in string s"""
@@ -721,13 +721,13 @@ def expandstr(s, expected=None, wikidb=None, pagename='thispage'):
 
     te = Expander(s, pagename=pagename, wikidb=db)
     res = te.expandTemplates()
-    print "EXPAND: %r -> %r" % (s, res)
+    print("EXPAND: %r -> %r" % (s, res))
     if expected is not None:
         assert res==expected, "expected %r, got %r" % (expected, res)
     return res
 
 if __name__=="__main__":
     #print splitrx.groupindex
-    d=unicode(open(sys.argv[1]).read(), 'utf8')
+    d=str(open(sys.argv[1]).read(), 'utf8')
     e = Expander(d)
-    print e.expandTemplates()
+    print(e.expandTemplates())

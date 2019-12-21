@@ -21,7 +21,7 @@ class LinksCounter:
             if len(words) > 0:
                 page = words[0]
                 if page in selected_pages:
-                    print "Processing page %s \r" % page,
+                    print("Processing page %s \r" % page, end=' ')
                     for n in range(1, len(words) - 1):
                         link = words[n]
                         # check if is a redirect
@@ -39,11 +39,11 @@ class LinksCounter:
 
 
 input_xml_file_name = config.input_xml_file_name
-print "Loading redirects"
+print("Loading redirects")
 redirect_parser = RedirectParser(input_xml_file_name)
-print "Processed %d redirects" % len(redirect_parser.redirects)
+print("Processed %d redirects" % len(redirect_parser.redirects))
 
-print "Loading selected pages"
+print("Loading selected pages")
 if os.path.exists('%s.pages_selected-level-1' % input_xml_file_name):
     selected_pages_reader = FileListReader('%s.pages_selected-level-1' %
                                            input_xml_file_name)
@@ -51,15 +51,15 @@ else:
     selected_pages_reader = FileListReader('%s.pages_selected' %
                                            input_xml_file_name)
 
-print "Processing links"
+print("Processing links")
 links_counter = LinksCounter(input_xml_file_name, redirect_parser.redirects,
         selected_pages_reader.list)
 
-print "Sorting counted links"
-items = links_counter.links_to_counter.items()
+print("Sorting counted links")
+items = list(links_counter.links_to_counter.items())
 items.sort(key = itemgetter(1), reverse=True)
 
-print "Writing links_counted file"
+print("Writing links_counted file")
 output_file = codecs.open('%s.links_counted' % input_xml_file_name,
                 encoding='utf-8', mode='w')
 for n  in range(len(items)):
