@@ -21,4 +21,4 @@ wpfooter = Content available under the
  <br/> Wikipedia is a registered trademark of the non-profit 
  Wikimedia Foundation, Inc.<br/><a href="/static/about_en.html">
  About Wikipedia</a>
-resultstitle = Search results for '%s'.
+resultstitle = Search results for '{}'.
