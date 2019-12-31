@@ -3,4 +3,4 @@ name = WikipediaBase
 activity_version = 33.1
 bundle_id = org.laptop.WikipediaBaseActivity
 icon = activity-wikipedia
-exec = sugar-activity activity_es.WikipediaActivityES
+exec = sugar-activity3 activity_es.WikipediaActivityES
