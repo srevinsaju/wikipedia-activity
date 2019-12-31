@@ -10,7 +10,7 @@ def read_conf_from_info(path):
     if not os.path.exists(activity_info_path):
         print("FATAL ERROR: no activity.info file available on path '%s'" % \
             activity_info_path)
-        raise
+        raise Exception('Unknown error')
     activity_info = ConfigParser()
     activity_info.readfp(open(activity_info_path))
     wiki_section = 'Wikipedia'
