@@ -29,6 +29,6 @@ def read_conf_from_info(path):
     else:
         print("FATAL ERROR: activity.info don't have [%s] section" % \
             wiki_section)
-        raise
+        raise Exception("Unknown Error")
 
     return confvars
