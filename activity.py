@@ -49,14 +49,14 @@ if browse_path is None:
 
 sys.path.append(browse_path)
 
-
-import webactivity
+from sugar3.activity import activity
+from sugar3.activity import webactivity
 
 from searchtoolbar import SearchToolbar
 
 
 # Activity class, extends WebActivity.
-class WikipediaActivity(webactivity.WebActivity):
+class WikipediaActivity(activity.Activity):
     def __init__(self, handle):
 
         if not hasattr(self, 'confvars'):
