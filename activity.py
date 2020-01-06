@@ -26,6 +26,7 @@ USE_GTK2 = False
 try:
     from sugar3.graphics.toolbarbox import ToolbarButton
     from sugar3.activity.activity import get_bundle_path
+    from sugar3.graphics.toolbarbox import ToolbarBox
 except ImportError:
     from sugar.graphics.toolbarbox import ToolbarButton
     from sugar.activity.activity import get_bundle_path
@@ -50,7 +51,7 @@ if browse_path is None:
 sys.path.append(browse_path)
 
 from sugar3.activity import activity
-from sugar3.activity import webactivity
+#from sugar3.activity import webactivity
 
 from searchtoolbar import SearchToolbar
 
@@ -75,7 +76,7 @@ class WikipediaActivity(activity.Activity):
             self.confvars['ip'], self.confvars['port'],
             self.confvars['home_page'])
 
-        webactivity.WebActivity.__init__(self, handle)
+        activity.Activity.__init__(self, handle)
 
         if USE_GTK2:
             # Use xpcom to set a RAM cache limit.  (Trac #7081.)
@@ -91,19 +92,21 @@ class WikipediaActivity(activity.Activity):
             ios_class = components.classes["@mozilla.org/network/io-service;1"]
             io_service = ios_class.getService(interfaces.nsIIOService2)
             io_service.manageOfflineStatus = False
-
+        
+        toolbar_box = ToolbarBox()
         self.searchtoolbar = SearchToolbar(self)
         search_toolbar_button = ToolbarButton()
         search_toolbar_button.set_page(self.searchtoolbar)
         search_toolbar_button.props.icon_name = 'search-wiki'
         search_toolbar_button.props.label = _('Search')
-        self.get_toolbar_box().toolbar.insert(search_toolbar_button, 1)
+        toolbar_box.toolbar.insert(search_toolbar_button, 1)
         search_toolbar_button.show()
         # Hide add-tabs button
-        if hasattr(self._primary_toolbar, '_add_tab'):
-            self._primary_toolbar._add_tab.hide()
-
+        #toolbar_box.toolbar._add_tab.hide()
+        
         self.searchtoolbar.show()
+        self.set_toolbar_box(toolbar_box)
+        toolbar_box.show_all()
 
     def _get_browser(self):
         if hasattr(self, '_browser'):
