@@ -44,10 +44,10 @@ if len(sys.argv) > 1:
         arg = sys.argv[argn]
         if arg.startswith('--only='):
             only_page = arg[len('--only='):]
-            print("Processing only article '%s'" % only_page)
+            print(("Processing only article '%s'" % only_page))
         if arg.startswith('--start_at='):
             start_at = arg[len('--start_at='):]
-            print("Starting to process at article '%s'" % start_at)
+            print(("Starting to process at article '%s'" % start_at))
         if arg == '--stdout':
             stdout = True
             print("Writing output to stdout")

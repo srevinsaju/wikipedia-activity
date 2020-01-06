@@ -17,7 +17,7 @@ if __name__ == '__main__':
         if sys.argv[1] == '--min_cant_links':
             min_cant_links = int(sys.argv[2])
 
-    print("Adding articles with less than %d links" % min_cant_links)
+    print(("Adding articles with less than %d links" % min_cant_links))
 
     # Read favorites list
     favorites_reader = FileListReader(config.favorites_file_name)

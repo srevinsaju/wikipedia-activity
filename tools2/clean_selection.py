@@ -20,8 +20,8 @@ if __name__ == '__main__':
 
     if len(sys.argv) > 1:
         remove_pages_list_path = sys.argv[1]
-        print("Loading list of pages to remove from %s" % \
-            remove_pages_list_path)
+        print(("Loading list of pages to remove from %s" % \
+            remove_pages_list_path))
     else:
         print("Need select the file with the list of pages to remove")
         exit()
@@ -63,7 +63,7 @@ if __name__ == '__main__':
                                 finish = True
                                 break
                 else:
-                    print("* Ignored %s " % title)
+                    print(("* Ignored %s " % title))
 
         data_line = processed_file.readline()
 

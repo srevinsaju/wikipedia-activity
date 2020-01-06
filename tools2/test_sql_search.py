@@ -15,11 +15,11 @@ print("Opening index")
 dbpath = './search.db'
 conn = sqlite3.connect(dbpath)
 
-print("Searching %s" % search_word)
+print(("Searching %s" % search_word))
 search_word = '%' + search_word + '%'
 results = conn.execute("SELECT * from articles where title like'%s'" %
             search_word)
-print("arraysize", results.arraysize)
+print(("arraysize", results.arraysize))
 row = next(results)
 while row:
     print(row)
