@@ -1674,8 +1674,6 @@ yy237:
 
 }
 
-Scanner::~scan ()
-{}
 
 
 PyObject *
@@ -1733,7 +1731,7 @@ static PyMethodDef module_functions[] = {
 
 
 
-extern "C"
+/*extern "C"
 {
   DL_EXPORT (void) init_mwscan ();
   
@@ -1742,5 +1740,6 @@ extern "C"
 DL_EXPORT (void)
 init_mwscan ()
 {
-  /*PyObject *m = */ Py_InitModule ("_mwscan", module_functions);
+  Py_InitModule ("_mwscan", module_functions);
 };
+*/

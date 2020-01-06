@@ -153,14 +153,14 @@ PyObject *py_scan(PyObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, "O:_expander.scan", &arg1)) {
 		return 0;
 	}
-	PyUnicodeObject *unistr = (PyUnicodeObject*)PyUnicode_FromObject(arg1);
+	PyASCIIObject *unistr = (PyASCIIObject*)PyUnicode_FromObject(arg1);
 	if (unistr == NULL) {
 		PyErr_SetString(PyExc_TypeError,
 				"parameter cannot be converted to unicode in _expander.scan");
 		return 0;
 	}
 
-	Py_UNICODE *start = unistr->str;
+	Py_UNICODE *start = unistr->wstr;
 	Py_UNICODE *end = start+unistr->length;
 	
 
@@ -195,12 +195,13 @@ static PyMethodDef module_functions[] = {
 };
 
 
-
+/*
 extern "C" {
 	DL_EXPORT(void) init_expander();
 }
 
 DL_EXPORT(void) init_expander()
 {
-	/*PyObject *m =*/ Py_InitModule("_expander", module_functions);
+	*PyObject *m = Py_InitModule("_expander", module_functions);
 }
+*/

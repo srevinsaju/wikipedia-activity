@@ -5,7 +5,10 @@
 
 import sys
 import time
-import _mwscan
+try:
+    import _mwscan
+except:
+    pass
 import html.entities
 
 class token(object):
@@ -53,9 +56,12 @@ def dump_tokens(text, tokens):
            
 def scan(text):
     stime=time.time()
-    text += "\0"*32    
-    tokens = _mwscan.scan(text)
-    return scan_result(text, tokens)
+    text += "\0"*32 
+    try:
+        tokens = _mwscan.scan(text)
+        return scan_result(text, tokens)
+    except:
+        raise NotImplementedError
 
 def resolve_entity(e):
     if e[1]=='#':
