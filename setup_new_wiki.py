@@ -21,7 +21,7 @@ import os
 import shutil
 import zipfile
 from fnmatch import fnmatch
-from sugar.activity import bundlebuilder
+from sugar3.activity import bundlebuilder
 
 INCLUDE_DIRS = ['activity', 'binarylibs', 'icons', 'locale', 'bin',
                 'mwlib', 'po', 'seek-bzip2', 'static', 'tools2']
@@ -121,6 +121,6 @@ if __name__ == '__main__':
     if os.path.exists(f):
         shutil.copyfile(f, 'activity/activity.info')
 
-    config = bundlebuilder.Config()
+    config = bundlebuilder.Config('.')
     packager = WikiXOPackager(bundlebuilder.Builder(config), data_file)
     packager.package()
