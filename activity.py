@@ -16,30 +16,48 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 from gettext import gettext as _
+
 import os
 import sys
 import server
 import logging
-from sugar3.graphics.toolbarbox import ToolbarButton
-from sugar3.activity.activity import get_bundle_path
-from sugar3.graphics.toolbarbox import ToolbarBox
+
+try:
+    from sugar3.activity import activity
+    from sugar3.graphics.toolbarbox import ToolbarButton
+    from sugar3.graphics.toolbarbox import ToolbarBox
+    from sugar3.activity.activity import get_bundle_path
+except ImportError:
+    from sugar.graphics.toolbarbox import ToolbarButton
+    from sugar.activity.activity import get_bundle_path
+    USE_GTK2 = True
+
 from utils import read_conf_from_info
 
 browse_path = None
-
-from sugar3.activity.activity import get_bundle
-browse_bundle = get_bundle('org.sugarlabs.BrowseActivity')
-browse_path = browse_bundle.get_path()
+try:
+    from sugar3.activity.activity import get_bundle
+    browse_bundle = get_bundle('org.sugarlabs.WebActivity')
+    browse_path = browse_bundle.get_path()
+except:
+    if os.path.exists('../Browse.activity'):
+        browse_path = '../Browse.activity'
+    elif os.path.exists('/usr/share/sugar/activities/Browse.activity'):
+        browse_path = '/usr/share/sugar/activities/Browse.activity'
+    elif os.path.exists(os.path.expanduser('~/Activities/Browse.activity')):
+        browse_path = os.path.expanduser('~/Activities/Browse.activity')
 
 if browse_path is None:
     print('This activity need a Browser activity installed to run')
 
 sys.path.append(browse_path)
 
-from sugar3.activity import activity
+
 
 from searchtoolbar import SearchToolbar
 
+
+# Activity class, extends WebActivity.
 class WikipediaActivity(activity.Activity):
     def __init__(self, handle):
 
@@ -48,10 +66,17 @@ class WikipediaActivity(activity.Activity):
 
         logging.error("Starting server database: %s port: %s" %
                       (self.confvars['path'], self.confvars['port']))
+
         os.chdir(os.environ['SUGAR_BUNDLE_PATH'])
-        port = 8000
-        start_server = 'python3 -m http.server --directory static {}'.format(port)
-        os.system(start_server)
+
+        self.confvars['ip'] = '0.0.0.0'
+
+        server.run_server(self.confvars)
+
+        handle.uri = 'http://%s:%s%s' % (
+            self.confvars['ip'], self.confvars['port'],
+            self.confvars['home_page'])
+
         activity.Activity.__init__(self, handle)
         toolbar_box = ToolbarBox()
         self.searchtoolbar = SearchToolbar(self)
@@ -62,10 +87,10 @@ class WikipediaActivity(activity.Activity):
         toolbar_box.toolbar.insert(search_toolbar_button, 1)
         search_toolbar_button.show()
         # Hide add-tabs button
-        #toolbar_box.toolbar._add_tab.hide()
+        if hasattr(self._primary_toolbar, '_add_tab'):
+            self._primary_toolbar._add_tab.hide()
+
         self.searchtoolbar.show()
-        self.set_toolbar_box(toolbar_box)
-        toolbar_box.show_all()
 
     def _get_browser(self):
         if hasattr(self, '_browser'):
@@ -75,7 +100,8 @@ class WikipediaActivity(activity.Activity):
             return self._tabbed_view.props.current_browser
 
     def _go_home_button_cb(self, button):
-        lang = 'en'
-        home_url = 'http://0.0.0.0:{}/index_{}.html'.format(port, lang)
+        home_url = 'http://%s:%s%s' % (
+            self.confvars['ip'], self.confvars['port'],
+            self.confvars['home_page'])
         browser = self._get_browser()
         browser.load_uri(home_url)

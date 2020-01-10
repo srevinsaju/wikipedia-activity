@@ -1,6 +1,24 @@
 [Activity]
-name = WikipediaBase
-activity_version = 33.1
-bundle_id = org.laptop.WikipediaBaseActivity
-icon = activity-wikipedia
-exec = sugar-activity3 activity_es.WikipediaActivityES
+name = Simple English Wikipedia
+activity_version = 38.2
+bundle_id = org.laptop.WikipediaActivitySimpleEN
+icon = SIMPLE_WIKI_ICON
+exec = sugar-activity activity.WikipediaActivity
+single_instance = yes
+summary = A good place to start your research. Get information on Wikipedia for your homework and personal research as well as other sources.
+license = GPLv2+
+max_paticipants = 10
+repository = https://github.com/godiard/wikipedia-activity.git
+
+[Wikipedia]
+path = en_simple/simplewiki-20130724-pages-articles.xml
+port = 8011
+home_page = /static/index_en_simple.html
+templateprefix = Template:
+wpheader = From Wikipedia, The Free Encyclopedia
+wpfooter = Content available under the
+ <a href="/static/es-gfdl.html">GNU Free Documentation License</a>.
+ <br/> Wikipedia is a registered trademark of the non-profit
+ Wikimedia Foundation, Inc.<br/><a href="/static/about_en.html">
+ About Wikipedia</a>
+resultstitle = Search results for '{}'.

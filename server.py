@@ -578,8 +578,7 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
         if article_text == "":
             self.send_response(301)
             self.send_header("Location",
-                             'http://' + self.lang + '.wikipedia.org/wiki/' +
-                             title.encode('utf8'))
+                             'http://' + self.lang + '.wikipedia.org/wiki/' + title)
             self.end_headers()
             return
 
@@ -903,7 +902,7 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
         context.fill()
         context.set_source_surface(icon_surface, 0, 0)
         context.paint()
-        out = io.StringIO()
+        out = io.BytesIO()
         surface.write_to_png(out)
         self.send_response(200)
         self.send_header("Content-Type", "image/png;")
@@ -931,7 +930,7 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         real_path = urllib.parse.unquote(self.path)
-        real_path = str(real_path, 'utf8')
+        real_path = str(real_path)
 
         (real_path, sep, param_text) = real_path.partition('?')
         self.params = {}
@@ -1008,9 +1007,9 @@ def run_server(confvars):
     if os.path.exists(blacklistpath):
         with open(blacklistpath, 'r') as f:
             for line in f.readlines():
-                blacklist.add(line.rstrip())
+                blacklist.add(line.rstrip().decode('utf8'))
     logging.debug("Read %d blacklisted templates" % len(blacklist))
-
+    confvars['ip'] = '0.0.0.0'
     confvars['templateblacklist'] = blacklist
     confvars['lang'] = confvars['path'][0:2]
     confvars['flang'] = os.path.basename(confvars['path'])[0:5]
