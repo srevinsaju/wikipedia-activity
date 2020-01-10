@@ -127,7 +127,7 @@ class WPWikiDB:
             return ''
 
         article_text = \
-            self.dataretriever.get_text_article(title).decode('utf-8')
+            self.dataretriever.get_text_article(title)
 
         # Stripping leading & trailing whitespace fixes template expansion.
         article_text = article_text.lstrip()
@@ -1008,7 +1008,7 @@ def run_server(confvars):
     if os.path.exists(blacklistpath):
         with open(blacklistpath, 'r') as f:
             for line in f.readlines():
-                blacklist.add(line.rstrip().decode('utf8'))
+                blacklist.add(line.rstrip())
     logging.debug("Read %d blacklisted templates" % len(blacklist))
 
     confvars['templateblacklist'] = blacklist

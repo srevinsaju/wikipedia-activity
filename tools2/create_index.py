@@ -36,11 +36,13 @@ def create_index(pages_blacklist):
         p = Popen(cmd, stdin=bzip_file, stdout=PIPE, stderr=STDOUT,
                 close_fds=True)
         data_line = p.stdout.readline()
+        print(data_line)
         while data_line:
             position += len(data_line)
             #print data_line
             if len(data_line) == 2:
-                if ord(data_line[0]) == 1:
+                
+                if ord(str(data_line[0])) == 1:
                     title = p.stdout.readline()
                     position += len(title)
                     # read article size
