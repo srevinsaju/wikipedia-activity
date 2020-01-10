@@ -156,7 +156,7 @@ class DataRetriever():
 
         finish = False
         while not finish:
-            line = p.stdout.readline()
+            line = p.stdout.readline().decode()
             if len(line) == 2:
                 if ord(line[0]) == 3:
                     finish = True

@@ -16,34 +16,20 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 from gettext import gettext as _
-
 import os
 import sys
 import server
 import logging
-
-USE_GTK2 = False
-try:
-    from sugar3.graphics.toolbarbox import ToolbarButton
-    from sugar3.activity.activity import get_bundle_path
-    from sugar3.graphics.toolbarbox import ToolbarBox
-except ImportError:
-    from sugar.graphics.toolbarbox import ToolbarButton
-    from sugar.activity.activity import get_bundle_path
-    USE_GTK2 = True
-
+from sugar3.graphics.toolbarbox import ToolbarButton
+from sugar3.activity.activity import get_bundle_path
+from sugar3.graphics.toolbarbox import ToolbarBox
 from utils import read_conf_from_info
 
 browse_path = None
-try:
-    from sugar3.activity.activity import get_bundle
-    browse_bundle = get_bundle('org.laptop.WebActivity')
-    browse_path = browse_bundle.get_path()
-except:
-    if os.path.exists('../Browse.activity'):
-        browse_path = '../Browse.activity'
-    elif os.path.exists('/usr/share/sugar/activities/Browse.activity'):
-        browse_path = '/usr/share/sugar/activities/Browse.activity'
+
+from sugar3.activity.activity import get_bundle
+browse_bundle = get_bundle('org.sugarlabs.BrowseActivity')
+browse_path = browse_bundle.get_path()
 
 if browse_path is None:
     print('This activity need a Browser activity installed to run')
@@ -51,12 +37,9 @@ if browse_path is None:
 sys.path.append(browse_path)
 
 from sugar3.activity import activity
-#from sugar3.activity import webactivity
 
 from searchtoolbar import SearchToolbar
 
-
-# Activity class, extends WebActivity.
 class WikipediaActivity(activity.Activity):
     def __init__(self, handle):
 
@@ -65,34 +48,11 @@ class WikipediaActivity(activity.Activity):
 
         logging.error("Starting server database: %s port: %s" %
                       (self.confvars['path'], self.confvars['port']))
-
         os.chdir(os.environ['SUGAR_BUNDLE_PATH'])
-
-        self.confvars['ip'] = '0.0.0.0'
-
-        server.run_server(self.confvars)
-
-        handle.uri = 'http://%s:%s%s' % (
-            self.confvars['ip'], self.confvars['port'],
-            self.confvars['home_page'])
-
+        port = 8000
+        start_server = 'python3 -m http.server --directory static {}'.format(port)
+        os.system(start_server)
         activity.Activity.__init__(self, handle)
-
-        if USE_GTK2:
-            # Use xpcom to set a RAM cache limit.  (Trac #7081.)
-            from xpcom import components
-            from xpcom.components import interfaces
-            cls = components.classes['@mozilla.org/preferences-service;1']
-            pref_service = cls.getService(interfaces.nsIPrefService)
-            branch = pref_service.getBranch("browser.cache.memory.")
-            branch.setIntPref("capacity", "5000")
-
-            # Use xpcom to turn off "offline mode" detection, which disables
-            # access to localhost for no good reason.  (Trac #6250.)
-            ios_class = components.classes["@mozilla.org/network/io-service;1"]
-            io_service = ios_class.getService(interfaces.nsIIOService2)
-            io_service.manageOfflineStatus = False
-        
         toolbar_box = ToolbarBox()
         self.searchtoolbar = SearchToolbar(self)
         search_toolbar_button = ToolbarButton()
@@ -103,7 +63,6 @@ class WikipediaActivity(activity.Activity):
         search_toolbar_button.show()
         # Hide add-tabs button
         #toolbar_box.toolbar._add_tab.hide()
-        
         self.searchtoolbar.show()
         self.set_toolbar_box(toolbar_box)
         toolbar_box.show_all()
@@ -116,8 +75,7 @@ class WikipediaActivity(activity.Activity):
             return self._tabbed_view.props.current_browser
 
     def _go_home_button_cb(self, button):
-        home_url = 'http://%s:%s%s' % (
-            self.confvars['ip'], self.confvars['port'],
-            self.confvars['home_page'])
+        lang = 'en'
+        home_url = 'http://0.0.0.0:{}/index_{}.html'.format(port, lang)
         browser = self._get_browser()
         browser.load_uri(home_url)

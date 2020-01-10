@@ -21,9 +21,9 @@ def normalize_title(title):
 
 
 def create_index(pages_blacklist):
-    output_file = open("%s.processed.idx" % input_xml_file_name, mode='w')
+    output_file = open("%s.processed.idx" % input_xml_file_name, 'w')
     num_block = 1
-    index_file = open("%s.processed.bz2t" % input_xml_file_name, mode='r')
+    index_file = open("%s.processed.bz2t" % input_xml_file_name, 'rb')
     index_line = index_file.readline()
     while index_line:
         parts = index_line.split()
@@ -31,7 +31,7 @@ def create_index(pages_blacklist):
         print("Block %d starts at %d" % (num_block, block_start))
         position = 0
         # extract the block
-        bzip_file = open("%s.processed.bz2" % input_xml_file_name, mode='r')
+        bzip_file = open("%s.processed.bz2" % input_xml_file_name, mode='r', encoding="ISO-8859-1")
         cmd = ['../bin/%s/seek-bunzip' % config.system_id, str(block_start)]
         p = Popen(cmd, stdin=bzip_file, stdout=PIPE, stderr=STDOUT,
                 close_fds=True)
@@ -39,10 +39,15 @@ def create_index(pages_blacklist):
         print(data_line)
         while data_line:
             position += len(data_line)
+            try:
+                data_line = data_line.decode('ISO-8859-1')
+            except Exception as e:
+                print(data_line)
+                raise Exception()
             #print data_line
             if len(data_line) == 2:
-                
-                if ord(str(data_line[0])) == 1:
+
+                if ord(data_line[0]) == 1:
                     title = p.stdout.readline()
                     position += len(title)
                     # read article size
@@ -53,6 +58,7 @@ def create_index(pages_blacklist):
                     data_line = p.stdout.readline()
                     position += len(data_line)
                     try:
+                        title = title.decode('ISO-8859-1')
                         title = normalize_title(title[0:-1])
                         if title not in pages_blacklist:
                             output_file.write("%s %d %d\n" % \
