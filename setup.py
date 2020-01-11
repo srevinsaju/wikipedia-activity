@@ -84,10 +84,7 @@ home_page = /static/index_{lang}.html
 templateprefix = Template:	
 wpheader = From Wikipedia, The Free Encyclopedia	
 wpfooter = Content available under the	
-<a href="/static/es-gfdl.html">GNU Free Documentation License</a>.	
-<br/> Wikipedia is a registered trademark of the non-profit	
-Wikimedia Foundation, Inc.<br/><a href="/static/about_en.html">	
-About Wikipedia</a>	
+<a href="/static/es-gfdl.html">GNU Free Documentation License</a>. <br/> Wikipedia is a registered trademark of the non-profit Wikimedia Foundation, Inc.<br/><a href="/static/about_en.html"> About Wikipedia</a>	
 resultstitle = Search results for '{search}'.
 """.format(path=sys.argv[-1], lang=sys.argv[-1].split('/')[0], search='{}')
     
