@@ -4,11 +4,27 @@ from __future__ import print_function
 import time
 import codecs
 import os
-from pijnu import makeParser
+import sys
+from sugar3.activity import activity
+
+try:
+    from pijnu import makeParser
+except ModuleNotFoundError:
+    print("Module pijnu not found. Installing it")
+    path_to_pijnu ="{}/bin/any/pijnu-20160727.tar.gz".format(activity.get_bundle_path())
+    os.system('pip3 install {} --user'.format(path_to_pijnu))
+    try:
+        from pijnu import makeParser
+    except ModuleNotFoundError:
+        print("""Wikipedia Activity couldn't automatically install pijnu.
+            Install it manually by 
+            pip3 install pijnu --user"
+            """)
+        sys.exit(1)
 from .mediawiki_parser.preprocessor import make_parser as make_parser1
 from .mediawiki_parser.text import make_parser as make_parser2
 from .mediawiki_parser.html import make_parser as make_parser3
-from sugar3.activity import activity
+
 print("*** Parsing to HTML ***")
 
 start_time = time.time()
