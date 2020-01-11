@@ -3,7 +3,15 @@
 # These configuration params are used in the process to create
 # a new wikipedia activity
 
-input_xml_file_name = './gnwiki-20120220-pages-articles.xml'
+import os
+files_list = os.listdir()
+for i in file_list:
+    if i.endswith('.xml'):
+        input_xml_file_name = i
+        break
+    else:
+        input_xml_file_name = './gnwiki-20120220-pages-articles.xml'
+
 favorites_file_name = './favorites_en.txt'
 blacklist_file_name = './blacklist_en.txt'
 
