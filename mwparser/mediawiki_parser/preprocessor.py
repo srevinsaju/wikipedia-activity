@@ -81,7 +81,7 @@ toolset = {'substitute_template': substitute_template,
            'substitute_named_entity': substitute_named_entity,
            'substitute_numbered_entity': substitute_numbered_entity}
 
-from mediawiki_parser import preprocessorParser
+from . import preprocessorParser
 
 def make_parser(template_dict):
     global templates

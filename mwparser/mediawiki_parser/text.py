@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 from .constants import html_entities
 from pijnu.library.node import Nil, Nodes, Node
-from mediawiki_parser import wikitextParser
+from . import wikitextParser
 from . import apostrophes
 import py3compat
 

@@ -5,9 +5,9 @@ import time
 import codecs
 import os
 from pijnu import makeParser
-from mediawiki_parser.preprocessor import make_parser as make_parser1
-from mediawiki_parser.text import make_parser as make_parser2
-from mediawiki_parser.html import make_parser as make_parser3
+from .mediawiki_parser.preprocessor import make_parser as make_parser1
+from .mediawiki_parser.text import make_parser as make_parser2
+from .mediawiki_parser.html import make_parser as make_parser3
 from sugar3.activity import activity
 print("*** Parsing to HTML ***")
 
