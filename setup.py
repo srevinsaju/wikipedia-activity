@@ -27,7 +27,7 @@ from sugar3.activity import bundlebuilder
 import utils
 
 INCLUDE_DIRS = ['activity', 'binarylibs', 'icons', 'locale', 'bin',
-                'mwlib', 'po', 'seek-bzip2', 'static', 'tools2']
+                'mwlib', 'po', 'seek-bzip2', 'static', 'tools2', 'mwparser']
 IGNORE_FILES = ['.gitignore', 'MANIFEST', '*.pyc', '*~', '*.bak', 'pseudo.po']
 
 
