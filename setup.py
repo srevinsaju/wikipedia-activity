@@ -30,6 +30,77 @@ INCLUDE_DIRS = ['activity', 'binarylibs', 'icons', 'locale', 'bin',
                 'mwlib', 'po', 'seek-bzip2', 'static', 'tools2', 'mwparser']
 IGNORE_FILES = ['.gitignore', 'MANIFEST', '*.pyc', '*~', '*.bak', 'pseudo.po']
 
+def formatted_text(text):
+    list_text = text.split('_')
+    
+    # make sentence case
+    if 'simple' in text:
+        text_tmp = text.split('_')
+        text = text_tmp[1] + text_tmp[0]
+        text = text.replace('simple', 'Simple ')
+    if 'en' in text:
+        text = text.replace('en', 'English')
+    elif 'fr' in text:
+        text = text.replace('fr', 'French')
+    elif 'es' in text:
+        text = text.replace('es', 'Espanol')
+    elif 'hi' in text:
+        text = text.replace('hi', 'Hindi')
+    elif 'ru' in text:
+        text = text.replace('ru', 'Russian')
+    else:
+        # TODO add support for other langs
+        pass
+    # make a short version
+    output = [text]
+    short_text = ""
+    for i in list_text[::-1]:
+        j = i.capitalize()
+        short_text += j
+    
+    output.append(short_text)
+    return output
+
+def generate_activityinfo():
+    if not os.path.exists(sys.argv[-1]):
+        print("Data file is not valid.")
+        return False
+    elif os.path.exists(sys.argv[-1]) and not sys.argv[-1].endswith('.xml'):
+        print("Data file should exist in .xml")
+        return False
+    print("Generating activity.info")
+    with open(os.path.abspath(os.path.join('activity', 'activity.info.base')), 'r') as w:
+        base_activity = w.read()
+    data_file = sys.argv[-1].split('/')
+    formatted_text_arg = formatted_text(data_file[0])
+    base_activity = base_activity.format(formatted=formatted_text_arg[0], 
+                            short=formatted_text_arg[1])
+    wikipedia_block = \
+        """
+[Wikipedia]	
+path = {path}	
+port = 8011	
+home_page = /static/index_{lang}.html	
+templateprefix = Template:	
+wpheader = From Wikipedia, The Free Encyclopedia	
+wpfooter = Content available under the	
+<a href="/static/es-gfdl.html">GNU Free Documentation License</a>.	
+<br/> Wikipedia is a registered trademark of the non-profit	
+Wikimedia Foundation, Inc.<br/><a href="/static/about_en.html">	
+About Wikipedia</a>	
+resultstitle = Search results for '{search}'.
+""".format(path=sys.argv[-1], lang=sys.argv[-1].split('/')[0], search='{}')
+    
+            
+    with open(os.path.abspath(os.path.join('activity', 'activity.info')), 'w') as activity:
+        activity.write(base_activity + wikipedia_block)
+
+for i in sys.argv:
+    if i == ('gen_act'):
+        print("Generating activity.info")
+        generate_activityinfo()
+        sys.exit(0)
+
 
 def list_files(base_dir, filter_directories=False, data_file=None):
     if filter_directories:
