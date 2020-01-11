@@ -7,7 +7,11 @@ import os
 from subprocess import Popen, PIPE, STDOUT
 import re
 import sys
-import config
+
+if len(sys.argv) >= 2:
+    exec('\nimport config_{} as config'.format(sys.argv[1]))
+else:
+    import config
 
 input_xml_file_name = config.input_xml_file_name
 
@@ -168,10 +172,10 @@ class DataRetriever():
 if __name__ == '__main__':
 
     page_title = ''
-    if len(sys.argv) > 1:
-        page_title = sys.argv[1]
+    if len(sys.argv) > 2:
+        page_title = sys.argv[-1]
     else:
-        print("Use ../tools2/test_index.py page_title")
+        print("Use ../tools2/test_index.py language page_title")
         exit()
 
     redirects_checker = RedirectParser(input_xml_file_name)
