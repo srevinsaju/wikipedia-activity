@@ -23,16 +23,14 @@ import server
 import logging
 from gi.repository import Gtk, Gdk
 
-try:
-    from sugar3.activity import activity
-    from sugar3.graphics.toolbarbox import ToolbarButton
-    from sugar3.activity.widgets import StopButton
-    from sugar3.graphics.toolbarbox import ToolbarBox
-    from sugar3.activity.activity import get_bundle_path
-except ImportError:
-    from sugar.graphics.toolbarbox import ToolbarButton
-    from sugar.activity.activity import get_bundle_path
-    USE_GTK2 = True
+
+from sugar3.activity import activity
+from sugar3.graphics.toolbarbox import ToolbarButton
+from sugar3.activity.widgets import StopButton
+from sugar3.activity.widgets import ActivityToolbarButton
+from sugar3.graphics.toolbarbox import ToolbarBox
+from sugar3.activity.activity import get_bundle_path
+
 
 from utils import read_conf_from_info
 
@@ -83,6 +81,11 @@ class WikipediaActivity(webactivity.WebActivity):
 
     def build_toolbar(self):
         toolbar_box = ToolbarBox()
+        
+        activity_button = ActivityToolbarButton(self)
+        toolbar_box.toolbar.insert(activity_button, 0)
+        activity_button.show()
+
         # Search Gtk Entry
         search_item = Gtk.ToolItem()
 
@@ -106,7 +109,6 @@ class WikipediaActivity(webactivity.WebActivity):
 
         self.set_toolbar_box(toolbar_box)
         toolbar_box.show_all()
-
 
     def _get_browser(self):
         if hasattr(self, '_browser'):
