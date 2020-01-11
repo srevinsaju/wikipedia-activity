@@ -62,7 +62,6 @@ from mwparser.parserEngine import ParserCore
 ## shared objects
 ##
 _root_path = os.path.dirname(__file__)
-# linux32_27" for Linux 32bits Python 2.7
 system_id = "%s%s" % (platform.system().lower(),
                       platform.architecture()[0][0:2])
 if platform.processor().startswith('arm'):
