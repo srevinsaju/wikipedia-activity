@@ -131,7 +131,7 @@ def list_files(base_dir, filter_directories=False, data_file=None):
 
     if data_file is not None:
         # Add the data files
-        needed_sufix = ['.processed.bz2', '.processed.bz2t']
+        needed_sufix = ['.processed.bz2', '.processed.bz2t', '.redirects_used', '.redirects', '.processed.idx']
         for sufix in needed_sufix:
             file_name = data_file + sufix
             result.append(file_name)

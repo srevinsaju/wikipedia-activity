@@ -8,7 +8,9 @@ import os
 import logging
 import codecs
 import sqlite3
-
+from sugar3.activity import activity
+import sys
+sys.path.append(activity.get_bundle_path())
 
 def normalize_title(title):
     s = title.strip().replace(' ', '_')
