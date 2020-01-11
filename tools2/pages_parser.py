@@ -7,8 +7,10 @@ import codecs
 import re
 import os
 import sys
-
-import config
+if len(sys.argv) >= 2:
+    exec('\nimport config_{} as config'.format(sys.argv[1]))
+else:
+    import config
 
 
 def normalize_title(title):
