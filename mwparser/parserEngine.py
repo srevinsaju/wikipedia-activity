@@ -3,10 +3,12 @@
 from __future__ import print_function
 import time
 import codecs
+import os
 from pijnu import makeParser
-from mediawiki_parser.preprocessor import make_parser
-from mediawiki_parser.text import make_parser
-
+from mediawiki_parser.preprocessor import make_parser as make_parser1
+from mediawiki_parser.text import make_parser as make_parser2
+from mediawiki_parser.html import make_parser as make_parser3
+from sugar3.activity import activity
 print("*** Parsing to HTML ***")
 
 start_time = time.time()
@@ -16,10 +18,10 @@ start_time = time.time()
 class ParserCore:
     def __init__(self, i_file):
         self.o_file = ""
-        preprocessorGrammar = open("preprocessor.pijnu").read()
+        preprocessorGrammar = open(os.path.join(activity.get_bundle_path(), "mwparser", "preprocessor.pijnu")).read()
         makeParser(preprocessorGrammar)
 
-        mediawikiGrammar = open("mediawiki.pijnu").read()
+        mediawikiGrammar = open(os.path.join(activity.get_bundle_path(), "mwparser", "mediawiki.pijnu")).read()
         makeParser(mediawikiGrammar)
 
         allowed_tags = ['p', 'span', 'b', 'i', 'small', 'center']
@@ -52,9 +54,9 @@ class ParserCore:
         """,
                     '3e': '3<sup>e</sup>'}
 
-        preprocessor = make_parser(templates)
+        preprocessor = make_parser1(templates)
         
-        parser = make_parser(allowed_tags, allowed_autoclose_tags, allowed_parameters, interwiki, namespaces)
+        parser = make_parser3(allowed_tags, allowed_autoclose_tags, allowed_parameters, interwiki, namespaces)
 
         # import the source in a utf-8 string
         source = i_file

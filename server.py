@@ -698,7 +698,7 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
 
             html = htmlout.getvalue()
 
-            self.wfile.write(html)
+            self.wfile.write(html.encode('utf-8'))
 
     def write_process_links_js(self, htmlout, title):
         """
@@ -761,7 +761,7 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-Type", "text/html; charset=utf-8")
         self.end_headers()
-        self.wfile.write(json.dumps(external_links))
+        self.wfile.write(json.dumps(external_links).encode())
 
     def do_POST(self):
 

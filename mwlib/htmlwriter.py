@@ -39,12 +39,7 @@ class HTMLWriter(object):
         return categories
                     
     def write(self, obj):
-        m = "write" + obj.__class__.__name__
-        m=getattr(self, m)
-        try:
-            m(obj)
-        except:
-            print("Error trying to write %s" % obj)
+        pass
 
     def ignore(self, obj):
         pass
