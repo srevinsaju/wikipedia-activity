@@ -6,3 +6,5 @@ OLPC adaptation by:
 
 Wikipedia On iPhone by Patrick Collison <patrick@collison.ie>
 Some code from bzip2 and the FreeBSD implementation of locate has been used; more details are provided in README
+
+Ported to Python3 by Srevin Saju <srevin03@gmail.com>
