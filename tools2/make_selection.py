@@ -13,7 +13,12 @@ from xml.sax import make_parser, handler
 import os
 import sys
 from operator import itemgetter
-import config
+
+if len(sys.argv) >= 2:
+    exec('\nimport config_{} as config'.format(sys.argv[1]))
+else:
+    import config
+
 from wikitools_utils import normalize_title
 from wikitools_utils import FileListReader, RedirectParser, RedirectsUsedWriter
 from wikitools_utils import TemplatesCounter, TemplatesCounterWriter
