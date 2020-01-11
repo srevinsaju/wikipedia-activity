@@ -78,7 +78,6 @@ class WikipediaActivity(webactivity.WebActivity):
 
         webactivity.WebActivity.__init__(self, handle)
         self.browser = self._get_browser()
-        import pdb; pdb.set_trace()
         self.build_toolbar()
 
     def build_toolbar(self):
