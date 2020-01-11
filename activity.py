@@ -72,7 +72,6 @@ class WikipediaActivity(webactivity.WebActivity):
         os.chdir(os.environ['SUGAR_BUNDLE_PATH'])
 
         self.confvars['ip'] = '0.0.0.0'
-
         server.run_server(self.confvars)
 
         handle.uri = 'http://%s:%s%s' % (
@@ -80,8 +79,10 @@ class WikipediaActivity(webactivity.WebActivity):
             self.confvars['home_page'])
 
         webactivity.WebActivity.__init__(self, handle)
-        toolbar_box = ToolbarBox()
+        self.build_toolbar()
 
+    def build_toolbar(self):
+        toolbar_box = ToolbarBox()
         # Search Gtk Entry
         search_item = Gtk.ToolItem()
 
@@ -120,6 +121,17 @@ class WikipediaActivity(webactivity.WebActivity):
             self.confvars['home_page'])
         browser = self._get_browser()
         browser.load_uri(home_url)
+        
+    def normalize_title(self, title):
+        s = title.strip().replace(' ', '_')
+        return s[0].capitalize() + s[1:]
 
     def search_entry_activate_cb(self, entry):
-        print("HURRAY", entry.get_text(), " received by me")
+        text = entry.get_text()
+        text = self.normalize_title(text)
+        home_url = 'http://%s:%s/wiki/%s' % (
+            self.confvars['ip'], self.confvars['port'],
+            text)
+        browser = self._get_browser()
+        browser.load_uri(home_url)
+        
