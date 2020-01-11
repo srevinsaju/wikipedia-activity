@@ -5,7 +5,7 @@
 # See README.txt for additional licensing information.
 
 import os
-from mwlib import parser, rendermath, timeline
+from mwlib import rendermath, timeline
 
 import urllib.request, urllib.parse, urllib.error
 import cgi
@@ -34,9 +34,12 @@ class HTMLWriter(object):
         self.out.write(cgi.escape(s).encode('utf8'))
 
     def getCategoryList(self, obj):
+        raise NotImplementedError
+        '''
         categories = list(set(c.target for c in obj.find(parser.CategoryLink)))
         categories.sort()
         return categories
+        '''
                     
     def write(self, obj):
         self.out.write(obj)

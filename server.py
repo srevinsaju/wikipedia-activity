@@ -73,9 +73,8 @@ platform_dir = "%s_%s%s" % (system_id,
                             sys.version_info[1])   # minor
 
 sys.path.append(os.path.join(_root_path, 'binarylibs', platform_dir))
-
 import mwlib.htmlwriter
-from mwlib import parser, scanner, expander
+from mwlib import expander
 
 # Uncomment to print out a large dump from the template expander.
 #os.environ['DEBUG_EXPANDER'] = '1'
