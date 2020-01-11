@@ -5,7 +5,7 @@
 
 import os
 files_list = os.listdir()
-for i in file_list:
+for i in files_list:
     if i.endswith('.xml'):
         input_xml_file_name = i
         break
