@@ -3,7 +3,7 @@
 # These configuration params are used in the process to create
 # a new wikipedia activity
 
-input_xml_file_name = './simplewiki-20130724-pages-articles.xml'
+input_xml_file_name = './enwiki-20191220-pages-articles-multistream14.xml'
 favorites_file_name = './favorites_en.txt'
 blacklist_file_name = './blacklist_en.txt'
 

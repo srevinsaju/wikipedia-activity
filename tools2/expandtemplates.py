@@ -15,7 +15,6 @@ import importlib
 importlib.reload(sys)
 # Important! We'll be using stdout and stderr with
 # UTF-8 chars. Without this, errors galore.
-sys.setdefaultencoding('utf-8')
 
 sys.path.append('.')
 

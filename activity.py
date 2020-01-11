@@ -21,10 +21,12 @@ import os
 import sys
 import server
 import logging
+from gi.repository import Gtk, Gdk
 
 try:
     from sugar3.activity import activity
     from sugar3.graphics.toolbarbox import ToolbarButton
+    from sugar3.activity.widgets import StopButton
     from sugar3.graphics.toolbarbox import ToolbarBox
     from sugar3.activity.activity import get_bundle_path
 except ImportError:
@@ -52,13 +54,13 @@ if browse_path is None:
 
 sys.path.append(browse_path)
 
-
+import webactivity
 
 from searchtoolbar import SearchToolbar
 
 
 # Activity class, extends WebActivity.
-class WikipediaActivity(activity.Activity):
+class WikipediaActivity(webactivity.WebActivity):
     def __init__(self, handle):
 
         if not hasattr(self, 'confvars'):
@@ -77,20 +79,33 @@ class WikipediaActivity(activity.Activity):
             self.confvars['ip'], self.confvars['port'],
             self.confvars['home_page'])
 
-        activity.Activity.__init__(self, handle)
+        webactivity.WebActivity.__init__(self, handle)
         toolbar_box = ToolbarBox()
-        self.searchtoolbar = SearchToolbar(self)
-        search_toolbar_button = ToolbarButton()
-        search_toolbar_button.set_page(self.searchtoolbar)
-        search_toolbar_button.props.icon_name = 'search-wiki'
-        search_toolbar_button.props.label = _('Search')
-        toolbar_box.toolbar.insert(search_toolbar_button, 1)
-        search_toolbar_button.show()
-        # Hide add-tabs button
-        if hasattr(self._primary_toolbar, '_add_tab'):
-            self._primary_toolbar._add_tab.hide()
 
-        self.searchtoolbar.show()
+        # Search Gtk Entry
+        search_item = Gtk.ToolItem()
+
+        self.search_entry = Gtk.Entry()
+        self.search_entry.connect('activate', self.search_entry_activate_cb)
+
+        width = int(Gdk.Screen.width() / 3)
+        self.search_entry.set_size_request(width, -1)
+
+        self.search_entry.props.sensitive = True
+
+        search_item.add(self.search_entry)
+        self.search_entry.show()
+
+        toolbar_box.toolbar.insert(search_item, -1)
+        search_item.show()
+
+        stop = StopButton(self)
+        toolbar_box.toolbar.insert(stop, -1)
+        stop.show()
+
+        self.set_toolbar_box(toolbar_box)
+        toolbar_box.show_all()
+
 
     def _get_browser(self):
         if hasattr(self, '_browser'):
@@ -105,3 +120,6 @@ class WikipediaActivity(activity.Activity):
             self.confvars['home_page'])
         browser = self._get_browser()
         browser.load_uri(home_url)
+
+    def search_entry_activate_cb(self, entry):
+        print("HURRAY", entry.get_text(), " received by me")

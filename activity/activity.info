@@ -11,7 +11,7 @@ max_paticipants = 10
 repository = https://github.com/godiard/wikipedia-activity.git
 
 [Wikipedia]
-path = en_simple/simplewiki-20130724-pages-articles.xml
+path = en_simple/enwiki-20191220-pages-articles-multistream14.xml
 port = 8011
 home_page = /static/index_en_simple.html
 templateprefix = Template:

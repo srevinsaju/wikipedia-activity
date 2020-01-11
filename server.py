@@ -128,7 +128,7 @@ class WPWikiDB:
 
         article_text = \
             self.dataretriever.get_text_article(title)
-
+        import pdb; pdb.set_trace()
         # Stripping leading & trailing whitespace fixes template expansion.
         article_text = article_text.lstrip()
         article_text = article_text.rstrip()
