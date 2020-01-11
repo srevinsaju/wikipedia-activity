@@ -168,7 +168,7 @@ class PagesProcessor(handler.ContentHandler):
                 (title in self._selected_pages_list):
                 print("%d Page '%s', length %d                   \r" % \
                         (self._page_counter,
-                         title.encode('ascii', 'replace'), len(self._page)), end=' ')
+                         title, len(self._page)), end=' ')
                 # processed
                 self._register_page(self._output, title, self._page)
                 self.get_images(title)
