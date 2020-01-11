@@ -103,6 +103,13 @@ class WikipediaActivity(webactivity.WebActivity):
         toolbar_box.toolbar.insert(search_item, -1)
         search_item.show()
 
+        separator = Gtk.SeparatorToolItem()
+        separator.props.draw = False
+        separator.set_size_request(0, -1)
+        separator.set_expand(True)
+        toolbar_box.toolbar.insert(separator, -1)
+        separator.show()
+
         stop = StopButton(self)
         toolbar_box.toolbar.insert(stop, -1)
         stop.show()
