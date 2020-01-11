@@ -52,6 +52,8 @@ except:
 if browse_path is None:
     print('This activity need a Browser activity installed to run')
 
+sys.append(browse_path)
+import webactivity
 
 
 from searchtoolbar import SearchToolbar
