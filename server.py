@@ -53,8 +53,10 @@ import cairo
 from sugar3.graphics.icon import _IconBuffer
 from sugar3 import profile
 
-# import the new parser :)
-from mwparser.parserEngine import ParserCore
+# import the new parser :) from 
+# fork https://github.com/srevinsaju/caramwel
+# main https://github.com/peter17/mediawiki-parser
+from .mwparser.parserEngine import ParserCore
 
 
 ##
