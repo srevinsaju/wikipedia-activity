@@ -1,0 +1,78 @@
+'''KSOP-FM''' (104.3 [[FM broadcasting|FM]], Z104) is a [[radio station]] broadcasting a [[Country music]] format. Licensed to [[Salt Lake City, Utah]], United States, the station serves the Salt Lake City area.  The station is currently owned by Ksop, Inc.<ref> </ref>  Its studios are located along Redwood Road, and the transmitter site is atop [[Farnsworth Peak]].
+
+KSOP-FM also has a sister station with the same [[KSOP (AM)|call sign]] on [[AM Broadcasting|AM]] 1370 [[kHz]].
+
+On August 1, 2011, at midnight, after stunting with a countdown of 10 popular non-country pop songs, KSOP-FM rebranded as Z104.
+
+On November 15, 2017, at approximately 12pm (MST) the station switched on its HD transmitter. Allowing for clearer radio, album art in car, and other HD options.
+
+==Translators==
+In addition to the main station, KSOP is relayed by ten additional translators to widen its broadcast area.
+{{RadioTranslators
+| call1        = K221AX
+| watts1        = 12
+| class1        = D  
+| freq1        = 92.1
+| city1        = Laketown, UT
+| call2        = K224BR
+| watts2        = 16
+| class2        = D  
+| freq2        = 92.7
+| city2        = Park City, UT
+| call3        = K244AO
+| watts3        = 12
+| class3        = D  
+| freq3        = 96.7
+| city3        = Randolph, UT
+| call4        = K244DH
+| watts4        = 36
+| class4        = D  
+| freq4        = 96.7
+| city4        = Fort Douglas, Utah
+| call5        = K255AD
+| watts5        = 10
+| class5        = D  
+| freq5        = 98.9
+| city5        = Monroe, UT
+| call6        = K274AH
+| watts6        = 10
+| class6        = D  
+| freq6        = 102.7
+| city6        = Junction, UT
+| call7        = K280EA
+| watts7        = 5
+| class7        = D  
+| freq7        = 103.9
+| city7        = Hanksville, UT
+| call8        = K292AT
+| watts8        = 157
+| class8        = D  
+| freq8        = 106.3
+| city8        = Price, UT
+| call9        = K296AF
+| watts9        = 12
+| class9        = D  
+| freq9        = 107.1
+| city9        = Heber, UT
+| call10        = K296AQ
+| watts10        = 109
+| class10        = D  
+| freq10        = 107.1
+| city10        = Soda Springs, ID
+}}
+
+==References==
+
+
+==External links==
+*
+
+
+
+
+[[Category:Radio stations in Utah|SOP-FM]]
+[[Category:Country radio stations in the United States]]
+[[Category:Radio stations established in 1964]]
+[[Category:1964 establishments in Utah]]
+
+

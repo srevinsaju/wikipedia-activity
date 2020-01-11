@@ -1,0 +1,3 @@
+include README.rst
+include mediawiki.pijnu
+include preprocessor.pijnu
