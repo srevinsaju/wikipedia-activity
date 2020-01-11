@@ -10,7 +10,11 @@ from subprocess import call, Popen, PIPE, STDOUT
 import shutil
 import re
 import logging
-import config
+
+if len(sys.argv) >= 2:
+    exec('\nimport config_{} as config'.format(sys.argv[1]))
+else:
+    import config
 
 input_xml_file_name = config.input_xml_file_name
 
