@@ -39,7 +39,7 @@ class HTMLWriter(object):
         return categories
                     
     def write(self, obj):
-        pass
+        self.out.write(obj)
 
     def ignore(self, obj):
         pass
