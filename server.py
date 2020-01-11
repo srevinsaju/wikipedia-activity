@@ -53,6 +53,10 @@ import cairo
 from sugar3.graphics.icon import _IconBuffer
 from sugar3 import profile
 
+# import the new parser :)
+from mwparser.parserEngine import ParserCore
+
+
 ##
 ## Libs we ship -- add lib path for
 ## shared objects
@@ -128,7 +132,6 @@ class WPWikiDB:
 
         article_text = \
             self.dataretriever.get_text_article(title)
-        import pdb; pdb.set_trace()
         # Stripping leading & trailing whitespace fixes template expansion.
         article_text = article_text.lstrip()
         article_text = article_text.rstrip()
@@ -207,12 +210,12 @@ class WPImageDB:
         return "/".join([d[0], d[:2]])
 
     def getPath(self, name, size=None):
-        hashed_name = self.hashpath(name).encode('utf8')
+        hashed_name = self.hashpath(name).encode('utf-8')
         path = self.basepath + '/%s' % hashed_name
         return path
 
     def getURL(self, name, size=None):
-        hashed_name = self.hashpath(name).encode('utf8')
+        hashed_name = self.hashpath(name).encode('utf-8')
         if size is not None:
             file_name = self.basepath + self.hashpath_dir(name) + '/' + \
                 ('%dpx-' % size) + name.replace(' ', '_')
@@ -243,8 +246,8 @@ class HTMLOutputBuffer:
         self.buffer = ''
 
     def write(self, obj):
-        if isinstance(obj, str):
-            self.buffer += obj.encode('utf8')
+        if isinstance(obj, bytes):
+            self.buffer += obj.encode('utf-8')
         else:
             self.buffer += obj
 
@@ -552,10 +555,9 @@ class WikiRequestHandler(SimpleHTTPRequestHandler):
         return article_text
 
     def write_wiki_html(self, htmlout, title, article_text):
-        tokens = scanner.tokenize(article_text, title)
-
-        wiki_parsed = parser.Parser(tokens, title).parse()
-        wiki_parsed.caption = title
+        parser = ParserCore(article_text)
+        
+        wiki_parsed = parser.get()
 
         imagedb = WPImageDB(self.base_path + '/images/')
         writer = WPHTMLWriter(self.wikidb.dataretriever, htmlout,

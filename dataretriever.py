@@ -6,7 +6,7 @@ from subprocess import Popen, PIPE, STDOUT
 import re
 import os
 import logging
-
+import codecs
 import sqlite3
 
 
@@ -14,6 +14,34 @@ def normalize_title(title):
     s = title.strip().replace(' ', '_')
     return s[0].capitalize() + s[1:]
 
+class RedirectParser:
+
+    def __init__(self, file_name):
+        self.link_re = re.compile('\[\[.*?\]\]')
+        # Load redirects
+        input_redirects = codecs.open('%s.redirects_used' % file_name,
+                encoding='utf-8', mode='r')
+
+        line = input_redirects.readline()
+        self.redirects = {}
+        count = 0
+        while line:
+            links = self.link_re.findall(str(line))
+            if len(links) == 2:
+                origin = normalize_title(links[0][2:-2])
+                destination = normalize_title(links[1][2:-2])
+                self.redirects[origin] = destination
+            line = input_redirects.readline()
+            count += 1
+            print("Processing %d\r" % count, end=' ')
+        input_redirects.close()
+
+    def get_redirected(self, article_title):
+        try:
+            redirect = self.redirects[normalize_title(article_title)]
+        except:
+            redirect = None
+        return redirect
 
 class DataRetriever():
 
@@ -25,8 +53,10 @@ class DataRetriever():
         self.template_re = re.compile('({{.*?}})')
         base_path = os.path.dirname(data_files_base)
         self._db_path = os.path.join(base_path, "search.db")
+        self._idx_path = "%s.processed.idx" % data_files_base
         # TODO: I need control cache size
         self.templates_cache = {}
+        self.redirects_checker = RedirectParser(data_files_base)
 
     def _check_seek_bunzip_cmnd(self):
         # check if seek-bunzip is installed in the system
@@ -46,6 +76,36 @@ class DataRetriever():
 
     def _get_article_position(self, article_title):
         article_title = normalize_title(article_title)
+        #index_file = codecs.open(self._index_file_name, encoding='utf-8',
+        #        mode='r')
+        index_file = open(self._idx_path, mode='r')
+
+        index_line = index_file.readline()
+        num_block = -1
+        position = -1
+        while index_line:
+            words = index_line.split()
+            article = words[0]
+            if article == article_title:
+                num_block = int(words[1])
+                position = int(words[2])
+                break
+            index_line = index_file.readline()
+        index_file.close()
+
+        if num_block == -1:
+            # look at redirects
+            redirect = self.redirects_checker.get_redirected(article_title)
+            print("Searching redirect from %s to %s" % (article_title,
+                    redirect))
+            if redirect is not None:
+                return self._get_article_position(redirect)
+
+        print("Numblock %d, position %d" % (num_block, position))
+        return num_block, position
+        
+        """
+        article_title = normalize_title(article_title)
         # look at the title in the index database
         conn = sqlite3.connect(self._db_path)
         if article_title.find('"'):
@@ -64,6 +124,7 @@ class DataRetriever():
             num_block = -1
             position = -1
         conn.close()
+        
 
         if num_block == 0 and position == 0:
             # if block and position = 0 serach with the redirect_to value
@@ -75,6 +136,8 @@ class DataRetriever():
             else:
                 return num_block2, position2
         return num_block, position
+        """
+        
 
     def check_existence_list(self, article_title_list):
         if not article_title_list:
@@ -185,7 +248,7 @@ class DataRetriever():
 
         finish = False
         while not finish:
-            line = p.stdout.readline()
+            line = p.stdout.readline().decode()
             if line == '':
                 # end of block?
                 output += self._get_block_text(num_block + 1, 0)
