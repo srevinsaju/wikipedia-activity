@@ -40,7 +40,7 @@ class ParserCore:
         mediawikiGrammar = open(os.path.join(activity.get_bundle_path(), "mwparser", "mediawiki.pijnu")).read()
         makeParser(mediawikiGrammar)
 
-        allowed_tags = ['p', 'span', 'b', 'i', 'small', 'center']
+        allowed_tags = ['p', 'span', 'b', 'i', 'small', 'center', 'ref', 'div', 'references']
         allowed_autoclose_tags = ['br']
         allowed_parameters = ['class', 'style', 'name', 'id', 'scope']
         interwiki = {'ar': 'http://ar.wikipedia.org/wiki/',
@@ -68,7 +68,10 @@ class ParserCore:
         <center>[[Fichier:{{{filename|{{{nomfichier|{{{2|}}}}}}}}}|noicon]]</center></span><br /><span style="height:20px; width:100%; padding-left:0.3em;" cellspacing="0"><span title="Des difficultés pour écouter le fichier ?">[[Image:Circle question mark.png|14px|link=Aide:Écouter des sons ogg|Des difficultés  pour  écouter le fichier ?]] ''[[Aide:Écouter des sons ogg|Des problèmes pour écouter le fichier ?]]''</span>
         |}
         """,
-                    '3e': '3<sup>e</sup>'}
+            '3e': '3<sup>e</sup>',
+            'prettyTable': 'font-size:90%',
+            'title': 'test: {{{1}}}',
+            'template': '{{{1}}} and {{{parameters}}}...'}
 
         preprocessor = make_parser1(templates)
         
